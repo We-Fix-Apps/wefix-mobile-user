@@ -1,0 +1,1 @@
+const LANG_CACHE = 'LANG_CACHE';

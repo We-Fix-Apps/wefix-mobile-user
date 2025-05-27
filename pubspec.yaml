@@ -1,0 +1,110 @@
+name: wefix
+description: A new Flutter project.
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+
+dependencies:
+  carousel_slider: ^4.2.1
+
+  flutter:
+    sdk: flutter
+  # Lnaguage
+  flutter_localizations:
+    sdk: flutter
+  # Rating
+  flutter_rating_stars: ^1.1.0
+  # SVG
+  flutter_svg: ^2.0.0
+  # Date
+  intl: ^0.18.0
+  # Phone Number
+  intl_phone_number_input: ^0.7.2
+  # Animation Icon
+
+  # Indicator
+  # smooth_page_indicator: ^1.1.0
+  # Permission
+
+  # Drop Down
+  dropdown_textfield: ^1.0.8
+  # Firebase
+  firebase_core: ^2.11.0
+  firebase_messaging: ^14.2.5
+  bot_toast: ^4.0.3
+  # Check Network in Application
+  connectivity_plus: ^3.0.3
+  # App Prvider
+  provider: ^6.0.2
+  # Shared Preferences
+  shared_preferences: ^2.0.15
+  # Cach Netwok Image
+  cached_network_image: ^3.3.1
+  # Loading Shimmer
+  shimmer: ^3.0.0
+  # Google Map
+  google_maps_flutter: ^2.2.4
+  flutter_google_places: ^0.3.0
+  # flutter_paytabs_bridge: ^2.6.1
+  geocoding: ^2.1.0
+  geolocator: ^9.0.2
+  # location: ^4.4.0
+  google_api_headers: ^1.5.0+1
+  google_maps_webservice: ^0.0.20-nullsafety.5
+  # fluttertoast: ^8.2.5
+  flutter_paypal_checkout: ^1.0.1
+  image_picker: ^1.0.8
+  # Html Widget
+  flutter_widget_from_html: ^0.10.2
+  # Icon Luncher
+  flutter_launcher_icons: ^0.11.0
+  # readmore: ^3.0.0
+  # flutter_facebook_auth: ^6.0.4
+  # speech_to_text: ^6.6.0
+  url_launcher: ^6.1.11
+  # flutter_staggered_grid_view: ^0.7.0
+  # google_sign_in: ^5.0.0
+  firebase_auth: ^4.17.8
+  pin_code_fields: ^8.0.1
+  local_auth: ^2.1.8
+  flutter_rating_bar: ^4.0.1
+  convex_bottom_bar: ^3.2.0
+  table_calendar: ^3.0.9
+  file_picker: ^8.0.0+1
+  flutter_sound: ^9.2.13
+  permission_handler: ^11.0.1
+  record: ^3.0.0
+  video_player: ^2.7.0
+  audioplayers: ^5.2.1
+  open_file: ^3.3.2
+  # tutorial_coach_mark: ^1.2.13
+  # flutter_widget_from_html: ^0.15.3
+  # jitsi_meet_flutter_sdk: ^10.0.0
+
+flutter_icons:
+  android: launcher_icon
+  ios: true
+  image_path: assets/image/icon_logo.png
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.1
+  cupertino_icons: ^1.0.2
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/image/
+    - assets/icon/
+
+  fonts:
+    - family: Poppins
+      fonts:
+        # - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/JANNALT-REGULAR (1).TTF

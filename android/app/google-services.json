@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "115771809459",
+    "project_id": "wefix-16eac",
+    "storage_bucket": "wefix-16eac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:115771809459:android:80c2c751d0e8b26481dac6",
+        "android_client_info": {
+          "package_name": "com.example.wefixapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyzC5293pQvw_z9zTp4JjJtu6ewVK-93Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

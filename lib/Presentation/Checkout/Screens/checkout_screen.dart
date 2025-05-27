@@ -1,0 +1,755 @@
+import 'dart:developer';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:provider/provider.dart';
+import 'package:wefix/Business/AppProvider/app_provider.dart';
+import 'package:wefix/Business/CreateOrder/create_order_api.dart';
+import 'package:wefix/Business/orders/profile_api.dart';
+import 'package:wefix/Data/Constant/theme/color_constant.dart';
+import 'package:wefix/Data/Functions/app_size.dart';
+import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/appText/appText.dart';
+import 'package:wefix/Data/model/appitment_model.dart';
+import 'package:wefix/Data/model/subsicripe_model.dart';
+import 'package:wefix/Presentation/Address/Screens/address_screen.dart';
+import 'package:wefix/Presentation/Profile/Components/usage_details_widget.dart';
+import 'package:wefix/Presentation/appointment/Components/location_map_widget.dart';
+import 'package:wefix/Presentation/Checkout/Components/coboun_widget.dart';
+import 'package:wefix/Presentation/Checkout/Components/payment_method_bottom_sheet_widget.dart';
+import 'package:wefix/Presentation/Checkout/Components/payment_summary_widget.dart';
+import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
+import 'package:wefix/Presentation/Components/language_icon.dart';
+import 'package:wefix/Presentation/Components/widget_dialog.dart';
+import 'package:wefix/Presentation/Subscriptions/Screens/Subscriptions_screen.dart';
+import 'package:wefix/Presentation/auth/login_screen.dart';
+import 'package:wefix/layout_screen.dart';
+
+import '../../Components/widget_form_text.dart';
+
+class CheckoutScreen extends StatefulWidget {
+  const CheckoutScreen({super.key});
+
+  @override
+  State<CheckoutScreen> createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends State<CheckoutScreen> {
+  List<Placemark> placemarks = [];
+  @override
+  void initState() {
+    AppProvider appProvider = Provider.of(context, listen: false);
+    setState(() {
+      isFemale =
+          appProvider.appoitmentInfo["gender"] == "Female" ? true : false;
+    });
+    isSubsicribed(
+      isfromPlaceOreder: false,
+    );
+    super.initState();
+  }
+
+  bool loading = false;
+  bool loading2 = false;
+  bool loading3 = false;
+  bool loading5 = false;
+  bool? isFemale;
+
+  // bool? isSubsicribe;
+  SubsicripeModel? subsicripeModel;
+  AppointmentModel? appointmentModel;
+
+  String selectedPayment = 'visa';
+  double? discountAmount;
+  double? totalafterDiscount;
+
+  TextEditingController promoCodeController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    AppProvider appProvider = Provider.of(context, listen: false);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text('${AppText(context).checkout}'),
+        centerTitle: true,
+        actions: [
+          const LanguageButton(),
+        ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: CustomBotton(
+          title: AppText(context).placeOrder,
+          loading: loading,
+          onTap: () {
+            // addRequest();
+            appProvider.userModel == null
+                ? showDialog(
+                    context: context,
+                    builder: (context) => WidgetDialog(
+                          title: AppText(context, isFunction: true).warning,
+                          desc: AppText(context, isFunction: true)
+                              .pleaselogintocontinue,
+                          isError: true,
+                          bottonText: AppText(context, isFunction: true).login,
+                          onTap: () => Navigator.push(
+                            context,
+                            downToTop(
+                              const LoginScreen(),
+                            ),
+                          ),
+                        ))
+                : subsicripeModel?.status == true
+                    ? addRequest()
+                    : showPaymentMethod(context);
+            log(appProvider.appoitmentInfo.toString());
+            // showUpgradeDialog(context);
+          },
+        ),
+      ),
+      body: loading2 == true
+          ? LinearProgressIndicator(
+              color: AppColors(context).primaryColor,
+              backgroundColor: AppColors.secoundryColor,
+            )
+          : loading5 == true
+              ? LinearProgressIndicator(
+                  color: AppColors(context).primaryColor,
+                  backgroundColor: AppColors.secoundryColor,
+                )
+              : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Stack(
+                      children: [
+                        SvgPicture.asset("assets/icon/background.svg"),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "📍 ${AppText(context).location}",
+                                  style: TextStyle(
+                                    fontSize: AppSize(context).smallText1,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                TextButton(
+                                    onPressed: () async {
+                                      final a = await Navigator.push(context,
+                                          downToTop(const AddressScreen()));
+
+                                      if (a) {
+                                        makeLoadingFor2Seconds();
+                                      }
+                                    },
+                                    child: Text(
+                                      "${AppText(context).change}",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              AppColors(context).primaryColor),
+                                    ))
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            WidgetAddressCheckout(
+                              addressNameStreet: "",
+                              lat: appProvider.currentLocation?.latitude
+                                      .toString() ??
+                                  "",
+                              long: appProvider.currentLocation?.longitude
+                                      .toString() ??
+                                  "",
+                              addressName: "",
+                            ),
+                            const SizedBox(height: 20),
+                            discountAmount != null
+                                ? SizedBox()
+                                : subsicripeModel?.status == true
+                                    ? SizedBox()
+                                    : CouponWidget(
+                                        promoCodeController:
+                                            promoCodeController,
+                                        onTap: () {
+                                          promoCode();
+                                        },
+                                        loading: loading3,
+                                      ),
+
+                            Row(
+                              children: [
+                                Text(
+                                  "👨‍🔧 ${AppText(context).technicianGender}",
+                                  style: TextStyle(
+                                    fontSize: AppSize(context).smallText1,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                                const Tooltip(
+                                  triggerMode: TooltipTriggerMode.tap,
+                                  message: "You will be charged 10 JOD extra",
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    color: AppColors.greyColor1,
+                                    size: 15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 5,
+                            ),
+
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SwitchListTile.adaptive(
+                                activeColor: AppColors(context).primaryColor,
+                                secondary: Image.asset(
+                                  "assets/image/Layer 12.png",
+                                  height: AppSize(context).height * .05,
+                                  width: AppSize(context).width * .1,
+                                ),
+                                title: Text(
+                                  AppText(context)
+                                      .needafemaletechnicianforsupport,
+                                  style: TextStyle(
+                                    fontSize: AppSize(context).smallText2,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  AppText(context).youwillbecharged10JODextra,
+                                  style: TextStyle(
+                                    fontSize: AppSize(context).smallText3,
+                                    color: AppColors.greyColor2,
+                                  ),
+                                ),
+                                inactiveThumbColor: AppColors.whiteColor1,
+                                inactiveTrackColor: AppColors.greyColor1,
+                                overlayColor: MaterialStateProperty.all(
+                                  AppColors(context)
+                                      .primaryColor
+                                      .withOpacity(.2),
+                                ),
+                                value: isFemale ?? false,
+                                onChanged: (value) {
+                                  setState(() {
+                                    isFemale = value;
+                                    appProvider.saveAppoitmentInfo({
+                                      "TicketTypeId": appProvider
+                                          .appoitmentInfo["TicketTypeId"],
+                                      "gender":
+                                          isFemale == false ? "Male" : "Female",
+                                      "date": appProvider.selectedDate ??
+                                          DateTime.now(),
+                                      "time":
+                                          appProvider.appoitmentInfo["time"],
+                                      "services": appProvider
+                                          .appoitmentInfo["services"],
+                                      "totalPrice": appProvider
+                                          .appoitmentInfo["totalPrice"],
+                                      "totalTickets": appProvider
+                                          .appoitmentInfo["totalTickets"]
+                                    });
+
+                                    log(appProvider.appoitmentInfo.toString());
+                                  });
+                                },
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+                            Text(
+                              "🧾 ${AppText(context).paymentSum}",
+                              style: TextStyle(
+                                fontSize: AppSize(context).smallText1,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            PaymentSummaryWidget(
+                                title: AppText(context).subTotal,
+                                value: subsicripeModel?.status == true
+                                    ? " ${appProvider.appoitmentInfo["totalTickets"]} ${AppText(context).ticket}"
+                                    : ' ${AppText(context).jod} ${appProvider.appoitmentInfo["totalPrice"]}'),
+                            discountAmount == null
+                                ? SizedBox()
+                                : PaymentSummaryWidget(
+                                    title:
+                                        ' ${AppText(context).totalAfterDiscount} 🥳',
+                                    value:
+                                        '- ${AppText(context).jod} ${discountAmount?.toStringAsFixed(2)}',
+                                    highlight: true),
+                            appProvider.appoitmentInfo["gender"] == "Male"
+                                ? SizedBox()
+                                : PaymentSummaryWidget(
+                                    title: 'Female WeFix',
+                                    value: ' ${AppText(context).jod} 10.00',
+                                    icon: Icons.info_outline),
+                            const SizedBox(height: 20),
+                            PaymentSummaryWidget(
+                                title: AppText(context).total,
+                                value: subsicripeModel?.status == true
+                                    ? " ${appProvider.appoitmentInfo["totalTickets"]} ${AppText(context).ticket}  ${appProvider.appoitmentInfo["gender"] == "Female" ? " + 10  ${AppText(context).jod}" : ""}"
+                                    : ' ${AppText(context).jod}  ${appProvider.appoitmentInfo["gender"] == "Female" ? totalafterDiscount ?? appProvider.appoitmentInfo["totalPrice"] + 10 : totalafterDiscount ?? appProvider.appoitmentInfo["totalPrice"]}',
+                                bold: true),
+                            const SizedBox(height: 20),
+                            totalafterDiscount == null
+                                ? SizedBox()
+                                : Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                        color: AppColors(context)
+                                            .primaryColor
+                                            .withOpacity(.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: AppColors(context)
+                                                .primaryColor)),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          "🎉",
+                                          style: TextStyle(
+                                              fontSize:
+                                                  AppSize(context).smallText1),
+                                        ),
+                                        Expanded(
+                                            child: Text(
+                                                " Awesome! You're saving JOD ${discountAmount?.toStringAsFixed(2)}",
+                                                style: TextStyle(
+                                                    color: AppColors(context)
+                                                        .primaryColor))),
+                                      ],
+                                    ),
+                                  ),
+
+                            // subsicripeModel?.status == false
+                            //     ? SizedBox()
+                            //     : Container(
+                            //         padding: const EdgeInsets.all(12),
+                            //         decoration: BoxDecoration(
+                            //             color: AppColors(context)
+                            //                 .primaryColor
+                            //                 .withOpacity(.2),
+                            //             borderRadius: BorderRadius.circular(8),
+                            //             border: Border.all(
+                            //                 color: AppColors(context)
+                            //                     .primaryColor)),
+                            //         child: Row(
+                            //           children: [
+                            //             Text(
+                            //               "🎉",
+                            //               style: TextStyle(
+                            //                   fontSize:
+                            //                       AppSize(context).smallText1),
+                            //             ),
+                            //             SizedBox(width: 5),
+                            //             Expanded(
+                            //                 child: Text(
+                            //                     " Awesome! You're saving JOD ${appProvider.appoitmentInfo["totalPrice"]} , This appointment will use 1 ticket from your subscription. No additional payment is required",
+                            //                     style: TextStyle(
+                            //                         color: AppColors(context)
+                            //                             .primaryColor))),
+                            //           ],
+                            //         ),
+                            //       )
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+    );
+  }
+
+  makeLoadingFor2Seconds() {
+    setState(() {
+      loading2 = true;
+    });
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        loading2 = false;
+      });
+    });
+  }
+
+  showPaymentMethod(context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => StatefulBuilder(builder: (context, set) {
+        return Padding(
+          padding: MediaQuery.of(context).viewInsets,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Wrap(
+              runSpacing: 10,
+              children: [
+                Center(
+                  child: Text(
+                    AppText(context, isFunction: true).selectPaymentMethods,
+                    style: TextStyle(
+                        fontSize: AppSize(context).smallText1,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _paymentOption("visa", "Visa", "assets/icon/visa.svg", set),
+                _paymentOption("qlic", "Cliq",
+                    "assets/icon/final_cliq_logo-02_1.svg", set),
+                _paymentOption(
+                    "wallet", "Wallet", "assets/icon/wallet.svg", set),
+                _paymentOption("bitcoin", "BitCoin",
+                    "assets/icon/bitcoin-btc-logo.svg", set),
+                _paymentOption(
+                    "Paybal", "Paybal", "assets/icon/paybal.svg", set),
+                _paymentOption(
+                    "later", "Buy Later", "assets/icon/delay_3360328.svg", set),
+                const Divider(),
+                const SizedBox(height: 20),
+                CustomBotton(
+                    title: AppText(context, isFunction: true).continuesss,
+                    loading: loading,
+                    onTap: () {
+                      set(() {
+                        loading = true;
+                      });
+                      addRequest();
+                      // isSubsicribed().then((value) {
+                      //   set(() {
+                      //     loading5 = false;
+                      //   });
+                      // });
+                    }),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _paymentOption(String value, String label, String icon,
+      void Function(void Function()) localSetState) {
+    final isSelected = selectedPayment == value;
+    return InkWell(
+      onTap: () => localSetState(() => selectedPayment = value),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isSelected
+                ? AppColors(context).primaryColor
+                : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          color: isSelected
+              ? AppColors(context).primaryColor.withOpacity(0.05)
+              : AppColors.whiteColor1,
+        ),
+        child: Row(
+          children: [
+            SvgPicture.asset(
+              icon,
+              width: 30,
+            ),
+            const SizedBox(width: 12),
+            Text(label, style: const TextStyle(fontSize: 16)),
+            const Spacer(),
+            if (isSelected)
+              Icon(Icons.check_circle, color: AppColors(context).primaryColor),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void showUpgradeDialog(BuildContext context) {
+    Navigator.pop(context);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.whiteColor1,
+          icon: Center(
+            child: Text(
+              "🚀",
+              style: TextStyle(fontSize: AppSize(context).largText1),
+            ),
+          ),
+          title: Text(
+            AppText(context, isFunction: true).upgradeandSaveBig,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          // ignore: prefer_const_constructors
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Text(
+                AppText(context, isFunction: true)
+                    .subscribenowandsave50JODDonmissoutonthisspecialoffer,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity, // Ensures buttons take full width
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: CustomBotton(
+                      height: AppSize(context).height * .04,
+                      title: AppText(context, isFunction: true).subscribeNow,
+                      onTap: () {
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            downToTop(HomeLayout(
+                              index: 2,
+                            )),
+                            (route) => false);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: CustomBotton(
+                      border: true,
+                      color: AppColors.whiteColor1,
+                      height: AppSize(context).height * .04,
+                      title: AppText(context, isFunction: true).skip,
+                      textColor: AppColors(context).primaryColor,
+                      onTap: () {
+                        Navigator.pushAndRemoveUntil(context,
+                            downToTop(const HomeLayout()), (route) => false);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future addRequest() async {
+    AppProvider appProvider = Provider.of(context, listen: false);
+
+    Map data = {
+      "TicketTypeId": appProvider.appoitmentInfo["TicketTypeId"],
+      "PromoCode": promoCodeController.text,
+      "SelectedDate":
+          appProvider.appoitmentInfo["date"].toString().substring(0, 10),
+      "SelectedDateTime": appProvider.appoitmentInfo["time"],
+      "Description": appProvider.desc.text,
+      "Location":
+          "${appProvider.places![0].country} ,${appProvider.places![0].locality}, ${appProvider.places![0].name}, ${appProvider.places![0].subAdministrativeArea} ,${appProvider.places![0].subLocality}",
+      "Longitude": appProvider.currentLocation?.longitude.toString() ?? "",
+      "Latitude": appProvider.currentLocation?.latitude.toString() ?? "",
+      "IsWithFemale":
+          appProvider.appoitmentInfo["gender"] == "Female" ? true : false,
+      "IsWithMaterial": appProvider.isMaterialFromProvider,
+      "CustomerPackageId": subsicripeModel?.objSubscribe?.id,
+      "TotalPrice": appProvider.appoitmentInfo["gender"] == "Female"
+          ? appProvider.appoitmentInfo["totalPrice"] + 10
+          : appProvider.appoitmentInfo["totalPrice"],
+      "ServiceTicket": appProvider.appoitmentInfo["services"],
+      "Attachments": appProvider.attachments,
+      "RealEstateId": appProvider.realStateId ?? 0,
+    };
+
+    if (mounted) {
+      setState(() {
+        loading = true;
+      });
+    }
+    await CreateOrderApi.requestService(
+      token: '${appProvider.userModel?.token}',
+      data: data,
+    ).then((value) {
+      appointmentModel = value;
+      appProvider.clearRealState();
+
+      subsicripeModel?.status == false
+          ? showUpgradeDialog(context)
+          : showModalBottomSheet(
+              context: context,
+              isDismissible: false,
+              builder: (context) {
+                return SizedBox(
+                  width: AppSize(context).width,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        SvgPicture.asset("assets/icon/Group 550.svg"),
+                        const SizedBox(height: 10),
+                        Text(
+                          AppText(context).orderSentSuccessfully,
+                          style: TextStyle(
+                            fontSize: AppSize(context).smallText1,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        UsageDetailsWidget(
+                            title: AppText(context).recurringVisits,
+                            value: appointmentModel
+                                    ?.customerPackages.recurringVist ??
+                                0,
+                            total: appointmentModel
+                                    ?.customerPackages.totalRecurringVist ??
+                                0,
+                            color: Colors.green),
+                        UsageDetailsWidget(
+                            title: AppText(context).ondemandVisits,
+                            value: appointmentModel
+                                    ?.customerPackages.onDemandVisit ??
+                                0,
+                            total: appointmentModel
+                                    ?.customerPackages.totalOnDemandVisit ??
+                                0,
+                            color: Colors.red),
+                        UsageDetailsWidget(
+                            title: AppText(context).emergencyVisits,
+                            value: appointmentModel
+                                    ?.customerPackages.emeregencyVisit ??
+                                0,
+                            total: appointmentModel
+                                    ?.customerPackages.totalEmeregencyVisit ??
+                                0,
+                            color: Colors.orange),
+                        Spacer(),
+                        CustomBotton(
+                          title: AppText(context).back,
+                          onTap: () {
+                            Navigator.pushAndRemoveUntil(
+                                context,
+                                downToTop(const HomeLayout()),
+                                (route) => false);
+                          },
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+
+      // showDialog(
+      //   context: context,
+      //   builder: (context) {
+      //     return WidgetDialog(
+      //         title: AppText(context).successfully,
+      //         desc:
+      //             "${AppText(context).orderSentSuccessfully} \n  you still have : \n ${appointmentModel?.customerPackages?.recurringVist} ${AppText(context).recurringVisits}  \n ${appointmentModel?.customerPackages?.recurringVist} ${AppText(context).ondemandVisits} \n ${appointmentModel?.customerPackages?.emeregencyVisit} ${AppText(context).emergencyVisits}",
+      //         onTap: () => Navigator.pushAndRemoveUntil(
+      //             context, downToTop(const HomeLayout()), (route) => false),
+      //         isError: false);
+      //   },
+      // );
+
+      if (value == false) {
+        setState(() {
+          loading = false;
+        });
+      } else {
+        setState(() {});
+        loading = false;
+      }
+    });
+  }
+
+  Future isSubsicribed({isfromPlaceOreder = true}) async {
+    AppProvider appProvider = Provider.of(context, listen: false);
+
+    setState(() {
+      loading5 = true;
+    });
+
+    await ProfileApis.isSubsicribe(
+      token: '${appProvider.userModel?.token}',
+    ).then((value) {
+      if (value != null) {
+        setState(() {
+          subsicripeModel = value;
+        });
+        if (isfromPlaceOreder) {
+          addRequest();
+        }
+        setState(() {
+          loading5 = false;
+        });
+      } else {
+        // addRequest().then((value) {
+        //   showUpgradeDialog(context);
+        // });
+        setState(() {
+          loading5 = false;
+        });
+      }
+    });
+  }
+
+  Future promoCode() async {
+    setState(() {
+      loading3 = true;
+    });
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    try {
+      await ProfileApis.promoCode(
+        code: promoCodeController.text,
+        token: appProvider.userModel?.token ?? '',
+      ).then((value) {
+        setState(() {
+          if (value["status"] == true) {
+            discountAmount = (appProvider.appoitmentInfo["totalPrice"] *
+                (double.parse(value["percantage"].toString()) / 100));
+            totalafterDiscount = appProvider.appoitmentInfo["totalPrice"] -
+                (appProvider.appoitmentInfo["totalPrice"] *
+                    (double.parse(value["percantage"].toString()) / 100));
+            const snackBar = SnackBar(
+              content: Text('Your promo code has been applied successfully'),
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          } else {
+            const snackBar = SnackBar(
+              content: Text('The promo code you entered is not valid.'),
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          }
+          loading3 = false;
+        });
+        log(value.toString());
+      });
+    } catch (e) {
+      log('promoCode $e');
+      setState(() {
+        loading3 = false;
+      });
+    }
+  }
+}
