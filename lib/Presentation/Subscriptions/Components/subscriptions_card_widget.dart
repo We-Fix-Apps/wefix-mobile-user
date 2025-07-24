@@ -90,7 +90,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                height: AppSize(context).height * .18,
+                height: AppSize(context).height * .19,
                 // width: AppSize(context).width * .5,
                 decoration: BoxDecoration(color: widget.color?.withOpacity(.2)),
                 child: Center(
@@ -130,6 +130,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       SizedBox(height: AppSize(context).height * .01),
                       Column(
                         children: [
+                          Text(AppText(context).startfrom),
                           Text(
                             "${widget.price.toString()} ${AppText(context).jod}",
                             style: TextStyle(
@@ -196,30 +197,39 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                   FeatureWidget(
                     color: widget.color,
                     feature: AppText(context).correctivevisits,
-                    value:
-                        widget.package?.numberOfRegularVisit.toString() ?? "0",
+                    value: widget.package?.numberOfRegularVisit == 100
+                        ? AppText(context).unlimited
+                        : widget.package?.numberOfRegularVisit.toString() ??
+                            "0",
                   ),
                   FeatureWidget(
                     color: widget.color,
                     feature: AppText(context).preventivevisits,
-                    value:
-                        widget.package?.numberOnDemandVisit.toString() ?? "0",
+                    value: widget.package?.numberOnDemandVisit == 100
+                        ? AppText(context).unlimited
+                        : widget.package?.numberOnDemandVisit.toString() ?? "0",
                   ),
                   FeatureWidget(
                     color: widget.color,
                     feature: AppText(context).consultations,
-                    value: widget.package?.consultation.toString() ?? "0",
+                    value: widget.package?.consultation == 100
+                        ? AppText(context).unlimited
+                        : widget.package?.consultation.toString() ?? "0",
                   ),
                   FeatureWidget(
                     color: widget.color,
                     feature: AppText(context).emeregencyService,
-                    value:
-                        widget.package?.numberOfUrgentVisits.toString() ?? "0",
+                    value: widget.package?.numberOfUrgentVisits == 100
+                        ? AppText(context).unlimited
+                        : widget.package?.numberOfUrgentVisits.toString() ??
+                            "0",
                   ),
                   FeatureWidget(
                     color: widget.color,
                     feature: AppText(context).femaleService,
-                    value: widget.package?.numberOfFemalUse.toString() ?? "0",
+                    value: widget.package?.numberOfFemalUse == 100
+                        ? AppText(context).unlimited
+                        : widget.package?.numberOfFemalUse.toString() ?? "0",
                   ),
                   FeatureWidget(
                     color: widget.color,

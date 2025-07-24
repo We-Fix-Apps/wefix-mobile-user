@@ -32,6 +32,9 @@ class Advantage {
   int id;
   String titleEn;
   String titleAr;
+  String subTitleEn;
+  String subTitleAr;
+
   String icon;
   int sortOrder;
   int price;
@@ -41,6 +44,8 @@ class Advantage {
     required this.id,
     required this.titleEn,
     required this.titleAr,
+    required this.subTitleEn,
+    required this.subTitleAr,
     this.status,
     required this.icon,
     required this.sortOrder,
@@ -51,6 +56,8 @@ class Advantage {
         id: json["id"],
         titleEn: json["titleEn"],
         titleAr: json["titleAr"],
+        subTitleEn: json["subTitleEn"],
+        subTitleAr: json["subTitleAr"],
         icon: json["icon"],
         sortOrder: json["sortOrder"],
         price: json["price"],

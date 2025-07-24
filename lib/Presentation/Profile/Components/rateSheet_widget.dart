@@ -210,6 +210,11 @@ class _MultiRateSheetState extends State<MultiRateSheet>
       phone: phone.text,
       desc: desc.text,
       customerQuestion: appProvider.selectedAnswers,
+      mainAnswer: selectedSvgPath?.contains("smile") ?? false
+          ? 3
+          : selectedSvgPath?.contains("sadface") ?? false
+              ? 1
+              : 2,
     ).then((value) async {
       if (value) {
         appProvider.clearAnswers();
@@ -384,7 +389,10 @@ class _MultiRateSheetState extends State<MultiRateSheet>
                     : question.title,
                 selectedRating: selectedRating,
                 onRatingSelected: (rating) {
-                  context.read<AppProvider>().selectAnswer(question.id, rating);
+                  context.read<AppProvider>().selectAnswer(
+                        question.id,
+                        rating,
+                      );
                 },
               );
             },

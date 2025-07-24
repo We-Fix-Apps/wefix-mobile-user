@@ -6,8 +6,8 @@ import 'package:wefix/Data/appText/appText.dart';
 
 class ListRateTypeWidget extends StatelessWidget {
   final String? title;
-  final String? selectedRating;
-  final Function(String)? onRatingSelected;
+  final int? selectedRating;
+  final Function(int)? onRatingSelected;
 
   const ListRateTypeWidget({
     super.key,
@@ -45,6 +45,7 @@ class ListRateTypeWidget extends StatelessWidget {
                     iconPath: "assets/icon/smile.svg",
                     color: AppColors.greenColor,
                     label: AppText(context).happy,
+                    faceId: 3,
                   ),
                   const SizedBox(width: 5),
                   _buildFace(
@@ -52,14 +53,14 @@ class ListRateTypeWidget extends StatelessWidget {
                     iconPath: "assets/icon/good.svg",
                     color: AppColors(context).primaryColor,
                     label: AppText(context).good,
+                    faceId: 2,
                   ),
                   const SizedBox(width: 5),
-                  _buildFace(
-                    context,
-                    iconPath: "assets/icon/sadface.svg",
-                    color: AppColors.redColor,
-                    label: AppText(context).bad,
-                  ),
+                  _buildFace(context,
+                      iconPath: "assets/icon/sadface.svg",
+                      color: AppColors.redColor,
+                      label: AppText(context).bad,
+                      faceId: 1),
                 ],
               )
             ],
@@ -70,10 +71,13 @@ class ListRateTypeWidget extends StatelessWidget {
   }
 
   Widget _buildFace(BuildContext context,
-      {required String iconPath, required Color color, required String label}) {
-    final isSelected = selectedRating == label;
+      {required String iconPath,
+      required Color color,
+      required String label,
+      int? faceId}) {
+    final isSelected = selectedRating == faceId;
     return InkWell(
-      onTap: () => onRatingSelected?.call(label),
+      onTap: () => onRatingSelected?.call(faceId ?? 0),
       child: Container(
         padding: const EdgeInsets.all(0),
         decoration: BoxDecoration(

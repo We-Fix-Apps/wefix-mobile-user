@@ -120,7 +120,8 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
                                         ),
                                       ),
                                 const SizedBox(width: 10),
-                                widget.isSubsicribed == false
+                                (widget.isSubsicribed == false ||
+                                        widget.isSubsicribed == null)
                                     ? const SizedBox()
                                     : Text(
                                         "${AppText(context).jod} ${widget.services?.price}",

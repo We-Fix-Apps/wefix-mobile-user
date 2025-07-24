@@ -160,23 +160,6 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors(context)
-                                  .primaryColor
-                                  .withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              AppText(context, isFunction: true)
-                                  .sincethematerialcostexceeds100JODanupfrontpaymentof50requiredWetouchwithyoutoconfirmthematerialprice,
-                              style: TextStyle(
-                                  color: AppColors(context).primaryColor,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ),
                         ],
 
                         loadingAdv == true
@@ -194,6 +177,14 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                                   return Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: SwitchListTile.adaptive(
+                                      subtitle: Text(
+                                        languageProvider.lang == "ar"
+                                            ? advantage?.subTitleAr ?? ""
+                                            : advantage?.subTitleEn ?? "",
+                                        style: TextStyle(
+                                          fontSize: AppSize(context).smallText2,
+                                        ),
+                                      ),
                                       activeColor:
                                           AppColors(context).primaryColor,
                                       secondary: SvgPicture.network(

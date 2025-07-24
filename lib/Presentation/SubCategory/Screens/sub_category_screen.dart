@@ -48,7 +48,7 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
                 crossAxisCount: 3,
                 mainAxisSpacing: 5,
                 crossAxisSpacing: 5,
-                childAspectRatio: .9),
+                childAspectRatio: .95),
             itemCount: widget.categories?.length,
             itemBuilder: (context, index) {
               return InkWell(
@@ -76,15 +76,15 @@ class _SubCategoryScreenState extends State<SubCategoryScreen> {
                         Padding(
                           padding: const EdgeInsets.all(0),
                           child: WidgetCachNetworkImage(
-                            height: AppSize(context).height * .09,
+                            height: AppSize(context).height * .08,
                             image: widget.categories?[index].icon ?? "",
                             boxFit: BoxFit.contain,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        // const SizedBox(height: 8),
                         SizedBox(
                           width: AppSize(context).width *
-                              .2, // Set appropriate width
+                              .25, // Set appropriate width
                           child: Text(
                             languageProvider.lang == "ar"
                                 ? widget.categories![index].titleAr ?? ""

@@ -110,7 +110,7 @@ class ComparisonScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              "${plan.price} ${appText.jODMonth}",
+                              "${plan.price} ${appText.jod} ${appText.jODMonth}",
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,

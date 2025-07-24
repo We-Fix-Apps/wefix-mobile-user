@@ -114,25 +114,40 @@ class _MyAppState extends State<MyApp> {
     );
 
     return MaterialApp(
-        builder: BotToastInit(),
-        navigatorObservers: [BotToastNavigatorObserver()],
-        navigatorKey: _navigatorKey,
-        debugShowCheckedModeBanner: false,
-        title: AppConstans.appName,
-        localizationsDelegates: const [
-          // AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        locale: Locale(languageProvider.lang ?? 'en'),
-        supportedLocales: language.allLocale,
-        theme: lightThemes,
-        darkTheme: darkTheme,
-        themeMode: ThemeMode.light,
-        home: SplashScreen(
-          userModel: widget.userModel,
-        ));
+      builder: (context, child) {
+        // Wrap BotToastInit first
+        final botToastBuilder = BotToastInit();
+
+        // Apply BotToast and clamp textScaleFactor
+        return botToastBuilder(
+          context,
+          MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaleFactor:
+                  MediaQuery.of(context).textScaleFactor.clamp(.7, 1),
+            ),
+            child: child!,
+          ),
+        );
+      },
+      navigatorObservers: [BotToastNavigatorObserver()],
+      navigatorKey: _navigatorKey,
+      debugShowCheckedModeBanner: false,
+      title: AppConstans.appName,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      locale: Locale(languageProvider.lang ?? 'en'),
+      supportedLocales: language.allLocale,
+      theme: lightThemes,
+      darkTheme: darkTheme,
+      themeMode: ThemeMode.light,
+      home: SplashScreen(
+        userModel: widget.userModel,
+      ),
+    );
   }
 
   Future<void> initConnectivity() async {

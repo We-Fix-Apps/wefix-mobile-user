@@ -41,14 +41,16 @@ class ReviewsApi {
       {required String token,
       String? phone,
       String? desc,
+      int? mainAnswer,
       List? customerQuestion}) async {
     try {
       final response = await HttpHelper.postData(
         query: EndPoints.addReview,
         data: {
           "PhoneNumber": phone,
-          "Description": desc,
-          "CustomerQuestion": customerQuestion
+          "Name": desc,
+          "CustomerReview": customerQuestion,
+          "MainAnswer": mainAnswer,
         },
         token: token,
       );

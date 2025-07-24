@@ -90,7 +90,7 @@ class _ServiceQuintityCardWidgetState extends State<ServiceQuintityCardWidget> {
                         Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [ 
+                          children: [
                             Row(
                               children: [
                                 widget.isSubsicribed == true
@@ -113,7 +113,8 @@ class _ServiceQuintityCardWidgetState extends State<ServiceQuintityCardWidget> {
                                 const SizedBox(
                                   width: 10,
                                 ),
-                                widget.isSubsicribed == false
+                                (widget.isSubsicribed == false ||
+                                        widget.isSubsicribed == null)
                                     ? SizedBox()
                                     : Text(
                                         "${AppText(context).jod} ${widget.services?.price}",

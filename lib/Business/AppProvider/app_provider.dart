@@ -26,17 +26,17 @@ class AppProvider with ChangeNotifier {
 
   DateTime? selectedDate = DateTime.now();
 
-  List<Map<String, dynamic>> _selectedAnswers = [];
+  List<Map<String, int>> _selectedAnswers = [];
 
   List<Map<String, dynamic>> get selectedAnswers => _selectedAnswers;
 
-  void selectAnswer(int questionId, String rating) {
+  void selectAnswer(int questionId, int rating) {
     final index =
         _selectedAnswers.indexWhere((a) => a["QuestionId"] == questionId);
     if (index != -1) {
-      _selectedAnswers[index]["Rating"] = rating;
+      _selectedAnswers[index]["Answer"] = rating;
     } else {
-      _selectedAnswers.add({"QuestionId": questionId, "Rating": rating});
+      _selectedAnswers.add({"QuestionId": questionId, "Answer": rating});
     }
     notifyListeners();
   }
@@ -56,12 +56,12 @@ class AppProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String? getRating(int questionId) {
+  int getRating(int questionId) {
     final found = _selectedAnswers.firstWhere(
       (a) => a["QuestionId"] == questionId,
-      orElse: () => {},
+      orElse: () => {"Answer": 0},
     );
-    return found["Rating"];
+    return found["Answer"] as int;
   }
 
   void clearAnswers() {
@@ -127,6 +127,13 @@ class AppProvider with ChangeNotifier {
 
   void saveAdvantages(Map<String, dynamic> info) {
     advantages = info;
+
+    log(advantages.toString());
+    notifyListeners();
+  }
+
+  void deleteAdv() {
+    advantages = {};
 
     log(advantages.toString());
     notifyListeners();

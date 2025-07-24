@@ -168,6 +168,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               addressName: "",
                             ),
                             const SizedBox(height: 20),
+
                             discountAmount != null
                                 ? const SizedBox()
                                 : subsicripeModel?.status == true
@@ -404,6 +405,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                     color: AppColors(context)
                                                         .primaryColor))),
                                       ],
+                                    ),
+                                  ),
+
+                            appProvider.isMaterialFromProvider == false
+                                ? SizedBox()
+                                : Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppColors(context)
+                                          .primaryColor
+                                          .withOpacity(0.3),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      AppText(context, isFunction: true)
+                                          .sincethematerialcostexceeds100JODanupfrontpaymentof50requiredWetouchwithyoutoconfirmthematerialprice,
+                                      style: TextStyle(
+                                          color:
+                                              AppColors(context).primaryColor,
+                                          fontWeight: FontWeight.w600),
                                     ),
                                   ),
 
@@ -814,6 +835,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       appointmentModel = value;
       log(promoCodeController.text);
       appProvider.clearRealState();
+      appProvider.deleteAdv();
 
       subsicripeModel?.status == false
           ? showDialog(

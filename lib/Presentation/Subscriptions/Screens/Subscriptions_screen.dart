@@ -35,7 +35,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       if (selectedIndexes.contains(index)) {
         selectedIndexes.remove(index);
       } else {
-        if (selectedIndexes.length < 2) {
+        if (selectedIndexes.length < 3) {
           selectedIndexes.add(index);
         }
       }
@@ -215,7 +215,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    if (selectedIndexes.length == 2)
+                    if (selectedIndexes.length >= 2)
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: CustomBotton(

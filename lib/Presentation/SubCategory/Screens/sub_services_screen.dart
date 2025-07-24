@@ -42,7 +42,7 @@ class SubServicesScreen extends StatefulWidget {
 
 class _SubServicesScreenState extends State<SubServicesScreen> {
   int selectedDate = 25;
-  String? selectedTime = "08:00 - 10:00 AM";
+  String? selectedTime;
   bool selectedGenderMale = true;
   bool selectedGenderFeMale = true;
   double totalPrice = 0.0;
@@ -599,137 +599,154 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
 
   Widget _dateTimeContent(StateSetter setModalState) {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    return Column(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          children: [
-            // Date Selection
-            CalenderWidget(
-              onday: () {
-                getTime().then((value) {
-                  setModalState(() {});
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            // Time Selection
-            loadingTime == true
-                ? Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: LoadingText(
-                      width: AppSize(context).width,
-                      height: AppSize(context).height * .04,
-                    ),
-                  )
-                : SizedBox(
-                    height: AppSize(context).height * .05,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: timeAppoitmentModel?.timesList.length,
-                      itemBuilder: (context, index) {
-                        final timeItem = timeAppoitmentModel?.timesList[index];
-                        final isSelected = timeItem?.time == selectedTime;
-                        final isDisabled = timeItem?.status == false;
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            children: [
+              // Date Selection
+              CalenderWidget(
+                onday: () {
+                  getTime().then((value) {
+                    setModalState(() {});
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
+              // Time Selection
+              loadingTime == true
+                  ? Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: LoadingText(
+                        width: AppSize(context).width,
+                        height: AppSize(context).height * .04,
+                      ),
+                    )
+                  : SizedBox(
+                      height: AppSize(context).height * .05,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: timeAppoitmentModel?.timesList.length,
+                        itemBuilder: (context, index) {
+                          final timeItem =
+                              timeAppoitmentModel?.timesList[index];
+                          final isSelected = timeItem?.time == selectedTime;
+                          final isDisabled = timeItem?.status == false;
 
-                        return GestureDetector(
-                          onTap: isDisabled
-                              ? null
-                              : () {
-                                  setModalState(() =>
-                                      selectedTime = timeItem?.time ?? "");
-                                  setState(() {}); // Reflect changes
-                                },
-                          child: Opacity(
-                            opacity:
-                                isDisabled ? 0.4 : 1.0, // visually greyed out
-                            child: Container(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              margin: const EdgeInsets.symmetric(horizontal: 6),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors(context).primaryColor
-                                    : Colors.grey.shade300,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                timeItem?.time ?? "",
-                                style: TextStyle(
+                          return GestureDetector(
+                            onTap: isDisabled
+                                ? null
+                                : () {
+                                    setModalState(() =>
+                                        selectedTime = timeItem?.time ?? "");
+                                    setState(() {}); // Reflect changes
+                                  },
+                            child: Opacity(
+                              opacity:
+                                  isDisabled ? 0.4 : 1.0, // visually greyed out
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 6),
+                                decoration: BoxDecoration(
                                   color: isSelected
-                                      ? AppColors.whiteColor1
-                                      : AppColors.blackColor1,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                      ? AppColors(context).primaryColor
+                                      : Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  timeItem?.time ?? "",
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? AppColors.whiteColor1
+                                        : AppColors.blackColor1,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: CustomBotton(
-            loading: loading6,
-            title: AppText(context, isFunction: true).continuesss,
-            onTap: () {
-              setModalState(() {
-                loading6 = true;
-              });
-              chaeckAvalable().then((value) {
-                setModalState(() {
-                  loading6 = false;
-                });
-                if (status == false) {
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: CustomBotton(
+              loading: loading6,
+              title: AppText(context, isFunction: true).continuesss,
+              onTap: () {
+                if (selectedTime != null) {
+                  setModalState(() {
+                    loading6 = true;
+                  });
+                  chaeckAvalable().then((value) {
+                    setModalState(() {
+                      loading6 = false;
+                    });
+                    if (status == false) {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return WidgetDialog(
+                              title: AppText(context, isFunction: true).warning,
+                              desc: AppText(context, isFunction: true)
+                                  .wearesorryapp,
+                              isError: true);
+                        },
+                      );
+                    } else {
+                      appProvider.saveAppoitmentInfo({
+                        "TicketTypeId": 3,
+                        "date": appProvider.selectedDate ?? DateTime.now(),
+                        "time": selectedTime,
+                        "services": serviceId,
+                        "totalPrice": totalPrice,
+                        "totalTickets": totalTickets,
+                        "gender": "Male",
+                      });
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        downToTop(UploadOptionsScreen(
+                          data: {
+                            "TicketTypeId": 3,
+                            "date": appProvider.selectedDate ?? DateTime.now(),
+                            "time": selectedTime,
+                            "services": services,
+                            "totalPrice": totalPrice,
+                            "totalTickets": totalTickets,
+                            "gender": "Male",
+                          },
+                        )),
+                      );
+                    }
+                  });
+                } else {
                   showDialog(
                     context: context,
                     builder: (context) {
                       return WidgetDialog(
-                          title: AppText(context, isFunction: true).warning,
-                          desc:
-                              AppText(context, isFunction: true).wearesorryapp,
-                          isError: true);
+                        title: AppText(context, isFunction: true).warning,
+                        desc: "Please select a time",
+                        isError: true,
+                      );
                     },
                   );
-                } else {
-                  appProvider.saveAppoitmentInfo({
-                    "TicketTypeId": 3,
-                    "date": appProvider.selectedDate ?? DateTime.now(),
-                    "time": selectedTime,
-                    "services": serviceId,
-                    "totalPrice": totalPrice,
-                    "totalTickets": totalTickets,
-                    "gender": "Male",
-                  });
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    downToTop(UploadOptionsScreen(
-                      data: {
-                        "TicketTypeId": 3,
-                        "date": appProvider.selectedDate ?? DateTime.now(),
-                        "time": selectedTime,
-                        "services": services,
-                        "totalPrice": totalPrice,
-                        "totalTickets": totalTickets,
-                        "gender": "Male",
-                      },
-                    )),
-                  );
                 }
-              });
-            },
+              },
+            ),
           ),
-        ),
-        // Continue Button
-      ],
+          // Continue Button
+        ],
+      ),
     );
   }
 

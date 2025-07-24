@@ -105,7 +105,7 @@ class _CalenderWidgetState extends State<CalenderWidget> {
               holiday.month == day.month &&
               holiday.day == day.day);
 
-          if (isFriday || isApiHoliday) {
+          if (isFriday) {
             return Stack(
               alignment: Alignment.topRight,
               children: [

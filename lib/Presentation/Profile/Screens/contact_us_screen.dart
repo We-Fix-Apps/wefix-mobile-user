@@ -231,7 +231,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                   ),
                   spacing,
                   _sectionContainer(
-                    title: AppText(context).submit,
+                    title: AppText(context).contactUs,
                     children: [
                       _textField(
                         AppText(context).fullName,

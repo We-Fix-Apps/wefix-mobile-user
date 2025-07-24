@@ -18,7 +18,6 @@ import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 
-
 class AddShippingAddress extends StatefulWidget {
   final bool? isFromEdit;
 
@@ -117,6 +116,7 @@ class _AddShippingAddressState extends State<AddShippingAddress> {
                 child: WidgetTextField(
                   "",
                   controller: appProvider.ad,
+                  readOnly: true,
                 ),
               ),
 

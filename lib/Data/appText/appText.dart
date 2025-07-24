@@ -28,10 +28,11 @@ class AppText {
   }
 
   String get home => getTranslation('home');
+  String get unlimited => getTranslation('unlimited');
+
   String get discount => getTranslation('discount');
-
+  String get startfrom => getTranslation('startfrom');
   String get interiorDesign => getTranslation('interiorDesign');
-
   String get requestRegistered => getTranslation('requestRegistered');
   String get visitScheduled => getTranslation('visitScheduled');
   String get readytoVisit => getTranslation('readytoVisit');
