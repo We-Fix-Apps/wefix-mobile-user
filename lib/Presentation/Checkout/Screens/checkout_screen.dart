@@ -1,8 +1,12 @@
 import 'dart:developer';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:googleapis_auth/googleapis_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/CreateOrder/create_order_api.dart';
@@ -14,6 +18,7 @@ import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/appitment_model.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Presentation/Address/Screens/address_screen.dart';
+import 'package:wefix/Presentation/Components/google_calender.dart';
 import 'package:wefix/Presentation/Profile/Components/usage_details_widget.dart';
 import 'package:wefix/Presentation/appointment/Components/location_map_widget.dart';
 import 'package:wefix/Presentation/Checkout/Components/coboun_widget.dart';
@@ -23,6 +28,17 @@ import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/auth/login_screen.dart';
 import 'package:wefix/layout_screen.dart';
+import 'package:googleapis/calendar/v3.dart' as calendar;
+
+// final GoogleSignIn _googleSignIn = GoogleSignIn(
+//   clientId:
+//       "167167966746-njsoq8k438u5q6015bkpaahsbmbl0onk.apps.googleusercontent.com",
+//   scopes: [
+//     'email',
+//     'https://www.googleapis.com/auth/calendar',
+//     'https://www.googleapis.com/auth/calendar.events',
+//   ],
+// );
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -35,6 +51,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   List<Placemark> placemarks = [];
   @override
   void initState() {
+    googleSignIn?.signOut();
     AppProvider appProvider = Provider.of(context, listen: false);
     setState(() {
       isFemale =
@@ -59,8 +76,125 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String selectedPayment = 'visa';
   double? discountAmount;
   double? totalafterDiscount;
+  static GoogleSignIn? googleSignIn = GoogleSignIn(
+    scopes: [
+      'email',
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/calendar.events',
+    ],
+  );
+  static GoogleSignInAccount? user;
 
   TextEditingController promoCodeController = TextEditingController();
+
+  signInWithGoogle() async {
+    try {
+      final googleUser = await googleSignIn!.signIn();
+      if (googleUser == null) return;
+      user = googleUser;
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      FirebaseAuth.instance.signInWithCredential(credential);
+      print("✅ Logged in: ${user?.email}");
+      return user;
+    } catch (e) {
+      print("❌ Sign-in error: $e");
+    }
+  }
+
+  Future<void> addAppointmentToGoogleCalendar({
+    required String date, // e.g. "2025-07-27"
+    required String time, // e.g. "12:00 - 02:00 PM"
+    String? address,
+    String? serviceName,
+  }) async {
+    final user = await signInWithGoogle();
+    if (user == null) {
+      print("❌ Google sign-in failed");
+      return;
+    }
+
+    final authHeaders = await user.authHeaders;
+    if (authHeaders == null) {
+      print("❌ Auth headers are null — missing scopes?");
+      return;
+    }
+
+    // Parse the date string to DateTime (date only)
+    final DateTime dateOnly = DateTime.parse(date); // 2025-07-27 00:00:00
+
+    // Parse the time range string "12:00 - 02:00 PM"
+    // We'll extract start and end time strings separately:
+    final timeParts = time.split('-').map((t) => t.trim()).toList();
+    if (timeParts.length != 2) {
+      print("❌ Time format incorrect. Expected format 'HH:mm - HH:mm AM/PM'");
+      return;
+    }
+
+    final String startTimeStr = timeParts[0]; // e.g. "12:00"
+    final String endTimeStr = timeParts[1]; // e.g. "02:00 PM"
+
+    // We need to combine with AM/PM part from endTimeStr, since startTimeStr misses it
+    // Extract AM/PM from endTimeStr
+    final ampmMatch =
+        RegExp(r'(AM|PM)', caseSensitive: false).firstMatch(endTimeStr);
+    final ampm = ampmMatch?.group(0) ?? 'AM';
+
+    final String startTimeWithAmPm = '$startTimeStr $ampm';
+    final String endTimeWithAmPm = endTimeStr;
+
+    DateTime parseTime(String timeStr) {
+      final format = DateFormat.jm();
+      final timeParsed = format.parse(timeStr);
+
+      return DateTime(dateOnly.year, dateOnly.month, dateOnly.day,
+          timeParsed.hour, timeParsed.minute);
+    }
+
+    final DateTime startDateTime = parseTime(startTimeWithAmPm);
+    final DateTime endDateTime = parseTime(endTimeWithAmPm);
+
+    final client = GoogleHttpClient(authHeaders);
+    final calendarApi = calendar.CalendarApi(client);
+
+    final event = calendar.Event(
+      summary: 'Appointment with WeFix',
+      colorId: "1",
+      reminders: calendar.EventReminders(
+        useDefault: false,
+        // overrides: [
+        //   calendar.EventReminder(
+        //     method: 'popup',
+        //     minutes: 30,
+        //   ),
+        //   calendar.EventReminder(
+        //     method: 'popup',
+        //     minutes: 5,
+        //   ),
+        // ],
+      ),
+      description: serviceName ?? 'Service Appointment',
+      start: calendar.EventDateTime(
+        dateTime: startDateTime,
+        timeZone: 'Asia/Amman',
+      ),
+      end: calendar.EventDateTime(
+        dateTime: endDateTime,
+        timeZone: 'Asia/Amman',
+      ),
+    );
+
+    try {
+      await calendarApi.events.insert(event, "primary");
+      print("✅ Appointment added to Google Calendar!");
+    } catch (e) {
+      print("❌ Failed to insert event: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -836,6 +970,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       log(promoCodeController.text);
       appProvider.clearRealState();
       appProvider.deleteAdv();
+      addAppointmentToGoogleCalendar(
+        date: appProvider.appoitmentInfo["date"].toString().substring(0, 10),
+        time: appProvider.appoitmentInfo["time"],
+      );
 
       subsicripeModel?.status == false
           ? showDialog(
@@ -1109,3 +1247,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 }
+
+// final GoogleSignIn _googleSignIn = GoogleSignIn(
+//   clientId:
+//       '1077927200941-bkg5gbdo53o35gmmrh7fthgao26rs3g3.apps.googleusercontent.com',
+//   scopes: ['https://www.googleapis.com/auth/calendar'],
+// );

@@ -41,48 +41,53 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyB_LVPok9glVmZEhOK5hQBH7lyG5lFqWAw',
-    appId: '1:115771809459:web:0a723871319ae8fe81dac6',
-    messagingSenderId: '115771809459',
-    projectId: 'wefix-16eac',
-    authDomain: 'wefix-16eac.firebaseapp.com',
-    storageBucket: 'wefix-16eac.firebasestorage.app',
-    measurementId: 'G-ZYFEK67V67',
+    apiKey: 'AIzaSyBW43W9PBRVOBIjVeS87V_u4UazlYsJrr0',
+    appId: '1:167167966746:web:85c20a877dc8bf70265ba3',
+    messagingSenderId: '167167966746',
+    projectId: 'wefix-1b290',
+    authDomain: 'wefix-1b290.firebaseapp.com',
+    storageBucket: 'wefix-1b290.firebasestorage.app',
+    measurementId: 'G-WNMB5576H7',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCyzC5293pQvw_z9zTp4JjJtu6ewVK-93Q',
-    appId: '1:115771809459:android:80c2c751d0e8b26481dac6',
-    messagingSenderId: '115771809459',
-    projectId: 'wefix-16eac',
-    storageBucket: 'wefix-16eac.firebasestorage.app',
+    apiKey: 'AIzaSyD0cymu6Jg3F6YemkAoOSudmYKJkV7L7XI',
+    appId: '1:167167966746:android:120dda2ff892529c265ba3',
+    messagingSenderId: '167167966746',
+    projectId: 'wefix-1b290',
+    storageBucket: 'wefix-1b290.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCTmnH46ulEEyd4syc4ebb6VoQf4dPYrNg',
-    appId: '1:115771809459:ios:77954a0d982115cb81dac6',
-    messagingSenderId: '115771809459',
-    projectId: 'wefix-16eac',
-    storageBucket: 'wefix-16eac.firebasestorage.app',
+    apiKey: 'AIzaSyCNtqj4MSmuBeGoU6yAVa-uX-J8Wx6_eXA',
+    appId: '1:167167966746:ios:0636fbb636433604265ba3',
+    messagingSenderId: '167167966746',
+    projectId: 'wefix-1b290',
+    storageBucket: 'wefix-1b290.firebasestorage.app',
+    androidClientId: '167167966746-00phnkj2k1n7992biiq3p31lpnarrgn8.apps.googleusercontent.com',
+    iosClientId: '167167966746-jn3etauvntmk5q390pj5ifsradn31225.apps.googleusercontent.com',
     iosBundleId: 'com.tenderjo.wefixapp',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCTmnH46ulEEyd4syc4ebb6VoQf4dPYrNg',
-    appId: '1:115771809459:ios:77954a0d982115cb81dac6',
-    messagingSenderId: '115771809459',
-    projectId: 'wefix-16eac',
-    storageBucket: 'wefix-16eac.firebasestorage.app',
+    apiKey: 'AIzaSyCNtqj4MSmuBeGoU6yAVa-uX-J8Wx6_eXA',
+    appId: '1:167167966746:ios:0636fbb636433604265ba3',
+    messagingSenderId: '167167966746',
+    projectId: 'wefix-1b290',
+    storageBucket: 'wefix-1b290.firebasestorage.app',
+    androidClientId: '167167966746-00phnkj2k1n7992biiq3p31lpnarrgn8.apps.googleusercontent.com',
+    iosClientId: '167167966746-jn3etauvntmk5q390pj5ifsradn31225.apps.googleusercontent.com',
     iosBundleId: 'com.tenderjo.wefixapp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyB_LVPok9glVmZEhOK5hQBH7lyG5lFqWAw',
-    appId: '1:115771809459:web:63157e970dafc57881dac6',
-    messagingSenderId: '115771809459',
-    projectId: 'wefix-16eac',
-    authDomain: 'wefix-16eac.firebaseapp.com',
-    storageBucket: 'wefix-16eac.firebasestorage.app',
-    measurementId: 'G-1PZPKX799Q',
+    apiKey: 'AIzaSyBW43W9PBRVOBIjVeS87V_u4UazlYsJrr0',
+    appId: '1:167167966746:web:c21580407350b73a265ba3',
+    messagingSenderId: '167167966746',
+    projectId: 'wefix-1b290',
+    authDomain: 'wefix-1b290.firebaseapp.com',
+    storageBucket: 'wefix-1b290.firebasestorage.app',
+    measurementId: 'G-TWF4BF3FN8',
   );
+
 }

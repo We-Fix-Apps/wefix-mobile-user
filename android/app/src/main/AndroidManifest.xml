@@ -48,6 +48,12 @@ xmlns:tools="http://schemas.android.com/tools"
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyB_gK5Q70PoYdlP08CH8NfTyWsePdvS9e0"/>
 
+           <meta-data
+  android:name="com.google.android.gms.auth.api.signin.CLIENT_ID"
+  android:value="167167966746-e2nfudppa88vegllekpqq7hev6hhe22v.apps.googleusercontent.com" />
+
+
+
             
     </application>
 </manifest>

@@ -81,96 +81,56 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        actions: const [
-          LanguageButton(),
-        ],
-        centerTitle: true,
-        titleTextStyle: TextStyle(
-            fontSize: AppSize(context).mediumText3,
-            color: AppColors.blackColor1,
-            fontWeight: FontWeight.bold),
-        title: Text(widget.title),
-      ),
-      body: (isLoading == true) && (loadingTime == true)
-          ? LinearProgressIndicator(
-              color: AppColors(context).primaryColor,
-              backgroundColor: AppColors.secoundryColor,
-            )
-          : subServiceModel?.service.length == 0
-              ? const EmptyScreen()
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      ListView.builder(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: subServiceModel?.service.length ?? 0,
-                        itemBuilder: (context, index) {
-                          return subServiceModel?.service[index].haveQuantity ==
-                                  true
-                              ? ServiceQuintityCardWidget(
-                                  isSubsicribed: subsicripeModel?.status,
-                                  increment: () {
-                                    setState(() {
-                                      subServiceModel!
-                                          .service[index].quantity++;
-                                      subsicripeModel?.status == false
-                                          ? totalPrice += subServiceModel!
-                                              .service[index].discountPrice
-                                          : totalPrice += subServiceModel!
-                                                  .service[index]
-                                                  .subscriptionPrice ??
-                                              0;
-                                      totalTickets += subServiceModel
-                                              ?.service[index].numOfTicket ??
-                                          0;
-                                    });
-
-                                    // Check if service already exists in the list
-                                    final existingIndex = serviceId.indexWhere(
-                                      (element) =>
-                                          element["ServiceId"] ==
-                                          subServiceModel!.service[index].id,
-                                    );
-
-                                    if (existingIndex != -1) {
-                                      // Update quantity if exists
-                                      serviceId[existingIndex]["quantity"] =
-                                          subServiceModel!
-                                              .service[index].quantity;
-                                    } else {
-                                      // Add new service if not exists
-                                      serviceId.add({
-                                        "ServiceId":
-                                            subServiceModel!.service[index].id,
-                                        "quantity": subServiceModel!
-                                            .service[index].quantity,
-                                      });
-                                    }
-
-                                    log(serviceId.toString());
-                                  },
-                                  decrement: () {
-                                    if (subServiceModel!
-                                            .service[index].quantity >
-                                        0) {
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          actions: const [
+            LanguageButton(),
+          ],
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+              fontSize: AppSize(context).mediumText3,
+              color: AppColors.blackColor1,
+              fontWeight: FontWeight.bold),
+          title: Text(widget.title),
+        ),
+        body: (isLoading == true) && (loadingTime == true)
+            ? LinearProgressIndicator(
+                color: AppColors(context).primaryColor,
+                backgroundColor: AppColors.secoundryColor,
+              )
+            : subServiceModel?.service.length == 0
+                ? const EmptyScreen()
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ListView.builder(
+                          physics: const NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
+                          itemCount: subServiceModel?.service.length ?? 0,
+                          itemBuilder: (context, index) {
+                            return subServiceModel
+                                        ?.service[index].haveQuantity ==
+                                    true
+                                ? ServiceQuintityCardWidget(
+                                    isSubsicribed: subsicripeModel?.status,
+                                    increment: () {
                                       setState(() {
                                         subServiceModel!
-                                            .service[index].quantity--;
+                                            .service[index].quantity++;
                                         subsicripeModel?.status == false
-                                            ? totalPrice -= subServiceModel!
+                                            ? totalPrice += subServiceModel!
                                                 .service[index].discountPrice
-                                            : totalPrice -= subServiceModel!
+                                            : totalPrice += subServiceModel!
                                                     .service[index]
                                                     .subscriptionPrice ??
                                                 0;
-                                        totalTickets -= subServiceModel
+                                        totalTickets += subServiceModel
                                                 ?.service[index].numOfTicket ??
                                             0;
                                       });
 
+                                      // Check if service already exists in the list
                                       final existingIndex =
                                           serviceId.indexWhere(
                                         (element) =>
@@ -179,65 +139,42 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                       );
 
                                       if (existingIndex != -1) {
-                                        if (subServiceModel!
-                                                .service[index].quantity ==
-                                            0) {
-                                          // Quantity reached 0, remove from list
-                                          serviceId.removeAt(existingIndex);
-                                        } else {
-                                          // Just update quantity
-                                          serviceId[existingIndex]["quantity"] =
-                                              subServiceModel!
-                                                  .service[index].quantity;
-                                        }
-                                      }
-                                    }
-
-                                    log(serviceId.toString());
-                                  },
-                                  count: subServiceModel!
-                                          .service[index].quantity ??
-                                      0,
-                                  isAddedd: subServiceModel!
-                                      .service[index].isSelected,
-                                  services: subServiceModel!.service[index],
-                                  onTap: () {
-                                    log(services.toString());
-                                  },
-                                )
-                              : ServiceCardWidget(
-                                  isSubsicribed: subsicripeModel?.status,
-                                  isAddedd: subServiceModel!
-                                      .service[index].isSelected,
-                                  services: subServiceModel!.service[index],
-                                  onTap: () {
-                                    setState(() {
-                                      subServiceModel!
-                                              .service[index].isSelected =
-                                          !subServiceModel!
-                                              .service[index].isSelected;
-
-                                      if (subServiceModel!
-                                              .service[index].isSelected ==
-                                          true) {
+                                        // Update quantity if exists
+                                        serviceId[existingIndex]["quantity"] =
+                                            subServiceModel!
+                                                .service[index].quantity;
+                                      } else {
+                                        // Add new service if not exists
                                         serviceId.add({
                                           "ServiceId": subServiceModel!
                                               .service[index].id,
-                                          "quantity": 1,
+                                          "quantity": subServiceModel!
+                                              .service[index].quantity,
                                         });
-                                        subsicripeModel?.status == false
-                                            ? totalPrice += subServiceModel!
-                                                .service[index].discountPrice
-                                            : totalPrice += subServiceModel!
-                                                    .service[index]
-                                                    .subscriptionPrice ??
-                                                0;
+                                      }
 
-                                        totalTickets += subServiceModel
-                                                ?.service[index].numOfTicket ??
-                                            0;
-                                        // Add the service price
-                                      } else {
+                                      log(serviceId.toString());
+                                    },
+                                    decrement: () {
+                                      if (subServiceModel!
+                                              .service[index].quantity >
+                                          0) {
+                                        setState(() {
+                                          subServiceModel!
+                                              .service[index].quantity--;
+                                          subsicripeModel?.status == false
+                                              ? totalPrice -= subServiceModel!
+                                                  .service[index].discountPrice
+                                              : totalPrice -= subServiceModel!
+                                                      .service[index]
+                                                      .subscriptionPrice ??
+                                                  0;
+                                          totalTickets -= subServiceModel
+                                                  ?.service[index]
+                                                  .numOfTicket ??
+                                              0;
+                                        });
+
                                         final existingIndex =
                                             serviceId.indexWhere(
                                           (element) =>
@@ -246,77 +183,149 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                   .service[index].id,
                                         );
 
-                                        serviceId.removeAt(existingIndex);
-
-                                        subsicripeModel?.status == false
-                                            ? totalPrice -= subServiceModel!
-                                                .service[index].discountPrice
-                                            : totalPrice -= subServiceModel!
-                                                    .service[index]
-                                                    .subscriptionPrice ??
-                                                0;
-
-                                        totalTickets -= subServiceModel
-                                                ?.service[index].numOfTicket ??
-                                            0;
-                                        // Remove the service price
+                                        if (existingIndex != -1) {
+                                          if (subServiceModel!
+                                                  .service[index].quantity ==
+                                              0) {
+                                            // Quantity reached 0, remove from list
+                                            serviceId.removeAt(existingIndex);
+                                          } else {
+                                            // Just update quantity
+                                            serviceId[existingIndex]
+                                                    ["quantity"] =
+                                                subServiceModel!
+                                                    .service[index].quantity;
+                                          }
+                                        }
                                       }
-                                      isAddedd = subServiceModel!
-                                          .service[index].isSelected;
-                                    });
-                                    log(services.toString());
-                                  },
-                                );
-                        },
-                      ),
-                    ],
+
+                                      log(serviceId.toString());
+                                    },
+                                    count: subServiceModel!
+                                            .service[index].quantity ??
+                                        0,
+                                    isAddedd: subServiceModel!
+                                        .service[index].isSelected,
+                                    services: subServiceModel!.service[index],
+                                    onTap: () {
+                                      log(services.toString());
+                                    },
+                                  )
+                                : ServiceCardWidget(
+                                    isSubsicribed: subsicripeModel?.status,
+                                    isAddedd: subServiceModel!
+                                        .service[index].isSelected,
+                                    services: subServiceModel!.service[index],
+                                    onTap: () {
+                                      setState(() {
+                                        subServiceModel!
+                                                .service[index].isSelected =
+                                            !subServiceModel!
+                                                .service[index].isSelected;
+
+                                        if (subServiceModel!
+                                                .service[index].isSelected ==
+                                            true) {
+                                          serviceId.add({
+                                            "ServiceId": subServiceModel!
+                                                .service[index].id,
+                                            "quantity": 1,
+                                          });
+                                          subsicripeModel?.status == false
+                                              ? totalPrice += subServiceModel!
+                                                  .service[index].discountPrice
+                                              : totalPrice += subServiceModel!
+                                                      .service[index]
+                                                      .subscriptionPrice ??
+                                                  0;
+
+                                          totalTickets += subServiceModel
+                                                  ?.service[index]
+                                                  .numOfTicket ??
+                                              0;
+                                          // Add the service price
+                                        } else {
+                                          final existingIndex =
+                                              serviceId.indexWhere(
+                                            (element) =>
+                                                element["ServiceId"] ==
+                                                subServiceModel!
+                                                    .service[index].id,
+                                          );
+
+                                          serviceId.removeAt(existingIndex);
+
+                                          subsicripeModel?.status == false
+                                              ? totalPrice -= subServiceModel!
+                                                  .service[index].discountPrice
+                                              : totalPrice -= subServiceModel!
+                                                      .service[index]
+                                                      .subscriptionPrice ??
+                                                  0;
+
+                                          totalTickets -= subServiceModel
+                                                  ?.service[index]
+                                                  .numOfTicket ??
+                                              0;
+                                          // Remove the service price
+                                        }
+                                        isAddedd = subServiceModel!
+                                            .service[index].isSelected;
+                                      });
+                                      log(services.toString());
+                                    },
+                                  );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-      bottomNavigationBar: serviceId.isEmpty
-          ? const SizedBox()
-          : Material(
-              elevation: 20,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SizedBox(
-                  height: AppSize(context).height * .1,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            AppText(context).total,
-                            style: TextStyle(
-                              fontSize: AppSize(context).smallText1,
-                              color: AppColors.secoundryColor,
+        bottomNavigationBar: serviceId.isEmpty
+            ? const SizedBox()
+            : Material(
+                elevation: 20,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: SizedBox(
+                    height: AppSize(context).height * .1,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              AppText(context).total,
+                              style: TextStyle(
+                                fontSize: AppSize(context).smallText1,
+                                color: AppColors.secoundryColor,
+                              ),
                             ),
-                          ),
-                          Text(
-                            "${AppText(context).jod} ${totalPrice.toStringAsFixed(2)}",
-                            style: TextStyle(
-                              fontSize: AppSize(context).smallText2,
-                              color: AppColors(context).primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        ],
-                      ),
-                      CustomBotton(
-                        title: AppText(context).continuesss,
-                        width: AppSize(context).width * .3,
-                        onTap: () {
-                          showBottomSheetFun();
-                        },
-                      )
-                    ],
+                            Text(
+                              "${AppText(context).jod} ${totalPrice.toStringAsFixed(2)}",
+                              style: TextStyle(
+                                fontSize: AppSize(context).smallText2,
+                                color: AppColors(context).primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          ],
+                        ),
+                        CustomBotton(
+                          title: AppText(context).continuesss,
+                          width: AppSize(context).width * .3,
+                          onTap: () {
+                            showBottomSheetFun();
+                          },
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -332,7 +341,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
       ),
       builder: (context) {
         return SizedBox(
-          height: AppSize(context).height * .8,
+          height: AppSize(context).height * .9,
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setModalState) {
               int selectedTabIndex = 0; // track selected tab

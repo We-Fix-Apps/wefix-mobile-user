@@ -1,26 +1,67 @@
 {
   "project_info": {
-    "project_number": "115771809459",
-    "project_id": "wefix-16eac",
-    "storage_bucket": "wefix-16eac.firebasestorage.app"
+    "project_number": "167167966746",
+    "project_id": "wefix-1b290",
+    "storage_bucket": "wefix-1b290.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:115771809459:android:80c2c751d0e8b26481dac6",
+        "mobilesdk_app_id": "1:167167966746:android:120dda2ff892529c265ba3",
         "android_client_info": {
           "package_name": "com.tenderjo.wefixapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "167167966746-00phnkj2k1n7992biiq3p31lpnarrgn8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tenderjo.wefixapp",
+            "certificate_hash": "64eac334008a9ac735807c0c6b70414882ede196"
+          }
+        },
+        {
+          "client_id": "167167966746-e2nfudppa88vegllekpqq7hev6hhe22v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tenderjo.wefixapp",
+            "certificate_hash": "a17f145ed56bf81a6dd3f564910dede8585b0396"
+          }
+        },
+        {
+          "client_id": "167167966746-sgbs9c80cocgaj80pvpf94md1nph7al8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tenderjo.wefixapp",
+            "certificate_hash": "49a8ca6d4111e2052bbf7c47f6e57007335aa829"
+          }
+        },
+        {
+          "client_id": "167167966746-njsoq8k438u5q6015bkpaahsbmbl0onk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyCyzC5293pQvw_z9zTp4JjJtu6ewVK-93Q"
+          "current_key": "AIzaSyD0cymu6Jg3F6YemkAoOSudmYKJkV7L7XI"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "167167966746-njsoq8k438u5q6015bkpaahsbmbl0onk.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "167167966746-jn3etauvntmk5q390pj5ifsradn31225.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tenderjo.wefixapp"
+              }
+            }
+          ]
         }
       }
     }
