@@ -48,7 +48,7 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
   bool? someUpdate;
   String? image;
   File? imageFile;
-  final serverURL = 'https://wefixApi.oneit.website/ChatHub';
+  final serverURL = 'https://api.wefixjo.com/ChatHub';
   // final serverURL = 'https://apitestwefix.oneit.website/ChatHub';
 
   HubConnection? hubConnection;

@@ -1,5 +1,5 @@
 class EndPoints {
-  static String baseUrl = 'https://wefixApi.oneit.website/';
+  static String baseUrl = 'https://api.wefixjo.com/';
   // static String baseUrl = 'https://apitestwefix.oneit.website/';
 
   // * Authantication

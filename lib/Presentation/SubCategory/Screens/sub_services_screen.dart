@@ -1,9 +1,13 @@
+import 'dart:convert';
 import 'dart:developer';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Home/home_apis.dart';
+import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
@@ -12,6 +16,7 @@ import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/sub_cat_model.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Data/model/time_appointment_model.dart';
+import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Components/empty_screen.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Loading/loading_text.dart';
@@ -25,6 +30,10 @@ import 'package:wefix/Presentation/SubCategory/Components/calender_widget.dart';
 import 'package:wefix/Presentation/SubCategory/Components/service_card_widget.dart';
 import 'package:wefix/Presentation/SubCategory/Components/service_quintity_card.dart';
 import 'package:wefix/layout_screen.dart';
+import 'package:wefix/main.dart';
+
+import '../../../Data/Helper/cache_helper.dart';
+import '../../Components/tour_widget.dart';
 
 class SubServicesScreen extends StatefulWidget {
   final String title;
@@ -69,12 +78,64 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
   int count = 0;
 
   SubServiceModel? subServiceModel;
+  late TutorialCoachMark tutorialCoachMark;
+
+  final List<GlobalKey<State<StatefulWidget>>> keyButtons = [
+    GlobalKey<State<StatefulWidget>>(),
+  ];
+
+  List<Map> contents = [
+    {
+      "title": AppText(navigatorKey.currentState!.context).selectDateTime,
+      "description":
+          AppText(navigatorKey.currentState!.context).nowYouCanSelect,
+      "image": "assets/image/date.png",
+      "isTop": true
+    },
+  ];
+
+  final List<GlobalKey<State<StatefulWidget>>> keyButton = [
+    GlobalKey<State<StatefulWidget>>(),
+  ];
+
+  List<Map> content = [
+    {
+      "title": AppText(navigatorKey.currentState!.context).addYourService,
+      "description": AppText(navigatorKey.currentState!.context).nowyoucanadd,
+      "image": "assets/image/icon_logo.png",
+      "isTop": false
+    },
+    // {
+    //   "title": "Select Date & Time",
+    //   "description":
+    //       "Now you can select the date & time that suit you to visit our technician",
+    //   "image": "assets/image/date.png",
+    //   "isTop": true
+    // },
+  ];
 
   @override
   void initState() {
     getTime();
     getSubCat();
     isSubsicribed();
+    // 👇 create & show tutorial only once
+
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CustomeTutorialCoachMark.createTutorial(keyButton, content);
+        Future.delayed(const Duration(seconds: 2), () {
+          Map showTour =
+              json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+          CustomeTutorialCoachMark.showTutorial(context,
+              isShow: showTour["subCategory"] ?? true);
+
+          log(showTour.toString());
+        });
+      });
+    } catch (e) {
+      log(e.toString());
+    }
 
     super.initState();
   }
@@ -109,10 +170,12 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                           shrinkWrap: true,
                           itemCount: subServiceModel?.service.length ?? 0,
                           itemBuilder: (context, index) {
+                            final key = index == 0 ? keyButton[0] : null;
                             return subServiceModel
                                         ?.service[index].haveQuantity ==
                                     true
                                 ? ServiceQuintityCardWidget(
+                                    // key: index == 0 ? keyButton11 : null,
                                     isSubsicribed: subsicripeModel?.status,
                                     increment: () {
                                       setState(() {
@@ -211,69 +274,108 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                       log(services.toString());
                                     },
                                   )
-                                : ServiceCardWidget(
-                                    isSubsicribed: subsicripeModel?.status,
-                                    isAddedd: subServiceModel!
-                                        .service[index].isSelected,
-                                    services: subServiceModel!.service[index],
-                                    onTap: () {
-                                      setState(() {
-                                        subServiceModel!
-                                                .service[index].isSelected =
-                                            !subServiceModel!
-                                                .service[index].isSelected;
-
-                                        if (subServiceModel!
-                                                .service[index].isSelected ==
-                                            true) {
-                                          serviceId.add({
-                                            "ServiceId": subServiceModel!
-                                                .service[index].id,
-                                            "quantity": 1,
+                                : Container(
+                                    key: key,
+                                    child: ServiceCardWidget(
+                                      isSubsicribed: subsicripeModel?.status,
+                                      isAddedd: subServiceModel!
+                                          .service[index].isSelected,
+                                      services: subServiceModel!.service[index],
+                                      onTap: () {
+                                        try {
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) {
+                                            CustomeTutorialCoachMark
+                                                .createTutorial(
+                                                    keyButtons, contents);
+                                            Future.delayed(
+                                                const Duration(seconds: 0), () {
+                                              Map showTour = json.decode(
+                                                  CacheHelper.getData(
+                                                      key: CacheHelper
+                                                          .showTour));
+                                              CustomeTutorialCoachMark
+                                                  .showTutorial(context,
+                                                      isShow: showTour[
+                                                              "subCategory"] ??
+                                                          true);
+                                              setState(() {
+                                                showTour["subCategory"] = false;
+                                              });
+                                              CacheHelper.saveData(
+                                                  key: CacheHelper.showTour,
+                                                  value: json.encode(showTour));
+                                              log(showTour.toString());
+                                            });
                                           });
-                                          subsicripeModel?.status == false
-                                              ? totalPrice += subServiceModel!
-                                                  .service[index].discountPrice
-                                              : totalPrice += subServiceModel!
-                                                      .service[index]
-                                                      .subscriptionPrice ??
-                                                  0;
-
-                                          totalTickets += subServiceModel
-                                                  ?.service[index]
-                                                  .numOfTicket ??
-                                              0;
-                                          // Add the service price
-                                        } else {
-                                          final existingIndex =
-                                              serviceId.indexWhere(
-                                            (element) =>
-                                                element["ServiceId"] ==
-                                                subServiceModel!
-                                                    .service[index].id,
-                                          );
-
-                                          serviceId.removeAt(existingIndex);
-
-                                          subsicripeModel?.status == false
-                                              ? totalPrice -= subServiceModel!
-                                                  .service[index].discountPrice
-                                              : totalPrice -= subServiceModel!
-                                                      .service[index]
-                                                      .subscriptionPrice ??
-                                                  0;
-
-                                          totalTickets -= subServiceModel
-                                                  ?.service[index]
-                                                  .numOfTicket ??
-                                              0;
-                                          // Remove the service price
+                                        } catch (e) {
+                                          log(e.toString());
                                         }
-                                        isAddedd = subServiceModel!
-                                            .service[index].isSelected;
-                                      });
-                                      log(services.toString());
-                                    },
+
+                                        // createTutorial(_createTargets2());
+                                        // Future.delayed(
+                                        //     const Duration(seconds: 0),
+                                        //     showTutorial);
+                                        setState(() {
+                                          subServiceModel!
+                                                  .service[index].isSelected =
+                                              !subServiceModel!
+                                                  .service[index].isSelected;
+
+                                          if (subServiceModel!
+                                                  .service[index].isSelected ==
+                                              true) {
+                                            serviceId.add({
+                                              "ServiceId": subServiceModel!
+                                                  .service[index].id,
+                                              "quantity": 1,
+                                            });
+                                            subsicripeModel?.status == false
+                                                ? totalPrice += subServiceModel!
+                                                    .service[index]
+                                                    .discountPrice
+                                                : totalPrice += subServiceModel!
+                                                        .service[index]
+                                                        .subscriptionPrice ??
+                                                    0;
+
+                                            totalTickets += subServiceModel
+                                                    ?.service[index]
+                                                    .numOfTicket ??
+                                                0;
+                                            // Add the service price
+                                          } else {
+                                            final existingIndex =
+                                                serviceId.indexWhere(
+                                              (element) =>
+                                                  element["ServiceId"] ==
+                                                  subServiceModel!
+                                                      .service[index].id,
+                                            );
+
+                                            serviceId.removeAt(existingIndex);
+
+                                            subsicripeModel?.status == false
+                                                ? totalPrice -= subServiceModel!
+                                                    .service[index]
+                                                    .discountPrice
+                                                : totalPrice -= subServiceModel!
+                                                        .service[index]
+                                                        .subscriptionPrice ??
+                                                    0;
+
+                                            totalTickets -= subServiceModel
+                                                    ?.service[index]
+                                                    .numOfTicket ??
+                                                0;
+                                            // Remove the service price
+                                          }
+                                          isAddedd = subServiceModel!
+                                              .service[index].isSelected;
+                                        });
+                                        log(services.toString());
+                                      },
+                                    ),
                                   );
                           },
                         ),
@@ -313,12 +415,15 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                             )
                           ],
                         ),
-                        CustomBotton(
-                          title: AppText(context).continuesss,
-                          width: AppSize(context).width * .3,
-                          onTap: () {
-                            showBottomSheetFun();
-                          },
+                        Container(
+                          key: keyButtons[0],
+                          child: CustomBotton(
+                            title: AppText(context).continuesss,
+                            width: AppSize(context).width * .3,
+                            onTap: () {
+                              showBottomSheetFun();
+                            },
+                          ),
                         )
                       ],
                     ),
@@ -618,7 +723,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                       onTap: () {
                         Navigator.pushAndRemoveUntil(
                             context,
-                            downToTop(HomeLayout(
+                            downToTop(const HomeLayout(
                               index: 2,
                             )),
                             (route) => false);
@@ -648,6 +753,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
   }
 
   Widget _dateTimeContent(StateSetter setModalState) {
+    LanguageProvider languageProvider = Provider.of<LanguageProvider>(context);
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     return SafeArea(
       child: Column(
@@ -709,7 +815,8 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  timeItem?.time ?? "",
+                                  formatTime(timeItem?.time,
+                                      languageProvider.lang ?? "en"),
                                   style: TextStyle(
                                     color: isSelected
                                         ? AppColors.whiteColor1
@@ -785,7 +892,8 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                     builder: (context) {
                       return WidgetDialog(
                         title: AppText(context, isFunction: true).warning,
-                        desc: "Please select a time",
+                        desc:
+                            AppText(context, isFunction: true).pleaseSelectTime,
                         isError: true,
                       );
                     },
@@ -905,6 +1013,23 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
         });
       },
     );
+  }
+
+  String formatTime(String? time, String lang) {
+    if (time == null) return "";
+
+    if (lang == "ar") {
+      if (time.contains("AM")) {
+        return time.replaceAll("AM", "صباحاً");
+      } else if (time.contains("PM")) {
+        return time.replaceAll("PM", "مساءً");
+      }
+    } else {
+      // return the original time for other languages
+      return time;
+    }
+
+    return time;
   }
 
   Future getSubCat() async {

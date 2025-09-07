@@ -2,7 +2,7 @@ name: wefix
 description: A new Flutter project.
 publish_to: "none"
 
-version: 1.0.9+1
+version: 1.1.1+1
 
 environment:
   sdk: ">=2.17.0 <3.0.0"
@@ -85,8 +85,11 @@ dependencies:
   googleapis_auth: ^1.4.0
   google_sign_in: ^5.0.0
   showcaseview: ^4.0.1
+  webview_flutter: ^4.5.0
+  sms_autofill: ^2.4.1
+  # tutorial_coach_mark: ^1.2.9
 
-  # tutorial_coach_mark: ^1.2.13
+  tutorial_coach_mark: ^1.2.11
   # flutter_widget_from_html: ^0.15.3
   # jitsi_meet_flutter_sdk: ^10.0.0
 

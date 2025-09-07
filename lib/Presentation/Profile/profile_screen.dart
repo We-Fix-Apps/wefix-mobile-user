@@ -9,6 +9,7 @@ import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Profile/Components/saving_widget.dart';
+import 'package:wefix/Presentation/Profile/Components/web_view_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/contract_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/proparity_screen.dart';
@@ -116,8 +117,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () {
                   Navigator.push(
                       context,
-                      rightToLeft(const ContentScreen(
-                        isPrivacy: true,
+                      rightToLeft(WebviewScreen(
+                        url: 'https://wefixjo.com/Privacy.html',
+                        title: AppText(context, isFunction: true).privacyPolicy,
                       )));
                 },
               ),
@@ -127,8 +129,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () {
                   Navigator.push(
                       context,
-                      rightToLeft(const ContentScreen(
-                        isTerms: true,
+                      rightToLeft(WebviewScreen(
+                        url: 'https://wefixjo.com/Terms-Conditions.html',
+                        title: AppText(context, isFunction: true)
+                            .termsAndConditions,
                       )));
                 },
               ),

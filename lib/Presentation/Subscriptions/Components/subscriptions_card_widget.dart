@@ -451,7 +451,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         _paymentOption(
                             "visa",
                             AppText(context, isFunction: true).visa,
-                            "assets/icon/visa.svg",
+                            "assets/icon/bank-card_17727858.svg",
                             set),
                         _paymentOption(
                             "qlic",
@@ -474,6 +474,13 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                             "assets/icon/delay_3360328.svg",
                             set),
                         const Divider(),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: Image.asset(
+                            "assets/icon/verified.png",
+                            width: 170,
+                          ),
+                        ),
                         const SizedBox(height: 20),
                         CustomBotton(
                           title: AppText(context).continuesss,

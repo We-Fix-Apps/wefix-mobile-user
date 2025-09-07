@@ -22,8 +22,11 @@ import 'package:wefix/layout_screen.dart';
 class DateTimeWidget extends StatefulWidget {
   final String? date;
   final String? time;
+  final GlobalKey? dateKey;
+  final GlobalKey? featureKey;
 
-  const DateTimeWidget({super.key, this.date, this.time});
+  const DateTimeWidget(
+      {super.key, this.date, this.time, this.dateKey, this.featureKey});
 
   @override
   State<DateTimeWidget> createState() => _DateTimeWidgetState();
@@ -88,6 +91,7 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Container(
+              key: widget.dateKey,
               width: AppSize(context).width,
               height: AppSize(context).height * .07,
               decoration: BoxDecoration(
@@ -125,109 +129,119 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
         const Divider(
           color: AppColors.backgroundColor,
         ),
-        Row(
-          children: [
-            Text(
-              "👨‍🔧 ${AppText(context).technicianGender}",
-              style: TextStyle(
-                fontSize: AppSize(context).smallText1,
-                fontWeight: FontWeight.bold,
+        Container(
+          key: widget.featureKey,
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Text(
+                    "👨‍🔧 ${AppText(context).technicianGender}",
+                    style: TextStyle(
+                      fontSize: AppSize(context).smallText1,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  Tooltip(
+                    triggerMode: TooltipTriggerMode.tap,
+                    message: ((subsicripeModel?.numberOnFemalUse ?? 0) > 0)
+                        ? AppText(context).youwillbechargedTicketextra
+                        : AppText(context).youwillbecharged10JODextra,
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: AppColors.greyColor1,
+                      size: 15,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(
-              width: 5,
-            ),
-            Tooltip(
-              triggerMode: TooltipTriggerMode.tap,
-              message: ((subsicripeModel?.numberOnFemalUse ?? 0) > 0)
-                  ? AppText(context).youwillbechargedTicketextra
-                  : AppText(context).youwillbecharged10JODextra,
-              child: const Icon(
-                Icons.info_outline,
-                color: AppColors.greyColor1,
-                size: 15,
+              const SizedBox(
+                height: 5,
               ),
-            ),
-          ],
-        ),
-        const SizedBox(
-          height: 5,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SwitchListTile.adaptive(
-            activeColor: AppColors(context).primaryColor,
-            secondary: Image.asset(
-              "assets/image/Layer 12.png",
-              height: AppSize(context).height * .05,
-              width: AppSize(context).width * .1,
-            ),
-            title: Text(
-              AppText(context).needafemaletechnicianforsupport,
-              style: TextStyle(
-                fontSize: AppSize(context).smallText2,
-              ),
-            ),
-            subtitle: Text(
-              ((subsicripeModel?.numberOnFemalUse ?? 0) > 0)
-                  ? AppText(context).youwillbechargedTicketextra
-                  : AppText(context).youwillbecharged10JODextra,
-              style: TextStyle(
-                fontSize: AppSize(context).smallText3,
-                color: AppColors.greyColor2,
-              ),
-            ),
-            inactiveThumbColor: AppColors.whiteColor1,
-            inactiveTrackColor: AppColors.greyColor1,
-            overlayColor: MaterialStateProperty.all(
-              AppColors(context).primaryColor.withOpacity(.2),
-            ),
-            value: isFemale ?? false,
-            onChanged: (value) {
-              // if (subsicripeModel?.status == true) {
-              //   if ((subsicripeModel?.numberOnFemalUse ?? 0) <= 0) {
-              //     showUpgradeDialog(context);
-              //   } else {
-              //     setState(() {
-              //       isFemale = value;
-              //       appProvider.saveAppoitmentInfo({
-              //         "TicketTypeId":
-              //             appProvider.appoitmentInfo["TicketTypeId"],
-              //         "gender": isFemale == false ? "Male" : "Female",
-              //         "date": appProvider.selectedDate ?? DateTime.now(),
-              //         "time":
-              //             selectedTime ?? appProvider.appoitmentInfo["time"],
-              //         "services":
-              //             services ?? appProvider.appoitmentInfo["services"],
-              //         "totalPrice": totalPrice ??
-              //             appProvider.appoitmentInfo["totalPrice"],
-              //         "totalTickets": appProvider.appoitmentInfo["totalTickets"]
-              //       });
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SwitchListTile.adaptive(
+                  activeColor: AppColors(context).primaryColor,
+                  secondary: Image.asset(
+                    "assets/image/Layer 12.png",
+                    height: AppSize(context).height * .05,
+                    width: AppSize(context).width * .1,
+                  ),
+                  title: Text(
+                    AppText(context).needafemaletechnicianforsupport,
+                    style: TextStyle(
+                      fontSize: AppSize(context).smallText2,
+                    ),
+                  ),
+                  subtitle: Text(
+                    ((subsicripeModel?.numberOnFemalUse ?? 0) > 0)
+                        ? AppText(context).youwillbechargedTicketextra
+                        : AppText(context).youwillbecharged10JODextra,
+                    style: TextStyle(
+                      fontSize: AppSize(context).smallText3,
+                      color: AppColors.greyColor2,
+                    ),
+                  ),
+                  inactiveThumbColor: AppColors.whiteColor1,
+                  inactiveTrackColor: AppColors.greyColor1,
+                  overlayColor: MaterialStateProperty.all(
+                    AppColors(context).primaryColor.withOpacity(.2),
+                  ),
+                  value: isFemale ?? false,
+                  onChanged: (value) {
+                    // if (subsicripeModel?.status == true) {
+                    //   if ((subsicripeModel?.numberOnFemalUse ?? 0) <= 0) {
+                    //     showUpgradeDialog(context);
+                    //   } else {
+                    //     setState(() {
+                    //       isFemale = value;
+                    //       appProvider.saveAppoitmentInfo({
+                    //         "TicketTypeId":
+                    //             appProvider.appoitmentInfo["TicketTypeId"],
+                    //         "gender": isFemale == false ? "Male" : "Female",
+                    //         "date": appProvider.selectedDate ?? DateTime.now(),
+                    //         "time":
+                    //             selectedTime ?? appProvider.appoitmentInfo["time"],
+                    //         "services":
+                    //             services ?? appProvider.appoitmentInfo["services"],
+                    //         "totalPrice": totalPrice ??
+                    //             appProvider.appoitmentInfo["totalPrice"],
+                    //         "totalTickets": appProvider.appoitmentInfo["totalTickets"]
+                    //       });
 
-              //       log(appProvider.appoitmentInfo.toString());
-              //     });
-              //   }
-              // }
+                    //       log(appProvider.appoitmentInfo.toString());
+                    //     });
+                    //   }
+                    // }
 
-              setState(() {
-                isFemale = value;
-                appProvider.saveAppoitmentInfo({
-                  "TicketTypeId": appProvider.appoitmentInfo["TicketTypeId"],
-                  "gender": isFemale == false ? "Male" : "Female",
-                  "date": appProvider.selectedDate ?? DateTime.now(),
-                  "time": selectedTime ?? appProvider.appoitmentInfo["time"],
-                  "services":
-                      services ?? appProvider.appoitmentInfo["services"],
-                  "totalPrice":
-                      totalPrice ?? appProvider.appoitmentInfo["totalPrice"],
-                  "totalTickets": appProvider.appoitmentInfo["totalTickets"]
-                });
+                    setState(() {
+                      isFemale = value;
+                      appProvider.saveAppoitmentInfo({
+                        "TicketTypeId":
+                            appProvider.appoitmentInfo["TicketTypeId"],
+                        "gender": isFemale == false ? "Male" : "Female",
+                        "date": appProvider.selectedDate ?? DateTime.now(),
+                        "time":
+                            selectedTime ?? appProvider.appoitmentInfo["time"],
+                        "services":
+                            services ?? appProvider.appoitmentInfo["services"],
+                        "totalPrice": totalPrice ??
+                            appProvider.appoitmentInfo["totalPrice"],
+                        "totalTickets":
+                            appProvider.appoitmentInfo["totalTickets"]
+                      });
 
-                log(appProvider.appoitmentInfo.toString());
-              });
-            },
+                      log(appProvider.appoitmentInfo.toString());
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
-        ),
+        )
 
         // Padding(
         //     padding: const EdgeInsets.all(8.0),
@@ -268,6 +282,7 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
         //         });
         //       },
         //     )),
+        ,
         const SizedBox(
           height: 5,
         ),

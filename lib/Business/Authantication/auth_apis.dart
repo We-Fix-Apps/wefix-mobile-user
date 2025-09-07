@@ -47,6 +47,7 @@ class Authantication {
     required String name,
     required String password,
     required String phone,
+    required String lastname,
     required String address,
     required double lat,
     required double long,
@@ -62,8 +63,9 @@ class Authantication {
           "Email": email,
           "Password": password,
           "Address": address,
-          "lat" : lat, 
-          "long" : long,
+          "LastName": lastname,
+          "lat": lat,
+          "long": long,
         },
       );
 

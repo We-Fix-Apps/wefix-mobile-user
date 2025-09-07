@@ -23,7 +23,7 @@ class _ChatOverlayState extends State<ChatOverlay> {
   bool? someUpdate;
   String? image;
   File? imageFile;
-  final serverURL = 'https://ApiTestWeFix.oneit.website/ChatHub';
+  final serverURL = 'https://api.wefixjo.com/ChatHub';
   HubConnection? hubConnection;
   List messagesList = [];
 
@@ -94,7 +94,7 @@ class _ChatOverlayState extends State<ChatOverlay> {
                                         const SizedBox(
                                           width: 10,
                                         ),
-                                        Column(
+                                        const Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.start,
                                           crossAxisAlignment:
@@ -102,8 +102,7 @@ class _ChatOverlayState extends State<ChatOverlay> {
                                           children: [
                                             Text(
                                               "",
-                                              style:
-                                                  const TextStyle(fontSize: 20),
+                                              style: TextStyle(fontSize: 20),
                                             ),
                                           ],
                                         ),

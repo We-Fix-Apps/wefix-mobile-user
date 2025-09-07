@@ -12,9 +12,10 @@ import 'package:wefix/layout_screen.dart';
 class SliderWidget extends StatefulWidget {
   final List<String> images;
   final List<int>? catId;
-
+  final GlobalKey? key1;
   final Function()? onTap;
-  const SliderWidget({super.key, required this.images, this.onTap, this.catId});
+  const SliderWidget(
+      {super.key, required this.images, this.onTap, this.catId, this.key1});
 
   @override
   State<SliderWidget> createState() => _SliderWidgetState();
@@ -24,6 +25,7 @@ class _SliderWidgetState extends State<SliderWidget> {
   @override
   Widget build(BuildContext context) {
     return CarouselSlider(
+      key:widget.key1 ,
       items: widget.images.asMap().entries.map((entry) {
         int index = entry.key;
         String image = entry.value;
@@ -57,6 +59,7 @@ class _SliderWidgetState extends State<SliderWidget> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: WidgetCachNetworkImage(
+                // key: widget.key1,
                 image: image,
                 boxFit: BoxFit.fill,
               ),
@@ -65,6 +68,7 @@ class _SliderWidgetState extends State<SliderWidget> {
         );
       }).toList(),
       options: CarouselOptions(
+      
         height: AppSize(context).height * .2,
         aspectRatio: 1,
         initialPage: 0,

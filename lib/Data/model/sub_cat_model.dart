@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+
 SubServiceModel subServiceModelFromJson(String str) =>
     SubServiceModel.fromJson(json.decode(str));
 
@@ -43,6 +45,7 @@ class Service {
   bool haveQuantity;
   String? description;
   String? descriptionAr;
+  GlobalKey serviceKey = GlobalKey();
 
   bool isSelected = false;
   int quantity = 0;

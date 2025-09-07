@@ -1,4 +1,5 @@
 import 'dart:async'; // Import this for the Timer
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -15,6 +16,7 @@ import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/appText/appText.dart';
+import 'package:wefix/Presentation/Components/tour_widget.dart';
 import 'package:wefix/Presentation/appointment/Screens/appointment_details_screen.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
@@ -22,6 +24,9 @@ import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:video_player/video_player.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:open_file/open_file.dart';
+import 'package:wefix/main.dart';
+
+import '../../../Data/Helper/cache_helper.dart';
 
 final TextEditingController noteController = TextEditingController();
 
@@ -261,10 +266,68 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     return extractedPaths;
   }
 
+  final List<GlobalKey<State<StatefulWidget>>> keyButton = [
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+  ];
+
+  List<Map> content = [
+    {
+      "title": AppText(navigatorKey.currentState!.context).uploadFilefromDevice,
+      "description":
+          AppText(navigatorKey.currentState!.context).youcanuploadfile,
+      "image": "assets/image/file.png"
+    },
+    {
+      "title":
+          AppText(navigatorKey.currentState!.context).takeAPictureFromCamera,
+      "description":
+          AppText(navigatorKey.currentState!.context).youcantakepicture,
+      "image": "assets/image/camera.png",
+    },
+    {
+      "title": AppText(navigatorKey.currentState!.context).recordVoice,
+      "description": AppText(navigatorKey.currentState!.context).youcanrecord,
+      "image": "assets/image/mic.png",
+    },
+    {
+      "title": AppText(navigatorKey.currentState!.context).describeyourproblem,
+      "description": AppText(navigatorKey.currentState!.context).youcandescripe,
+      "image": "assets/image/search.png",
+    },
+    {
+      "title": AppText(navigatorKey.currentState!.context).continuesss,
+      "description": AppText(navigatorKey.currentState!.context).afteraddingAll,
+      "image": "assets/image/cont.png",
+      "isTop": true
+    },
+  ];
   @override
   void initState() {
     _requestPermissionsOnce();
-    log(widget.data.toString());
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CustomeTutorialCoachMark.createTutorial(keyButton, content);
+        Future.delayed(const Duration(seconds: 1), () {
+          Map showTour =
+              json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+          CustomeTutorialCoachMark.showTutorial(context,
+              isShow: showTour["addAttachment"] ?? true);
+          setState(() {
+            showTour["addAttachment"] = false;
+          });
+          CacheHelper.saveData(
+              key: CacheHelper.showTour, value: json.encode(showTour));
+          log(showTour.toString());
+        });
+      });
+    } catch (e) {
+      log(e.toString());
+    }
+
     super.initState();
   }
 
@@ -280,14 +343,17 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     return Scaffold(
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: CustomBotton(
-            title: AppText(context).continuesss,
-            loading: loading,
-            onTap: () async {
-              await handleSubmit().then((value) {
-                uploadFile(files: extractedPaths);
-              });
-            }),
+        child: Container(
+          key: keyButton[4],
+          child: CustomBotton(
+              title: AppText(context).continuesss,
+              loading: loading,
+              onTap: () async {
+                await handleSubmit().then((value) {
+                  uploadFile(files: extractedPaths);
+                });
+              }),
+        ),
       ),
       appBar: AppBar(
         centerTitle: true,
@@ -302,37 +368,49 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _optionTile(
-              icon: Icons.attach_file,
-              label: AppText(context).uploadFilefromDevice,
-              color: Colors.blue,
-              onTap: pickFile,
+            Container(
+              key: keyButton[0],
+              child: _optionTile(
+                icon: Icons.attach_file,
+                label: AppText(context).uploadFilefromDevice,
+                color: Colors.blue,
+                onTap: pickFile,
+              ),
             ),
             const SizedBox(height: 16),
-            _optionTile(
-              icon: Icons.camera_alt,
-              label: AppText(context).takeAPictureFromCamera,
-              color: Colors.orange,
-              onTap: () {
-                pickFromCamera().then((value) {});
-              },
+            Container(
+              key: keyButton[1],
+              child: _optionTile(
+                icon: Icons.camera_alt,
+                label: AppText(context).takeAPictureFromCamera,
+                color: Colors.orange,
+                onTap: () {
+                  pickFromCamera().then((value) {});
+                },
+              ),
             ),
             const SizedBox(height: 16),
-            _optionTile(
-              icon: isRecording ? Icons.stop : Icons.mic,
-              label: isRecording
-                  ? "${AppText(context).stopRecording} (${AppText(context).time}: ${_seconds}s)"
-                  : (audioPath != null
-                      ? AppText(context).audioRecorded
-                      : AppText(context).recordVoice),
-              color: isRecording ? Colors.red : Colors.green,
-              onTap: isRecording ? stopRecording : startRecording,
+            Container(
+              key: keyButton[2],
+              child: _optionTile(
+                icon: isRecording ? Icons.stop : Icons.mic,
+                label: isRecording
+                    ? "${AppText(context).stopRecording} (${AppText(context).time}: ${_seconds}s)"
+                    : (audioPath != null
+                        ? AppText(context).audioRecorded
+                        : AppText(context).recordVoice),
+                color: isRecording ? Colors.red : Colors.green,
+                onTap: isRecording ? stopRecording : startRecording,
+              ),
             ),
             const SizedBox(height: 20),
-            WidgetTextField(
-              AppText(context).describeyourproblem,
-              maxLines: 4,
-              controller: noteController,
+            Container(
+              key: keyButton[3],
+              child: WidgetTextField(
+                AppText(context).describeyourproblem,
+                maxLines: 4,
+                controller: noteController,
+              ),
             ),
             const SizedBox(height: 20),
             uploadedFiles.isEmpty

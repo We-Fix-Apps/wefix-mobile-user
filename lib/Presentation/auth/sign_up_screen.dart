@@ -130,7 +130,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(
                   height: 5,
                 ),
-
                 WidgetTextField(
                   AppText(context, isFunction: true).lastName,
                   fillColor: AppColors.greyColorback,
@@ -203,91 +202,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(
                   height: 5,
                 ),
-                // WidgetTextField(
-                //   AppText(context, isFunction: true).password,
-                //   fillColor: AppColors.greyColorback,
-                //   haveBorder: false,
-                //   controller: password,
-                //   validator: (p0) {
-                //     if (password.text.isEmpty) {
-                //       return AppText(context, isFunction: true).required;
-                //     } else if (p0.toString().length < 8) {
-                //       return AppText(context, isFunction: true)
-                //           .mustbecontainatleast8characters;
-                //     }
-                //     return null;
-                //   },
-                //   obscureText: !isVisiable,
-                //   radius: 5,
-                //   suffixIcon: isVisiable
-                //       ? InkWell(
-                //           onTap: () {
-                //             setState(() {
-                //               isVisiable = !isVisiable;
-                //             });
-                //           },
-                //           child: const Icon(
-                //             Icons.visibility_off,
-                //             color: AppColors.greyColor3,
-                //           ))
-                //       : InkWell(
-                //           onTap: () {
-                //             setState(() {
-                //               isVisiable = !isVisiable;
-                //             });
-                //           },
-                //           child: const Icon(
-                //             Icons.visibility,
-                //             color: AppColors.greyColor3,
-                //           )),
-                // ),
-                // const SizedBox(
-                //   height: 5,
-                // ),
-                // WidgetTextField(
-                //   AppText(context, isFunction: true).confirmPassword,
-                //   fillColor: AppColors.greyColorback,
-                //   haveBorder: false,
-                //   controller: passwordConfirm,
-                //   validator: (p0) {
-                //     if (passwordConfirm.text.isEmpty) {
-                //       return AppText(context, isFunction: true).required;
-                //     } else if (password.text.isNotEmpty &&
-                //         password.text != passwordConfirm.text) {
-                //       return AppText(context, isFunction: true)
-                //           .passworddoesnotmatch;
-                //     } else if (p0.toString().length < 8) {
-                //       return AppText(context, isFunction: true)
-                //           .mustbecontainatleast8characters;
-                //     }
-
-                //     return null;
-                //   },
-                //   obscureText: !isVisiable2,
-                //   radius: 5,
-                //   suffixIcon: isVisiable2
-                //       ? InkWell(
-                //           onTap: () {
-                //             setState(() {
-                //               isVisiable2 = !isVisiable2;
-                //             });
-                //           },
-                //           child: const Icon(
-                //             Icons.visibility_off,
-                //             color: AppColors.greyColor3,
-                //           ))
-                //       : InkWell(
-                //           onTap: () {
-                //             setState(() {
-                //               isVisiable2 = !isVisiable2;
-                //             });
-                //           },
-                //           child: const Icon(
-                //             Icons.visibility,
-                //             color: AppColors.greyColor3,
-                //           )),
-                // ),
-                // SizedBox(height: AppSize(context).height * .01),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -475,6 +389,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     await Authantication.signUp(
       phone: phoneNumber ?? "",
       name: firstName.text,
+      lastname: lastName.text,
       address: location.text,
       email: email.text,
       password: password.text,

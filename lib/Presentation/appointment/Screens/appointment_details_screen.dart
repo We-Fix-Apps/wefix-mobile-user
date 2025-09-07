@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -9,9 +10,11 @@ import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/advantages_model.dart';
 import 'package:wefix/Data/model/realstate_model.dart';
+import 'package:wefix/Presentation/Components/tour_widget.dart';
 
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Loading/loading_text.dart';
@@ -20,6 +23,7 @@ import 'package:wefix/Presentation/appointment/Components/date_time_widget.dart'
 import 'package:wefix/Presentation/Checkout/Screens/checkout_screen.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
+import 'package:wefix/main.dart';
 
 import '../../../Business/orders/profile_api.dart';
 
@@ -54,11 +58,64 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
   RealEstatesModel? realEstatesModel;
   List<int> selectedServiceIds = [];
   double totalPrice = 0.0;
+  final List<GlobalKey<State<StatefulWidget>>> keyButton = [
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+  ];
+
+  List<Map> content = [
+   {
+  "title": AppText(navigatorKey.currentState!.context).editAppointmentTime,
+  "description": AppText(navigatorKey.currentState!.context).editAppointmentTimeDescription,
+  "image": "assets/image/date.png",
+  "isTop": false
+},
+{
+  "title": AppText(navigatorKey.currentState!.context).addAdditionalServices,
+  "description": AppText(navigatorKey.currentState!.context).addAdditionalServicesDescription,
+  "image": "assets/image/Layer 12.png",
+  "isTop": false
+},
+{
+  "title": AppText(navigatorKey.currentState!.context).viewYourAttachments,
+  "description": AppText(navigatorKey.currentState!.context).viewYourAttachmentsDescription,
+  "image": "assets/image/file.png",
+  "isTop": true
+},
+{
+  "title": AppText(navigatorKey.currentState!.context).continueYourAppointment,
+  "description": AppText(navigatorKey.currentState!.context).continueYourAppointmentDescription,
+  "image": "assets/image/cont.png",
+  "isTop": true
+}
+  ];
 
   @override
   void initState() {
     getRealState();
     getAdv();
+
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CustomeTutorialCoachMark.createTutorial(keyButton, content);
+        Future.delayed(const Duration(seconds: 1), () {
+          Map showTour =
+              json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+          CustomeTutorialCoachMark.showTutorial(context,
+              isShow: showTour["appointmentDetails"] ?? true);
+          setState(() {
+            showTour["appointmentDetails"] = false;
+          });
+          CacheHelper.saveData(
+              key: CacheHelper.showTour, value: json.encode(showTour));
+          log(showTour.toString());
+        });
+      });
+    } catch (e) {
+      log(e.toString());
+    }
 
     super.initState();
 
@@ -119,155 +176,173 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                       children: [
                         // Animate DateTimeWidget
                         DateTimeWidget(
+                          dateKey: keyButton[0],
+                          featureKey: keyButton[1],
                           date: appProvider.appoitmentInfo["date"]
                               .toString()
                               .substring(0, 10),
                           time: appProvider.appoitmentInfo["time"].toString(),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: SwitchListTile.adaptive(
-                            activeColor: AppColors(context).primaryColor,
-                            secondary: SvgPicture.asset(
-                              "assets/icon/optimizing.svg",
-                              height: AppSize(context).height * .05,
-                              width: AppSize(context).width * .1,
-                            ),
-                            title: Text(
-                              AppText(context).needmaterialfromprovider,
-                              style: TextStyle(
-                                fontSize: AppSize(context).smallText2,
-                              ),
-                            ),
-                            inactiveThumbColor: AppColors.whiteColor1,
-                            inactiveTrackColor: AppColors.greyColor1,
-                            overlayColor: MaterialStateProperty.all(
-                              AppColors(context).primaryColor.withOpacity(.2),
-                            ),
-                            value: appProvider.isMaterialFromProvider ?? false,
-                            onChanged: (value) {
-                              appProvider.isMaterailFromProvider(value);
-                              setState(() => needsMaterial = value);
-                            },
-                          ),
-                        ),
-                        if (appProvider.isMaterialFromProvider ?? false) ...[
-                          WidgetTextField(
-                            AppText(context, isFunction: true)
-                                .canyoutelluswhatmaterialisneeded,
-                            controller: materialCostController,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ],
-
-                        loadingAdv == true
-                            ? LoadingText(
-                                width: AppSize(context).width,
-                                height: AppSize(context).height * .05,
-                              )
-                            : ListView.builder(
-                                itemBuilder: (context, index) {
-                                  final advantage =
-                                      advantagesModel?.advantages[index];
-                                  final isSelected = selectedServiceIds
-                                      .contains(advantage?.id ?? -1);
-
-                                  return Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: SwitchListTile.adaptive(
-                                      subtitle: Text(
-                                        languageProvider.lang == "ar"
-                                            ? advantage?.subTitleAr ?? ""
-                                            : advantage?.subTitleEn ?? "",
-                                        style: TextStyle(
-                                            fontSize:
-                                                AppSize(context).smallText3,
-                                            color: AppColors.greyColor2),
-                                      ),
-                                      activeColor:
-                                          AppColors(context).primaryColor,
-                                      secondary: SvgPicture.network(
-                                        advantage?.icon ?? "",
-                                        height: AppSize(context).height * .05,
-                                        width: AppSize(context).width * .1,
-                                      ),
-                                      title: Text(
-                                        languageProvider.lang == "ar"
-                                            ? advantage?.titleAr ?? ""
-                                            : advantage?.titleEn ?? "",
-                                        style: TextStyle(
-                                          fontSize: AppSize(context).smallText2,
-                                        ),
-                                      ),
-                                      inactiveThumbColor: AppColors.whiteColor1,
-                                      inactiveTrackColor: AppColors.greyColor1,
-                                      overlayColor: MaterialStateProperty.all(
-                                        AppColors(context)
-                                            .primaryColor
-                                            .withOpacity(.2),
-                                      ),
-                                      value: isSelected,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          final id = advantage?.id;
-                                          final price = advantage?.price ?? 0.0;
-
-                                          if (value && id != null) {
-                                            if (!selectedServiceIds
-                                                .contains(id)) {
-                                              selectedServiceIds.add(id);
-                                              totalPrice += price;
-                                            }
-                                          } else if (!value && id != null) {
-                                            selectedServiceIds.remove(id);
-                                            totalPrice -= price;
-                                          }
-                                        });
-
-                                        log(selectedServiceIds.toString());
-                                        log("Total Price: $totalPrice");
-
-                                        appProvider.saveAdvantages({
-                                          "advantages": selectedServiceIds,
-                                          "totalPrice": totalPrice,
-                                        });
-                                      },
-                                    ),
-                                  );
+                        Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SwitchListTile.adaptive(
+                                activeColor: AppColors(context).primaryColor,
+                                secondary: SvgPicture.asset(
+                                  "assets/icon/optimizing.svg",
+                                  height: AppSize(context).height * .05,
+                                  width: AppSize(context).width * .1,
+                                ),
+                                title: Text(
+                                  AppText(context).needmaterialfromprovider,
+                                  style: TextStyle(
+                                    fontSize: AppSize(context).smallText2,
+                                  ),
+                                ),
+                                inactiveThumbColor: AppColors.whiteColor1,
+                                inactiveTrackColor: AppColors.greyColor1,
+                                overlayColor: MaterialStateProperty.all(
+                                  AppColors(context)
+                                      .primaryColor
+                                      .withOpacity(.2),
+                                ),
+                                value:
+                                    appProvider.isMaterialFromProvider ?? false,
+                                onChanged: (value) {
+                                  appProvider.isMaterailFromProvider(value);
+                                  setState(() => needsMaterial = value);
                                 },
-                                itemCount:
-                                    advantagesModel?.advantages.length ?? 0,
-                                shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
                               ),
+                            ),
+                            if (appProvider.isMaterialFromProvider ??
+                                false) ...[
+                              WidgetTextField(
+                                AppText(context, isFunction: true)
+                                    .canyoutelluswhatmaterialisneeded,
+                                controller: materialCostController,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ],
+                            loadingAdv == true
+                                ? LoadingText(
+                                    width: AppSize(context).width,
+                                    height: AppSize(context).height * .05,
+                                  )
+                                : ListView.builder(
+                                    itemBuilder: (context, index) {
+                                      final advantage =
+                                          advantagesModel?.advantages[index];
+                                      final isSelected = selectedServiceIds
+                                          .contains(advantage?.id ?? -1);
+
+                                      return Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: SwitchListTile.adaptive(
+                                          subtitle: Text(
+                                            languageProvider.lang == "ar"
+                                                ? advantage?.subTitleAr ?? ""
+                                                : advantage?.subTitleEn ?? "",
+                                            style: TextStyle(
+                                                fontSize:
+                                                    AppSize(context).smallText3,
+                                                color: AppColors.greyColor2),
+                                          ),
+                                          activeColor:
+                                              AppColors(context).primaryColor,
+                                          secondary: SvgPicture.network(
+                                            advantage?.icon ?? "",
+                                            height:
+                                                AppSize(context).height * .05,
+                                            width: AppSize(context).width * .1,
+                                          ),
+                                          title: Text(
+                                            languageProvider.lang == "ar"
+                                                ? advantage?.titleAr ?? ""
+                                                : advantage?.titleEn ?? "",
+                                            style: TextStyle(
+                                              fontSize:
+                                                  AppSize(context).smallText2,
+                                            ),
+                                          ),
+                                          inactiveThumbColor:
+                                              AppColors.whiteColor1,
+                                          inactiveTrackColor:
+                                              AppColors.greyColor1,
+                                          overlayColor:
+                                              MaterialStateProperty.all(
+                                            AppColors(context)
+                                                .primaryColor
+                                                .withOpacity(.2),
+                                          ),
+                                          value: isSelected,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              final id = advantage?.id;
+                                              final price =
+                                                  advantage?.price ?? 0.0;
+
+                                              if (value && id != null) {
+                                                if (!selectedServiceIds
+                                                    .contains(id)) {
+                                                  selectedServiceIds.add(id);
+                                                  totalPrice += price;
+                                                }
+                                              } else if (!value && id != null) {
+                                                selectedServiceIds.remove(id);
+                                                totalPrice -= price;
+                                              }
+                                            });
+
+                                            log(selectedServiceIds.toString());
+                                            log("Total Price: $totalPrice");
+
+                                            appProvider.saveAdvantages({
+                                              "advantages": selectedServiceIds,
+                                              "totalPrice": totalPrice,
+                                            });
+                                          },
+                                        ),
+                                      );
+                                    },
+                                    itemCount:
+                                        advantagesModel?.advantages.length ?? 0,
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                  ),
+                          ],
+                        ),
                         const Divider(
                           color: AppColors.backgroundColor,
                         ),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "📎 ${AppText(context).attachments}",
-                              style: TextStyle(
-                                fontSize: AppSize(context).smallText1,
-                                fontWeight: FontWeight.bold,
+                        Container(
+                          key: keyButton[2],
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "📎 ${AppText(context).attachments}",
+                                style: TextStyle(
+                                  fontSize: AppSize(context).smallText1,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            TextButton(
-                                onPressed: () {
-                                  showAttachmentBottomSheet(context);
-                                },
-                                child: Text(
-                                  AppText(context).viewAttachments,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors(context).primaryColor,
-                                  ),
-                                )),
-                          ],
+                              TextButton(
+                                  onPressed: () {
+                                    showAttachmentBottomSheet(context);
+                                  },
+                                  child: Text(
+                                    AppText(context).viewAttachments,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors(context).primaryColor,
+                                    ),
+                                  )),
+                            ],
+                          ),
                         ),
                         const Divider(
                           color: AppColors.backgroundColor,
@@ -347,15 +422,18 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
           ),
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: CustomBotton(
-            title: AppText(context).confirmAppointment,
-            onTap: () {
-              if (key.currentState!.validate()) {
-                Navigator.push(context, rightToLeft(const CheckoutScreen()));
-              }
-            }),
+      bottomNavigationBar: Container(
+        key: keyButton[3],
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CustomBotton(
+              title: AppText(context).confirmAppointment,
+              onTap: () {
+                if (key.currentState!.validate()) {
+                  Navigator.push(context, rightToLeft(const CheckoutScreen()));
+                }
+              }),
+        ),
       ),
     );
   }

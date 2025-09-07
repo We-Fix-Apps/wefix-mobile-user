@@ -22,7 +22,7 @@ import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Presentation/SplashScreen/splash_screen.dart';
 import 'Data/model/user_model.dart';
 
-final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -131,7 +131,7 @@ class _MyAppState extends State<MyApp> {
     MainManagements.handelNotification(
       context: context,
       handler: _firebaseMessagingBackgroundHandler,
-      navigatorKey: _navigatorKey,
+      navigatorKey: navigatorKey,
     );
 
     MainManagements.handelToken(
@@ -179,7 +179,7 @@ class _MyAppState extends State<MyApp> {
         );
       },
       navigatorObservers: [BotToastNavigatorObserver()],
-      navigatorKey: _navigatorKey,
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: AppConstans.appName,
       localizationsDelegates: const [

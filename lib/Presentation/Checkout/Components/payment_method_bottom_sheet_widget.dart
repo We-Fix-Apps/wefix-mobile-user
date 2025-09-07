@@ -7,12 +7,12 @@ import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
+import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Subscriptions/Screens/Subscriptions_screen.dart';
 import 'package:wefix/layout_screen.dart';
 import '../../../Data/appText/appText.dart';
-
 
 class PaymentBottomSheet extends StatefulWidget {
   final bool? isWallet;
@@ -96,7 +96,7 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                       ]),
                 const SizedBox(height: 10),
                 _paymentOption("visa", AppText(context, isFunction: true).visa,
-                    "assets/icon/visa.svg"),
+                    "assets/icon/bank-card_17727858.svg"),
                 _paymentOption("qlic", AppText(context, isFunction: true).cliq,
                     "assets/icon/final_cliq_logo-02_1.svg"),
                 widget.isWallet == true
@@ -116,7 +116,12 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
                         AppText(context, isFunction: true).paylater,
                         "assets/icon/delay_3360328.svg"),
                 const Divider(),
-                const SizedBox(height: 20),
+                Center(
+                  child: Image.asset(
+                    "assets/icon/verified.png",
+                  width: 170,
+                  ),
+                ),
                 CustomBotton(
                     title: AppText(context, isFunction: true).continuesss,
                     loading: widget.loading ?? createTransactionsLoading,

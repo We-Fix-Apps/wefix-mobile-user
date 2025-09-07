@@ -29,5 +29,6 @@ class CacheHelper {
   static String lang = 'LANGUAGEAPP';
   static String userData = 'USER_DATA';
   static String clearUserData = 'CLEAR_USER_DATA';
+  static String showTour = 'SHOW_TOUR';
   
 }

@@ -16,7 +16,7 @@ class CustomBotton extends StatelessWidget {
   final double? radius;
   final bool? isAddToCart;
   final bool? loading;
-  final Color ?borderColor;
+  final Color? borderColor;
   const CustomBotton({
     super.key,
     required this.title,
@@ -32,13 +32,14 @@ class CustomBotton extends StatelessWidget {
     this.loading = false,
     this.border = false,
     this.price,
-     this.borderColor,
+    this.borderColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: InkWell(
+        key: key,
         borderRadius: BorderRadius.circular(radius ?? 10),
         onTap: onTap,
         child: Container(

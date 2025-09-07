@@ -9,8 +9,9 @@ class CouponWidget extends StatefulWidget {
   final TextEditingController promoCodeController;
   final Function()? onTap;
   final bool? loading;
+  final GlobalKey? key1;
   const CouponWidget(
-      {super.key, required this.promoCodeController, this.onTap, this.loading});
+      {super.key, required this.promoCodeController, this.onTap, this.loading, this.key1});
 
   @override
   State<CouponWidget> createState() => _CouponWidgetState();

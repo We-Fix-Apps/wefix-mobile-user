@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,11 +15,13 @@ import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/appitment_model.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Presentation/Address/Screens/address_screen.dart';
 import 'package:wefix/Presentation/Components/google_calender.dart';
+import 'package:wefix/Presentation/Components/tour_widget.dart';
 import 'package:wefix/Presentation/Profile/Components/usage_details_widget.dart';
 import 'package:wefix/Presentation/appointment/Components/location_map_widget.dart';
 import 'package:wefix/Presentation/Checkout/Components/coboun_widget.dart';
@@ -29,6 +32,7 @@ import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/auth/login_screen.dart';
 import 'package:wefix/layout_screen.dart';
 import 'package:googleapis/calendar/v3.dart' as calendar;
+import 'package:wefix/main.dart';
 
 // final GoogleSignIn _googleSignIn = GoogleSignIn(
 //   clientId:
@@ -49,6 +53,44 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   List<Placemark> placemarks = [];
+  final List<GlobalKey<State<StatefulWidget>>> keyButton = [
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+  ];
+
+  List<Map> content = [
+    {
+      "title": AppText(navigatorKey.currentState!.context).changeLocation,
+      "description":
+          AppText(navigatorKey.currentState!.context).changeLocationDescription,
+      "isTop": false
+    },
+    {
+      "title": AppText(navigatorKey.currentState!.context).getDiscount,
+      "description":
+          AppText(navigatorKey.currentState!.context).getDiscountDescription,
+      "image": "assets/images/discountshape.svg",
+      "isTop": false
+    },
+    {
+      "title": AppText(navigatorKey.currentState!.context).paymentSummary,
+      "description":
+          AppText(navigatorKey.currentState!.context).paymentSummaryDescription,
+      "image": "assets/images/lump-sum-payment-rgb-color-icon-vector.jpg",
+      "isTop": true
+    },
+    {
+      "title": AppText(navigatorKey.currentState!.context)
+          .placeOrderAndChoosePaymentMethod,
+      "description": AppText(navigatorKey.currentState!.context)
+          .placeOrderAndChoosePaymentMethodDescription,
+      "image": "assets/image/cont.png",
+      "isTop": true
+    }
+  ];
+
   @override
   void initState() {
     // googleSignIn?.signOut();
@@ -56,6 +98,33 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() {
       isFemale =
           appProvider.appoitmentInfo["gender"] == "Female" ? true : false;
+    });
+
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        CustomeTutorialCoachMark.createTutorial(keyButton, content);
+        Future.delayed(const Duration(seconds: 1), () {
+          Map showTour =
+              json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+          CustomeTutorialCoachMark.showTutorial(context,
+              isShow: showTour["checkout"] ?? true);
+          setState(() {
+            showTour["checkout"] = false;
+          });
+          CacheHelper.saveData(
+              key: CacheHelper.showTour, value: json.encode(showTour));
+          log(showTour.toString());
+        });
+      });
+    } catch (e) {
+      log(e.toString());
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      CustomeTutorialCoachMark.createTutorial(keyButton, content);
+      Future.delayed(const Duration(seconds: 1), () {
+        CustomeTutorialCoachMark.showTutorial(context, isShow: true);
+      });
     });
     isSubsicribed(
       isfromPlaceOreder: false,
@@ -218,35 +287,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: CustomBotton(
-          title: AppText(context).placeOrder,
-          loading: loading,
-          onTap: () {
-            // addRequest();
-            appProvider.userModel == null
-                ? showDialog(
-                    context: context,
-                    builder: (context) => WidgetDialog(
-                          title: AppText(context, isFunction: true).warning,
-                          desc: AppText(context, isFunction: true)
-                              .pleaselogintocontinue,
-                          isError: true,
-                          bottonText: AppText(context, isFunction: true).login,
-                          onTap: () => Navigator.push(
-                            context,
-                            downToTop(
-                              const LoginScreen(),
+        child: Container(
+          key: keyButton[3],
+          child: CustomBotton(
+            title: AppText(context).placeOrder,
+            loading: loading,
+            onTap: () {
+              // addRequest();
+              appProvider.userModel == null
+                  ? showDialog(
+                      context: context,
+                      builder: (context) => WidgetDialog(
+                            title: AppText(context, isFunction: true).warning,
+                            desc: AppText(context, isFunction: true)
+                                .pleaselogintocontinue,
+                            isError: true,
+                            bottonText:
+                                AppText(context, isFunction: true).login,
+                            onTap: () => Navigator.push(
+                              context,
+                              downToTop(
+                                const LoginScreen(),
+                              ),
                             ),
-                          ),
-                        ))
-                : subsicripeModel?.status == true
-                    ? showConfirmAppointmentDialog(context, () {
-                        addRequest();
-                      })
-                    : showPaymentMethod(context);
-            log(appProvider.appoitmentInfo.toString());
-            // showUpgradeDialog(context);
-          },
+                          ))
+                  : subsicripeModel?.status == true
+                      ? showConfirmAppointmentDialog(context, () {
+                          addRequest();
+                        })
+                      : showPaymentMethod(context);
+              log(appProvider.appoitmentInfo.toString());
+              // showUpgradeDialog(context);
+            },
+          ),
         ),
       ),
       body: loading2 == true
@@ -269,44 +342,54 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "📍 ${AppText(context).location}",
-                                  style: TextStyle(
-                                    fontSize: AppSize(context).smallText1,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                TextButton(
-                                    onPressed: () async {
-                                      final a = await Navigator.push(context,
-                                          downToTop(const AddressScreen()));
-
-                                      if (a) {
-                                        makeLoadingFor2Seconds();
-                                      }
-                                    },
-                                    child: Text(
-                                      "${AppText(context).change}",
-                                      style: TextStyle(
+                            Container(
+                              key: keyButton[0],
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        "📍 ${AppText(context).location}",
+                                        style: TextStyle(
+                                          fontSize: AppSize(context).smallText1,
                                           fontWeight: FontWeight.bold,
-                                          color:
-                                              AppColors(context).primaryColor),
-                                    ))
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            WidgetAddressCheckout(
-                              addressNameStreet: "",
-                              lat: appProvider.currentLocation?.latitude
-                                      .toString() ??
-                                  "",
-                              long: appProvider.currentLocation?.longitude
-                                      .toString() ??
-                                  "",
-                              addressName: "",
+                                        ),
+                                      ),
+                                      TextButton(
+                                          onPressed: () async {
+                                            final a = await Navigator.push(
+                                                context,
+                                                downToTop(
+                                                    const AddressScreen()));
+
+                                            if (a) {
+                                              makeLoadingFor2Seconds();
+                                            }
+                                          },
+                                          child: Text(
+                                            "${AppText(context).change}",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: AppColors(context)
+                                                    .primaryColor),
+                                          ))
+                                    ],
+                                  ),
+                                  const SizedBox(height: 5),
+                                  WidgetAddressCheckout(
+                                    addressNameStreet: "",
+                                    lat: appProvider.currentLocation?.latitude
+                                            .toString() ??
+                                        "",
+                                    long: appProvider.currentLocation?.longitude
+                                            .toString() ??
+                                        "",
+                                    addressName: "",
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 20),
 
@@ -314,13 +397,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ? const SizedBox()
                                 : subsicripeModel?.status == true
                                     ? const SizedBox()
-                                    : CouponWidget(
-                                        promoCodeController:
-                                            promoCodeController,
-                                        onTap: () {
-                                          promoCode();
-                                        },
-                                        loading: loading3,
+                                    : Container(
+                                        key: keyButton[1],
+                                        child: CouponWidget(
+                                          promoCodeController:
+                                              promoCodeController,
+                                          onTap: () {
+                                            promoCode();
+                                          },
+                                          loading: loading3,
+                                        ),
                                       ),
 
                             Row(
@@ -393,38 +479,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 ),
                                 value: isFemale ?? false,
                                 onChanged: (value) {
-                                  // if (subsicripeModel?.status == true) {
-                                  //   if ((subsicripeModel?.numberOnFemalUse ??
-                                  //           0) <=
-                                  //       0) {
-                                  //     showUpgradeDialog(context);
-                                  //   } else {
-                                  //     setState(() {
-                                  //       isFemale = value;
-                                  //       appProvider.saveAppoitmentInfo({
-                                  //         "TicketTypeId": appProvider
-                                  //             .appoitmentInfo["TicketTypeId"],
-                                  //         "gender": isFemale == false
-                                  //             ? "Male"
-                                  //             : "Female",
-                                  //         "date": appProvider.selectedDate ??
-                                  //             DateTime.now(),
-                                  //         "time": appProvider
-                                  //             .appoitmentInfo["time"],
-                                  //         "services": appProvider
-                                  //             .appoitmentInfo["services"],
-                                  //         "totalPrice": appProvider
-                                  //             .appoitmentInfo["totalPrice"],
-                                  //         "totalTickets": appProvider
-                                  //             .appoitmentInfo["totalTickets"]
-                                  //       });
-
-                                  //       log(appProvider.appoitmentInfo
-                                  //           .toString());
-                                  //     });
-                                  //   }
-                                  // }
-
                                   setState(() {
                                     isFemale = value;
                                     appProvider.saveAppoitmentInfo({
@@ -451,103 +505,117 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
 
                             const SizedBox(height: 24),
-                            Text(
-                              "🧾 ${AppText(context).paymentSum}",
-                              style: TextStyle(
-                                fontSize: AppSize(context).smallText1,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            PaymentSummaryWidget(
-                                title: AppText(context).subTotal,
-                                value: ((subsicripeModel?.onDemandVisit ?? -1) >
-                                        0)
-                                    ? " ${appProvider.appoitmentInfo["totalTickets"]} ${AppText(context).ticket}"
-                                    : ' ${AppText(context).jod} ${appProvider.appoitmentInfo["totalPrice"]}'),
-                            discountAmount == null
-                                ? const SizedBox()
-                                : PaymentSummaryWidget(
-                                    title:
-                                        ' ${AppText(context).totalAfterDiscount} 🥳',
-                                    value:
-                                        '- ${AppText(context).jod} ${discountAmount?.toStringAsFixed(2)}',
-                                    highlight: true),
-
-                            appProvider.appoitmentInfo["TicketTypeId"] == 1
-                                ? PaymentSummaryWidget(
-                                    title: AppText(context).emergency,
-                                    value: ((subsicripeModel?.emergancyVisit ??
-                                                -1) >
-                                            0)
-                                        ? "1 ${AppText(context).ticket}"
-                                        : ' ${AppText(context).jod} 10.00',
-                                    highlight: false)
-                                : const SizedBox(),
-                            appProvider.appoitmentInfo["gender"] == "Male"
-                                ? const SizedBox()
-                                : PaymentSummaryWidget(
-                                    title: 'Female WeFix',
-                                    value: ((subsicripeModel?.status ??
-                                                    false) &&
-                                                (subsicripeModel
-                                                            ?.numberOnFemalUse ??
-                                                        0) >
-                                                    0) ==
-                                            true
-                                        ? "1 ${AppText(context).ticket}"
-                                        : ' ${AppText(context).jod.toUpperCase()} 10.00',
-                                    icon: Icons.info_outline),
-
-                            ((appProvider.advantages["totalPrice"] != null))
-                                ? appProvider.advantages["totalPrice"] == 0.0
-                                    ? const SizedBox()
-                                    : PaymentSummaryWidget(
-                                        title: AppText(context).services,
-                                        value:
-                                            "${AppText(context).jod.toUpperCase()} ${appProvider.advantages["totalPrice"]}",
-                                        highlight: false)
-                                : const SizedBox(),
-                            const SizedBox(height: 20),
-                            PaymentSummaryWidget(
-                              title: AppText(context).total,
-                              value: getPaymentSummaryValue(
-                                  appProvider.appoitmentInfo,
-                                  subsicripeModel,
-                                  totalafterDiscount,
-                                  context),
-                              bold: true,
-                            ),
-                            const SizedBox(height: 20),
-                            totalafterDiscount == null
-                                ? const SizedBox()
-                                : Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                        color: AppColors(context)
-                                            .primaryColor
-                                            .withOpacity(.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                            color: AppColors(context)
-                                                .primaryColor)),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          "🎉",
-                                          style: TextStyle(
-                                              fontSize:
-                                                  AppSize(context).smallText1),
-                                        ),
-                                        Expanded(
-                                            child: Text(
-                                                " Awesome! You're saving JOD ${discountAmount?.toStringAsFixed(2)}",
-                                                style: TextStyle(
-                                                    color: AppColors(context)
-                                                        .primaryColor))),
-                                      ],
+                            Container(
+                              key: keyButton[2],
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "🧾 ${AppText(context).paymentSum}",
+                                    style: TextStyle(
+                                      fontSize: AppSize(context).smallText1,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                                  const SizedBox(height: 16),
+                                  PaymentSummaryWidget(
+                                      title: AppText(context).subTotal,
+                                      value: ((subsicripeModel?.onDemandVisit ??
+                                                  -1) >
+                                              0)
+                                          ? " ${appProvider.appoitmentInfo["totalTickets"]} ${AppText(context).ticket}"
+                                          : ' ${AppText(context).jod} ${appProvider.appoitmentInfo["totalPrice"]}'),
+                                  discountAmount == null
+                                      ? const SizedBox()
+                                      : PaymentSummaryWidget(
+                                          title:
+                                              ' ${AppText(context).totalAfterDiscount} 🥳',
+                                          value:
+                                              '- ${AppText(context).jod} ${discountAmount?.toStringAsFixed(2)}',
+                                          highlight: true),
+                                  appProvider.appoitmentInfo["TicketTypeId"] ==
+                                          1
+                                      ? PaymentSummaryWidget(
+                                          title: AppText(context).emergency,
+                                          value: ((subsicripeModel
+                                                          ?.emergancyVisit ??
+                                                      -1) >
+                                                  0)
+                                              ? "1 ${AppText(context).ticket}"
+                                              : ' ${AppText(context).jod} 10.00',
+                                          highlight: false)
+                                      : const SizedBox(),
+                                  appProvider.appoitmentInfo["gender"] == "Male"
+                                      ? const SizedBox()
+                                      : PaymentSummaryWidget(
+                                          title: 'Female WeFix',
+                                          value: ((subsicripeModel?.status ??
+                                                          false) &&
+                                                      (subsicripeModel
+                                                                  ?.numberOnFemalUse ??
+                                                              0) >
+                                                          0) ==
+                                                  true
+                                              ? "1 ${AppText(context).ticket}"
+                                              : ' ${AppText(context).jod.toUpperCase()} 10.00',
+                                          icon: Icons.info_outline),
+                                  ((appProvider.advantages["totalPrice"] !=
+                                          null))
+                                      ? appProvider.advantages["totalPrice"] ==
+                                              0.0
+                                          ? const SizedBox()
+                                          : PaymentSummaryWidget(
+                                              title: AppText(context).services,
+                                              value:
+                                                  "${AppText(context).jod.toUpperCase()} ${appProvider.advantages["totalPrice"]}",
+                                              highlight: false)
+                                      : const SizedBox(),
+                                  const SizedBox(height: 20),
+                                  PaymentSummaryWidget(
+                                    title: AppText(context).total,
+                                    value: getPaymentSummaryValue(
+                                        appProvider.appoitmentInfo,
+                                        subsicripeModel,
+                                        totalafterDiscount,
+                                        context),
+                                    bold: true,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  totalafterDiscount == null
+                                      ? const SizedBox()
+                                      : Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                              color: AppColors(context)
+                                                  .primaryColor
+                                                  .withOpacity(.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                  color: AppColors(context)
+                                                      .primaryColor)),
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                "🎉",
+                                                style: TextStyle(
+                                                    fontSize: AppSize(context)
+                                                        .smallText1),
+                                              ),
+                                              Expanded(
+                                                  child: Text(
+                                                      " Awesome! You're saving JOD ${discountAmount?.toStringAsFixed(2)}",
+                                                      style: TextStyle(
+                                                          color: AppColors(
+                                                                  context)
+                                                              .primaryColor))),
+                                            ],
+                                          ),
+                                        ),
+                                ],
+                              ),
+                            ),
 
                             appProvider.isMaterialFromProvider == false
                                 ? const SizedBox()
@@ -569,30 +637,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     ),
                                   ),
 
-                            SizedBox(
+                            const SizedBox(
                               height: 20,
                             ),
 
                             Container(
                               padding: const EdgeInsets.all(12),
+                              width: double.infinity,
                               decoration: BoxDecoration(
                                 color: AppColors.redColor.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
-                                // mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.info_outline,
                                     color: AppColors.redColor,
                                   ),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    AppText(context).noteM,
-                                    style: TextStyle(
+                                  const SizedBox(width: 5),
+                                  Expanded(
+                                    // ✅ prevents overflow, allows wrapping
+                                    child: Text(
+                                      AppText(context).noteM,
+                                      style: const TextStyle(
                                         color: AppColors.redColor,
-                                        fontWeight: FontWeight.w600),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -694,6 +766,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return "${AppText(context).jod} ${totalPrice.toStringAsFixed(2)}";
     }
 
+    // ✅ New Case: requested tickets > onDemandVisit
+    if (appointmentInfo["totalTickets"] > onDemandVisit) {
+      int allowedTickets = onDemandVisit; // all tickets he has
+      int extraTickets = appointmentInfo["totalTickets"] - onDemandVisit;
+
+      // Price for extra tickets (you can change logic if price differs)
+      double extraPrice = ((appointmentInfo["totalPrice"] ?? 0) /
+              (appointmentInfo["totalTickets"])) *
+          extraTickets;
+
+      double finalPrice = extraPrice + totalExtra;
+
+      if (finalPrice > 0) {
+        return "$allowedTickets ${AppText(context).ticket} + ${AppText(context).jod} ${finalPrice.toStringAsFixed(2)}";
+      } else {
+        return "$allowedTickets ${AppText(context).ticket}";
+      }
+    }
+
     // Case: subscribed but on-demand is exhausted → show price + extras
     if (useOnDemandPrice) {
       double finalPrice = onDemandPrice + totalExtra;
@@ -779,7 +870,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
                 const SizedBox(height: 10),
                 _paymentOption("visa", AppText(context, isFunction: true).visa,
-                    "assets/icon/visa.svg", set),
+                    "assets/icon/bank-card_17727858.svg", set),
                 _paymentOption("qlic", AppText(context, isFunction: true).cliq,
                     "assets/icon/final_cliq_logo-02_1.svg", set),
                 _paymentOption(
@@ -799,6 +890,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     set),
                 const Divider(),
                 const SizedBox(height: 20),
+                Center(
+                  child: Image.asset(
+                    "assets/icon/verified.png",
+                    width: 170,
+                  ),
+                ),
                 CustomBotton(
                     title: AppText(context, isFunction: true).continuesss,
                     loading: loading,
@@ -937,6 +1034,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future addRequest() async {
     AppProvider appProvider = Provider.of(context, listen: false);
+
+    // --- Extras ---
     double advantageExtra = double.tryParse(
             appProvider.advantages["totalPrice"]?.toString() ?? "0") ??
         0;
@@ -953,24 +1052,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ((emergencyVisit ?? 0) <= 0 && emergencyVisit != null) ? 10 : 0;
     bool useOnDemandPrice = onDemandVisit <= 0;
 
-// Total price calculation
+    // --- Base price ---
     double basePrice = totalafterDiscount ??
         (appProvider.appoitmentInfo["totalPrice"] ?? 0).toDouble();
+
     double totalPrice =
         basePrice + advantageExtra + femaleExtra + emergencyExtra;
 
-// Tickets
+    // --- Tickets ---
     int numberOfTickets = 1;
+    int requestedTickets = appProvider.appoitmentInfo["totalTickets"] ?? 0;
+
     if (isSubscribed && !useOnDemandPrice) {
-      numberOfTickets = calculateTotalTickets(
-        appProvider.appoitmentInfo,
-        subsicripeModel,
-        isSubscribed,
-      );
+      // ✅ Handle case: requested tickets > onDemandVisit
+      if (requestedTickets > onDemandVisit) {
+        int allowedTickets = onDemandVisit;
+        int extraTickets = requestedTickets - onDemandVisit;
+
+        // safer price per ticket
+        double pricePerTicket =
+            requestedTickets > 0 ? basePrice / requestedTickets : 0;
+
+        double extraPrice = pricePerTicket * extraTickets;
+        totalPrice += extraPrice;
+
+        numberOfTickets = allowedTickets; // only allowed tickets sent
+      } else {
+        numberOfTickets = calculateTotalTickets(
+          appProvider.appoitmentInfo,
+          subsicripeModel,
+          isSubscribed,
+        );
+      }
     } else if (useOnDemandPrice) {
       numberOfTickets = 0; // or skip sending if your API expects null/empty
     }
 
+    // --- Payload ---
     Map<String, dynamic> data = {
       "TicketTypeId": appProvider.appoitmentInfo["TicketTypeId"],
       "PromoCode": promoCodeController.text,
@@ -985,7 +1103,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       "IsWithFemale": isFemale,
       "IsWithMaterial": appProvider.isMaterialFromProvider,
       "CustomerPackageId": subsicripeModel?.objSubscribe?.id,
-      "TotalPrice": totalPrice,
+      "TotalPrice": totalPrice, // ✅ always includes extras
       "ServiceTicket": appProvider.appoitmentInfo["services"],
       "Attachments": appProvider.attachments,
       "RealEstateId": appProvider.realStateId ?? 0,
@@ -999,6 +1117,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         loading = true;
       });
     }
+
     await CreateOrderApi.requestService(
       token: '${appProvider.userModel?.token}',
       data: data,
@@ -1119,19 +1238,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 );
               },
             );
-
-      // showDialog(
-      //   context: context,
-      //   builder: (context) {
-      //     return WidgetDialog(
-      //         title: AppText(context).successfully,
-      //         desc:
-      //             "${AppText(context).orderSentSuccessfully} \n  you still have : \n ${appointmentModel?.customerPackages?.recurringVist} ${AppText(context).recurringVisits}  \n ${appointmentModel?.customerPackages?.recurringVist} ${AppText(context).ondemandVisits} \n ${appointmentModel?.customerPackages?.emeregencyVisit} ${AppText(context).emergencyVisits}",
-      //         onTap: () => Navigator.pushAndRemoveUntil(
-      //             context, downToTop(const HomeLayout()), (route) => false),
-      //         isError: false);
-      //   },
-      // );
 
       if (value == false) {
         setState(() {

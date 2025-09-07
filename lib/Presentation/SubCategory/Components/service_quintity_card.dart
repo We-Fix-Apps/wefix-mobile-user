@@ -16,20 +16,23 @@ class ServiceQuintityCardWidget extends StatefulWidget {
   Function()? increment;
   Function()? decrement;
   final bool? isSubsicribed;
+  final GlobalKey? serviceCardKey;
 
   final Service? services;
   int count;
 
-  ServiceQuintityCardWidget(
-      {super.key,
-      this.isDetails,
-      this.services,
-      this.increment,
-      this.decrement,
-      this.onTap,
-      this.isAddedd,
-      required this.count,
-      this.isSubsicribed});
+  ServiceQuintityCardWidget({
+    super.key,
+    this.isDetails,
+    this.services,
+    this.increment,
+    this.decrement,
+    this.serviceCardKey,
+    this.onTap,
+    this.isAddedd,
+    required this.count,
+    this.isSubsicribed,
+  });
 
   @override
   State<ServiceQuintityCardWidget> createState() =>
@@ -44,6 +47,7 @@ class _ServiceQuintityCardWidgetState extends State<ServiceQuintityCardWidget> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Stack(
+        key: widget.serviceCardKey,
         clipBehavior: Clip.none,
         children: [
           Container(

@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'dart:developer';
-
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Bookings/bookings_apis.dart';
 import 'package:wefix/Business/Home/home_apis.dart';
@@ -12,11 +14,13 @@ import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/active_ticket_model.dart';
 import 'package:wefix/Data/model/home_model.dart';
 import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
+import 'package:wefix/Presentation/Components/tour_widget.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Home/Components/popular_section_widget.dart';
 import 'package:wefix/Presentation/Home/Components/services_list_widget.dart';
@@ -27,9 +31,11 @@ import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
 import 'package:wefix/Presentation/SubCategory/Screens/sub_services_screen.dart';
 import 'package:wefix/Presentation/appointment/Components/border_animated_widget.dart';
 import 'package:wefix/layout_screen.dart';
+import 'package:wefix/main.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final GlobalKey? keyButton;
+  const HomeScreen({super.key, this.keyButton});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -44,12 +50,57 @@ class _HomeScreenState extends State<HomeScreen>
   List<Category> allSearchCategories = [];
   bool startsSearch = false;
 
+  late TutorialCoachMark tutorialCoachMark;
+
+  final List<GlobalKey<State<StatefulWidget>>> keyButtons = [
+    GlobalKey<State<StatefulWidget>>(),
+    GlobalKey<State<StatefulWidget>>(),
+  ];
+
+  List<Map> contents = [
+    {
+      "title": AppText(navigatorKey.currentState!.context).yourdetails,
+      "description": AppText(navigatorKey.currentState!.context).checkProfile,
+      "image": "assets/image/profile.png",
+      "isTop": false,
+    },
+    {
+      "title": AppText(navigatorKey.currentState!.context).searchforservice,
+      "description": AppText(navigatorKey.currentState!.context).youcansearch,
+      "image": "assets/image/search.png",
+      "isTop": false,
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
 
-    getAllHomeApis().then((value) {});
-    getActiveTicket();
+    getAllHomeApis().then((value) {
+      _controller.forward();
+
+      getActiveTicket();
+
+      try {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          CustomeTutorialCoachMark.createTutorial(keyButtons, contents);
+          Future.delayed(const Duration(seconds: 2), () {
+            Map showTour =
+                json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+            CustomeTutorialCoachMark.showTutorial(context,
+                isShow: showTour["home"] ?? true);
+            setState(() {
+              showTour["home"] = false;
+            });
+            CacheHelper.saveData(
+                key: CacheHelper.showTour, value: json.encode(showTour));
+            log(showTour.toString());
+          });
+        });
+      } catch (e) {
+        log(e.toString());
+      }
+    });
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 400),
@@ -64,10 +115,6 @@ class _HomeScreenState extends State<HomeScreen>
       parent: _controller,
       curve: Curves.easeOutExpo,
     ));
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _controller.forward(); // Start animation on screen load
-    });
   }
 
   getCatId() {
@@ -86,14 +133,12 @@ class _HomeScreenState extends State<HomeScreen>
   HomeModel? homeModel;
   bool loading = false;
   bool loading2 = false;
-  GlobalKey _one = GlobalKey();
-  GlobalKey _two = GlobalKey();
-  GlobalKey _three = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     LanguageProvider languageProvider = Provider.of<LanguageProvider>(context);
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         leadingWidth: AppSize(context).width * .5,
@@ -116,6 +161,7 @@ class _HomeScreenState extends State<HomeScreen>
                     borderRadius: const BorderRadius.all(Radius.circular(50)),
                     child: SvgPicture.asset(
                       "assets/icon/smile.svg",
+                      key: keyButtons[0],
                       color: AppColors(context).primaryColor,
                     ),
                   ),
@@ -154,7 +200,9 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(
             width: 5,
           ),
-          SvgPicture.asset("assets/icon/line.svg"),
+          SvgPicture.asset(
+            "assets/icon/line.svg",
+          ),
           InkWell(
             onTap: () {
               Navigator.push(context, rightToLeft(NotificationsScreen()));
@@ -162,7 +210,9 @@ class _HomeScreenState extends State<HomeScreen>
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Badge(
-                child: SvgPicture.asset("assets/icon/notification.svg"),
+                child: SvgPicture.asset(
+                  "assets/icon/notification.svg",
+                ),
               ),
             ),
           ),
@@ -189,15 +239,20 @@ class _HomeScreenState extends State<HomeScreen>
                     physics: const ClampingScrollPhysics(),
                     child: Column(
                       children: [
-                        SliderWidget(
-                            catId: homeModel?.sliders
-                                    .map((e) => e.categoryId ?? 0)
-                                    .toList() ??
-                                [],
-                            images: homeModel?.sliders
-                                    .map((e) => e.image ?? "")
-                                    .toList() ??
-                                []),
+                        Stack(
+                          children: [
+                            SliderWidget(
+                              catId: homeModel?.sliders
+                                      .map((e) => e.categoryId ?? 0)
+                                      .toList() ??
+                                  [],
+                              images: homeModel?.sliders
+                                      .map((e) => e.image ?? "")
+                                      .toList() ??
+                                  [],
+                            ),
+                          ],
+                        ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Column(
@@ -354,65 +409,6 @@ class _HomeScreenState extends State<HomeScreen>
                                                                         : const SizedBox(),
                                                   ],
                                                 )
-                                          // MaintenanceStepper(
-                                          //   currentStep: ticketModel!.tickets[0]
-                                          //               .isWithMaterial ==
-                                          //           true
-                                          //       ? (ticketModel!
-                                          //                   .tickets[0].process
-                                          //                   .toString()
-                                          //                   .toLowerCase() ==
-                                          //               "requested registered"
-                                          //           ? 0
-                                          //           : ticketModel!.tickets[0]
-                                          //                       .process
-                                          //                       .toString()
-                                          //                       .toLowerCase() ==
-                                          //                   "preparing materials"
-                                          //               ? 1
-                                          //               : ticketModel!
-                                          //                           .tickets[0]
-                                          //                           .process
-                                          //                           .toString()
-                                          //                           .toLowerCase() ==
-                                          //                       "waiting for confirmation"
-                                          //                   ? 2
-                                          //                   : ticketModel!.tickets[0].process
-                                          //                               .toString()
-                                          //                               .toLowerCase() ==
-                                          //                           "visit scheduled"
-                                          //                       ? 3
-                                          //                       : ticketModel!
-                                          //                                   .tickets[0]
-                                          //                                   .process
-                                          //                                   .toString()
-                                          //                                   .toLowerCase() ==
-                                          //                               "ready to visit"
-                                          //                           ? 4
-                                          //                           : ticketModel!.tickets[0].process.toString().toLowerCase() == "visit completed"
-                                          //                               ? 5
-                                          //                               : ticketModel!.tickets[0].process.toString().toLowerCase() == "awaiting rating"
-                                          //                                   ? 6
-                                          //                                   : 0)
-                                          //       : (ticketModel!.tickets[0].process.toString().toLowerCase() == "requested registered"
-                                          //           ? 0
-                                          //           : ticketModel!.tickets[0].process.toString().toLowerCase() == "visit scheduled"
-                                          //               ? 1
-                                          //               : ticketModel!.tickets[0].process.toString().toLowerCase() == "ready to visit"
-                                          //                   ? 2
-                                          //                   : ticketModel!.tickets[0].process.toString().toLowerCase() == "visit completed"
-                                          //                       ? 3
-                                          //                       : ticketModel!.tickets[0].process.toString().toLowerCase() == "awaiting rating"
-                                          //                           ? 4
-                                          //                           : 0),
-                                          //   confirmationNote: ticketModel!
-                                          //               .tickets[0]
-                                          //               .isWithMaterial ==
-                                          //           true
-                                          //       ? ""
-                                          //       : "Without Approval",
-                                          //   // or 'Without Approval'
-                                          // ),
                                         ],
                                       ),
                                     ),
@@ -521,7 +517,8 @@ class _HomeScreenState extends State<HomeScreen>
                                                                 height: 10),
                                                             Row(
                                                               children: [
-                                                                Text("🕑 "),
+                                                                const Text(
+                                                                    "🕑 "),
                                                                 Text(
                                                                   ticketModel
                                                                           ?.tickets[
@@ -544,7 +541,8 @@ class _HomeScreenState extends State<HomeScreen>
                                                                 height: 5),
                                                             Row(
                                                               children: [
-                                                                Text("🗓 "),
+                                                                const Text(
+                                                                    "🗓 "),
                                                                 Text(
                                                                   ticketModel
                                                                           ?.tickets[
@@ -648,6 +646,7 @@ class _HomeScreenState extends State<HomeScreen>
                               const SizedBox(height: 20),
                               WidgetTextField(
                                   "${AppText(context).searchforservice}",
+                                  key: keyButtons[1],
                                   fillColor:
                                       AppColors.greyColorback.withOpacity(.5),
                                   haveBorder: false,

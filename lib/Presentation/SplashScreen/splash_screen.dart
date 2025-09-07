@@ -1,3 +1,5 @@
+// ignore_for_file: void_checks
+
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

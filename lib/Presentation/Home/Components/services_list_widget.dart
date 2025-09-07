@@ -15,7 +15,8 @@ import '../../SubCategory/Components/service_card_widget.dart';
 
 class ServicesWidget extends StatefulWidget {
   final List<Category> categories;
-  const ServicesWidget({super.key, required this.categories});
+  final GlobalKey? key1;
+  const ServicesWidget({super.key, required this.categories, this.key1});
 
   @override
   State<ServicesWidget> createState() => _ServicesWidgetState();
@@ -26,47 +27,6 @@ class _ServicesWidgetState extends State<ServicesWidget> {
   void initState() {
     super.initState();
   }
-
-  // void _showTutorial() {
-  //   // Create a list of targets (widgets to highlight)
-  //   List<TargetFocus> targets =
-  //       List.generate(widget.categories.length, (index) {
-  //     return TargetFocus(
-  //       identify: "Target$index",
-  //       keyTarget: cardKeys[index], // Attach the correct key for each service
-  //       shape: ShapeLightFocus.RRect, // Rectangle shape for focus
-  //       contents: [
-  //         TargetContent(
-  //           align: ContentAlign.top,
-  //           builder: (context, controller) {
-  //             return Container(
-  //               padding: const EdgeInsets.all(10),
-  //               child: const Text(
-  //                 "Long press on a service to explore more options!",
-  //                 style: TextStyle(
-  //                     fontWeight: FontWeight.bold, color: Colors.white),
-  //               ),
-  //             );
-  //           },
-  //         ),
-  //       ],
-  //     );
-  //   });
-
-  //   // Create the tutorial coach mark instance
-  //   tutorialCoachMark = TutorialCoachMark(
-  //     targets: targets,
-  //     colorShadow: Colors.black.withOpacity(0.7),
-  //     textSkip: "Skip",
-  //     paddingFocus: 10,
-  //     onFinish: () {
-  //       // Handle the finish action if needed
-  //     },
-  //     onSkip: () {
-  //       return true;
-  //     },
-  //   )..show(context: context);
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -84,19 +44,20 @@ class _ServicesWidgetState extends State<ServicesWidget> {
       itemCount: widget.categories.length,
       itemBuilder: (context, index) {
         return InkWell(
+          key: index == 0 ? widget.key : null,
           onTap: () {
             widget.categories[index].subscribScreen == true
                 ? Navigator.push(
                     context,
-                    downToTop(SubscriptionScreen()),
+                    downToTop(const SubscriptionScreen()),
                   )
                 : widget.categories[index].subCategory?.isNotEmpty == true
                     ? Navigator.push(
                         context,
                         downToTop(SubCategoryScreen(
                           categories: widget.categories[index].subCategory,
-                          title: widget.categories[index].titleEn ?? "",
-                          titleAr: widget.categories[index].titleAr ?? "",
+                          title: widget.categories[index].titleEn,
+                          titleAr: widget.categories[index].titleAr,
                         )),
                       )
                     : Navigator.push(
@@ -104,8 +65,8 @@ class _ServicesWidgetState extends State<ServicesWidget> {
                         downToTop(SubServicesScreen(
                           catId: widget.categories[index].id,
                           title: languageProvider.lang == "ar"
-                              ? widget.categories[index].titleAr ?? ""
-                              : widget.categories[index].titleEn ?? "",
+                              ? widget.categories[index].titleAr
+                              : widget.categories[index].titleEn,
                         )),
                       );
           },

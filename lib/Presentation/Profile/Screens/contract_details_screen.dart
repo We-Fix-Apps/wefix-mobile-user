@@ -379,7 +379,7 @@ class _ContractScreenState extends State<ContractScreen> {
                 ),
                 const SizedBox(height: 10),
                 _paymentOption("visa", AppText(context, isFunction: true).visa,
-                    "assets/icon/visa.svg", setState),
+                    "assets/icon/bank-card_17727858.svg", setState),
                 _paymentOption("qlic", AppText(context, isFunction: true).cliq,
                     "assets/icon/final_cliq_logo-02_1.svg", setState),
                 _paymentOption(
@@ -399,6 +399,12 @@ class _ContractScreenState extends State<ContractScreen> {
                     setState),
                 const Divider(),
                 const SizedBox(height: 20),
+                  Center(
+                          child: Image.asset(
+                            "assets/icon/verified.png",
+                       width: 170,
+                          ),
+                        ),
                 CustomBotton(
                     title: AppText(context, isFunction: true).continuesss,
                     loading: loading2,

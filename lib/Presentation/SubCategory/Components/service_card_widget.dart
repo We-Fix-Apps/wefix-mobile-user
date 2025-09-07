@@ -51,6 +51,7 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
     LanguageProvider languageProvider =
         Provider.of<LanguageProvider>(context, listen: true);
     return Padding(
+      key: widget.key,
       padding: const EdgeInsets.all(8.0),
       child: Stack(
         clipBehavior: Clip.none,
