@@ -1,23 +1,20 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
-
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
-
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/packages_model.dart';
-
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Loading/loading_text.dart';
 import 'package:wefix/Presentation/Subscriptions/Components/featuer_widget.dart';
+
 
 class SubscriptionCard extends StatefulWidget {
   final String? title;
@@ -124,9 +121,6 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                           ],
                         ),
                       ),
-                      widget.isRecommended == false
-                          ? SizedBox()
-                          : Text(AppText(context).recommended),
                       SizedBox(height: AppSize(context).height * .01),
                       Column(
                         children: [
