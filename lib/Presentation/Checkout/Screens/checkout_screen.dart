@@ -100,25 +100,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           appProvider.appoitmentInfo["gender"] == "Female" ? true : false;
     });
 
-    try {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        CustomeTutorialCoachMark.createTutorial(keyButton, content);
-        Future.delayed(const Duration(seconds: 1), () {
-          Map showTour =
-              json.decode(CacheHelper.getData(key: CacheHelper.showTour));
-          CustomeTutorialCoachMark.showTutorial(context,
-              isShow: showTour["checkout"] ?? true);
-          setState(() {
-            showTour["checkout"] = false;
-          });
-          CacheHelper.saveData(
-              key: CacheHelper.showTour, value: json.encode(showTour));
-          log(showTour.toString());
-        });
-      });
-    } catch (e) {
-      log(e.toString());
-    }
+    // try {
+    //   WidgetsBinding.instance.addPostFrameCallback((_) {
+    //     CustomeTutorialCoachMark.createTutorial(keyButton, content);
+    //     Future.delayed(const Duration(seconds: 1), () {
+    //       Map showTour =
+    //           json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+    //       CustomeTutorialCoachMark.showTutorial(context,
+    //           isShow: showTour["checkout"] ?? true);
+    //       setState(() {
+    //         showTour["checkout"] = false;
+    //       });
+    //       CacheHelper.saveData(
+    //           key: CacheHelper.showTour, value: json.encode(showTour));
+    //       log(showTour.toString());
+    //     });
+    //   });
+    // } catch (e) {
+    //   log(e.toString());
+    // }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       CustomeTutorialCoachMark.createTutorial(keyButton, content);

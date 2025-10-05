@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:wefix/Data/appText/appText.dart';
 
 class UsageDetailsWidget extends StatefulWidget {
   final String title;
   final int value;
-  final int total;
+  final dynamic total;
   final Color color;
   const UsageDetailsWidget(
       {super.key,
@@ -28,7 +29,8 @@ class _UsageDetailsWidgetState extends State<UsageDetailsWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(widget.title),
-              Text("${widget.value} / ${widget.total}"),
+              Text(
+                  "${widget.value} / ${widget.total == 100 ? "${AppText(context).unlimited}" : widget.total}"),
             ],
           ),
           const SizedBox(height: 4),
