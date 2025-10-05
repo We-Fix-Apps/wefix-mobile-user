@@ -30,17 +30,12 @@ class _ServicesWidgetState extends State<ServicesWidget> {
 
   @override
   Widget build(BuildContext context) {
-    LanguageProvider languageProvider =
-        Provider.of<LanguageProvider>(context, listen: true);
+    LanguageProvider languageProvider = Provider.of<LanguageProvider>(context, listen: true);
     return GridView.builder(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       padding: const EdgeInsets.all(0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 5,
-          crossAxisSpacing: 5,
-          childAspectRatio: .92),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, mainAxisSpacing: 5, crossAxisSpacing: 5, childAspectRatio: .92),
       itemCount: widget.categories.length,
       itemBuilder: (context, index) {
         return InkWell(
@@ -64,9 +59,7 @@ class _ServicesWidgetState extends State<ServicesWidget> {
                         context,
                         downToTop(SubServicesScreen(
                           catId: widget.categories[index].id,
-                          title: languageProvider.lang == "ar"
-                              ? widget.categories[index].titleAr
-                              : widget.categories[index].titleEn,
+                          title: languageProvider.lang == "ar" ? widget.categories[index].titleAr : widget.categories[index].titleEn,
                         )),
                       );
           },
@@ -90,12 +83,9 @@ class _ServicesWidgetState extends State<ServicesWidget> {
                   ),
                   // const SizedBox(height: 8),
                   SizedBox(
-                    width:
-                        AppSize(context).width * .25, // Set appropriate width
+                    width: AppSize(context).width * .25, // Set appropriate width
                     child: Text(
-                      languageProvider.lang == "ar"
-                          ? widget.categories[index].titleAr ?? ""
-                          : widget.categories[index].titleEn ?? "",
+                      languageProvider.lang == "ar" ? widget.categories[index].titleAr ?? "" : widget.categories[index].titleEn ?? "",
                       textAlign: TextAlign.center,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
@@ -120,8 +110,7 @@ class _GlassmorphicBottomSheet extends StatefulWidget {
   _GlassmorphicBottomSheet({required this.title});
 
   @override
-  State<_GlassmorphicBottomSheet> createState() =>
-      _GlassmorphicBottomSheetState();
+  State<_GlassmorphicBottomSheet> createState() => _GlassmorphicBottomSheetState();
 }
 
 class _GlassmorphicBottomSheetState extends State<_GlassmorphicBottomSheet> {
@@ -141,8 +130,7 @@ class _GlassmorphicBottomSheetState extends State<_GlassmorphicBottomSheet> {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.85),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(25)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
@@ -165,8 +153,7 @@ class _GlassmorphicBottomSheetState extends State<_GlassmorphicBottomSheet> {
                   const SizedBox(height: 12),
                   Text(
                     'Explore Options for ${widget.title}',
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
                   Expanded(
