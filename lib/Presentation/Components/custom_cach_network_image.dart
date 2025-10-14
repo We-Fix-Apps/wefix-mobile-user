@@ -39,11 +39,7 @@ class WidgetCachNetworkImage extends StatelessWidget {
             SizedBox(
               width: 12,
               height: 12,
-              child: Center(
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(
-                          AppColors(context).primaryColor))),
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(AppColors(context).primaryColor))),
             ),
           ],
         ),
