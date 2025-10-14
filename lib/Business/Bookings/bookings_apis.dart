@@ -6,6 +6,7 @@ import 'package:wefix/Data/Api/http_request.dart';
 import 'package:wefix/Data/model/active_ticket_model.dart';
 import 'package:wefix/Data/model/advantages_model.dart';
 import 'package:wefix/Data/model/booking_details_model.dart';
+import 'package:wefix/Data/model/buissness_type_model.dart';
 import 'package:wefix/Data/model/packages_model.dart';
 import 'package:wefix/Data/model/ticket_model.dart';
 
@@ -133,10 +134,10 @@ class BookingApi {
   }
 
   static PackagesModel? packageModel;
-  static Future getPackagesDetails({required String token}) async {
+  static Future getPackagesDetails({required String token, String? id}) async {
     try {
       final response = await HttpHelper.getData(
-        query: EndPoints.packages,
+        query: EndPoints.packages + "${id ?? ""}",
         token: token,
       );
 

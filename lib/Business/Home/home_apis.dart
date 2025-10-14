@@ -33,10 +33,11 @@ class HomeApis {
 
   static SubServiceModel? subServiceModel;
   static Future<SubServiceModel?> getSubCatService(
-      {required String token, required String id}) async {
+      {required String token, required String id, int? roleId}) async {
     try {
       final response = await HttpHelper.getData(
-        query: EndPoints.subCategory + id,
+        query:
+            roleId == 1 ? EndPoints.subCategory + id : EndPoints.serviceCompany,
         token: token,
       );
 

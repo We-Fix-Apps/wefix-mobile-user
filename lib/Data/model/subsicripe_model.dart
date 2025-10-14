@@ -16,6 +16,7 @@ class SubsicripeModel {
   int? numberOnFemalUse;
   int? onDemandVisit;
   int? emergancyVisit;
+  int? recurringVistUse;
 
   SubsicripeModel({
     required this.status,
@@ -23,6 +24,7 @@ class SubsicripeModel {
     this.numberOnFemalUse,
     this.emergancyVisit,
     this.onDemandVisit,
+    this.recurringVistUse,
   });
 
   factory SubsicripeModel.fromJson(Map<String, dynamic> json) =>
@@ -30,6 +32,7 @@ class SubsicripeModel {
         status: json["status"] ?? false,
         emergancyVisit: json["emergancyVisit"],
         onDemandVisit: json["onDemandVisit"],
+        recurringVistUse: json["recurringVistUse"],
         numberOnFemalUse: json["numberOnFemalUse"],
         objSubscribe: json["objSubscribe"] == null
             ? null
@@ -41,6 +44,7 @@ class SubsicripeModel {
         "objSubscribe": objSubscribe?.toJson(),
         "numberOnFemalUse": numberOnFemalUse,
         "onDemandVisit": onDemandVisit,
+        "recurringVistUse": recurringVistUse,
         "emergancyVisit": emergancyVisit,
       };
 }

@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:wefix/Business/end_points.dart';
 import 'package:wefix/Data/Api/http_request.dart';
+import 'package:wefix/Data/model/buissness_type_model.dart';
 
 import 'package:wefix/Data/model/login_model.dart';
 import 'package:wefix/Data/model/signup_model.dart';
@@ -41,6 +42,31 @@ class Authantication {
     }
   }
 
+  static BusinessTypesModel? businessTypesModel;
+  static Future getBusinessType({required String token}) async {
+    try {
+      final response = await HttpHelper.getData(
+        query: EndPoints.buissnessType,
+        token: token,
+      );
+
+      log('getBusinessType() [ STATUS ] -> ${response.statusCode}');
+
+      final body = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        businessTypesModel = BusinessTypesModel.fromJson(body);
+
+        return businessTypesModel;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      log('getBusinessType() [ ERROR ] -> $e');
+      return [];
+    }
+  }
+
   static SignUpModel? signUpModel;
   // * Register
   static Future<SignUpModel?> signUp({
@@ -48,10 +74,16 @@ class Authantication {
     required String password,
     required String phone,
     required String lastname,
+    required int BusinessTypeId,
     required String address,
+    String? companyName,
+    String? area,
+    int? type,
     required double lat,
     required double long,
     String? email,
+    String? owner,
+    String? website,
     required BuildContext context,
   }) async {
     try {
@@ -66,6 +98,11 @@ class Authantication {
           "LastName": lastname,
           "lat": lat,
           "long": long,
+          "BusinessTypeId": BusinessTypeId,
+          "Type": type,
+          "Area": area,
+          "Owner": owner,
+          "Website": website,
         },
       );
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
+import 'package:wefix/Business/B2b/b2b_api.dart';
 import 'package:wefix/Business/Bookings/bookings_apis.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
@@ -13,6 +14,7 @@ import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/advantages_model.dart';
+import 'package:wefix/Data/model/branch_model.dart';
 import 'package:wefix/Data/model/realstate_model.dart';
 import 'package:wefix/Presentation/Components/tour_widget.dart';
 
@@ -46,6 +48,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
   late AnimationController _serviceController;
   bool needsMaterial = false;
   final TextEditingController materialCostController = TextEditingController();
+  BranchesModel? branchesModel;
 
   late AnimationController _dateController;
   var key = GlobalKey<FormState>();
@@ -101,6 +104,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
   @override
   void initState() {
     getRealState();
+    getBranches();
     getAdv();
 
     try {
@@ -189,163 +193,184 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                               .substring(0, 10),
                           time: appProvider.appoitmentInfo["time"].toString(),
                         ),
-                        Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: SwitchListTile.adaptive(
-                                activeColor: AppColors(context).primaryColor,
-                                secondary: SvgPicture.asset(
-                                  "assets/icon/optimizing.svg",
-                                  height: AppSize(context).height * .05,
-                                  width: AppSize(context).width * .1,
-                                ),
-                                title: Text(
-                                  AppText(context).needmaterialfromprovider,
-                                  style: TextStyle(
-                                    fontSize: AppSize(context).smallText2,
-                                  ),
-                                ),
-                                inactiveThumbColor: AppColors.whiteColor1,
-                                inactiveTrackColor: AppColors.greyColor1,
-                                overlayColor: MaterialStateProperty.all(
-                                  AppColors(context)
-                                      .primaryColor
-                                      .withOpacity(.2),
-                                ),
-                                value:
-                                    appProvider.isMaterialFromProvider ?? false,
-                                onChanged: (value) {
-                                  appProvider.isMaterailFromProvider(value);
-                                  setState(() => needsMaterial = value);
-                                },
-                              ),
-                            ),
-                            if (appProvider.isMaterialFromProvider ??
-                                false) ...[
-                              WidgetTextField(
-                                AppText(context, isFunction: true)
-                                    .canyoutelluswhatmaterialisneeded,
-                                controller: materialCostController,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ],
-                            loadingAdv == true
-                                ? LoadingText(
-                                    width: AppSize(context).width,
-                                    height: AppSize(context).height * .05,
-                                  )
-                                : ListView.builder(
-                                    itemBuilder: (context, index) {
-                                      final advantage =
-                                          advantagesModel?.advantages[index];
-                                      final isSelected = selectedServiceIds
-                                          .contains(advantage?.id ?? -1);
-
-                                      return Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: SwitchListTile.adaptive(
-                                          subtitle: Text(
-                                            languageProvider.lang == "ar"
-                                                ? advantage?.subTitleAr ?? ""
-                                                : advantage?.subTitleEn ?? "",
-                                            style: TextStyle(
-                                                fontSize:
-                                                    AppSize(context).smallText3,
-                                                color: AppColors.greyColor2),
-                                          ),
-                                          activeColor:
-                                              AppColors(context).primaryColor,
-                                          secondary: advantage?.icon
-                                                      .endsWith("svg") ??
-                                                  false
-                                              ? SvgPicture.network(
-                                                  advantage?.icon ?? "",
-                                                  height:
-                                                      AppSize(context).height *
-                                                          .05,
-                                                  width:
-                                                      AppSize(context).width *
-                                                          .1,
-                                                )
-                                              : Image.network(
-                                                  advantage?.icon ?? "",
-                                                  height:
-                                                      AppSize(context).height *
-                                                          .05,
-                                                  width:
-                                                      AppSize(context).width *
-                                                          .1,
-                                                  errorBuilder: (context, error,
-                                                      stackTrace) {
-                                                    return Icon(
-                                                      Icons.image_not_supported,
-                                                      size: AppSize(context)
-                                                              .width *
-                                                          .1,
-                                                      color:
-                                                          AppColors.greyColor2,
-                                                    );
-                                                  },
-                                                ),
-                                          title: Text(
-                                            languageProvider.lang == "ar"
-                                                ? advantage?.titleAr ?? ""
-                                                : advantage?.titleEn ?? "",
-                                            style: TextStyle(
-                                              fontSize:
-                                                  AppSize(context).smallText2,
-                                            ),
-                                          ),
-                                          inactiveThumbColor:
-                                              AppColors.whiteColor1,
-                                          inactiveTrackColor:
-                                              AppColors.greyColor1,
-                                          overlayColor:
-                                              MaterialStateProperty.all(
-                                            AppColors(context)
-                                                .primaryColor
-                                                .withOpacity(.2),
-                                          ),
-                                          value: isSelected,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              final id = advantage?.id;
-                                              final price =
-                                                  advantage?.price ?? 0.0;
-
-                                              if (value && id != null) {
-                                                if (!selectedServiceIds
-                                                    .contains(id)) {
-                                                  selectedServiceIds.add(id);
-                                                  totalPrice += price;
-                                                }
-                                              } else if (!value && id != null) {
-                                                selectedServiceIds.remove(id);
-                                                totalPrice -= price;
-                                              }
-                                            });
-
-                                            log(selectedServiceIds.toString());
-                                            log("Total Price: $totalPrice");
-
-                                            appProvider.saveAdvantages({
-                                              "advantages": selectedServiceIds,
-                                              "totalPrice": totalPrice,
-                                            });
-                                          },
+                        appProvider.userModel?.customer.roleId == 2
+                            ? SizedBox()
+                            : Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: SwitchListTile.adaptive(
+                                      activeColor:
+                                          AppColors(context).primaryColor,
+                                      secondary: SvgPicture.asset(
+                                        "assets/icon/optimizing.svg",
+                                        height: AppSize(context).height * .05,
+                                        width: AppSize(context).width * .1,
+                                      ),
+                                      title: Text(
+                                        AppText(context)
+                                            .needmaterialfromprovider,
+                                        style: TextStyle(
+                                          fontSize: AppSize(context).smallText2,
                                         ),
-                                      );
-                                    },
-                                    itemCount:
-                                        advantagesModel?.advantages.length ?? 0,
-                                    shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(),
+                                      ),
+                                      inactiveThumbColor: AppColors.whiteColor1,
+                                      inactiveTrackColor: AppColors.greyColor1,
+                                      overlayColor: MaterialStateProperty.all(
+                                        AppColors(context)
+                                            .primaryColor
+                                            .withOpacity(.2),
+                                      ),
+                                      value:
+                                          appProvider.isMaterialFromProvider ??
+                                              false,
+                                      onChanged: (value) {
+                                        appProvider
+                                            .isMaterailFromProvider(value);
+                                        setState(() => needsMaterial = value);
+                                      },
+                                    ),
                                   ),
-                          ],
-                        ),
+                                  if (appProvider.isMaterialFromProvider ??
+                                      false) ...[
+                                    WidgetTextField(
+                                      AppText(context, isFunction: true)
+                                          .canyoutelluswhatmaterialisneeded,
+                                      controller: materialCostController,
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ],
+                                  loadingAdv == true
+                                      ? LoadingText(
+                                          width: AppSize(context).width,
+                                          height: AppSize(context).height * .05,
+                                        )
+                                      : ListView.builder(
+                                          itemBuilder: (context, index) {
+                                            final advantage = advantagesModel
+                                                ?.advantages[index];
+                                            final isSelected =
+                                                selectedServiceIds.contains(
+                                                    advantage?.id ?? -1);
+
+                                            return Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: SwitchListTile.adaptive(
+                                                subtitle: Text(
+                                                  languageProvider.lang == "ar"
+                                                      ? advantage?.subTitleAr ??
+                                                          ""
+                                                      : advantage?.subTitleEn ??
+                                                          "",
+                                                  style: TextStyle(
+                                                      fontSize: AppSize(context)
+                                                          .smallText3,
+                                                      color:
+                                                          AppColors.greyColor2),
+                                                ),
+                                                activeColor: AppColors(context)
+                                                    .primaryColor,
+                                                secondary: advantage?.icon
+                                                            .endsWith("svg") ??
+                                                        false
+                                                    ? SvgPicture.network(
+                                                        advantage?.icon ?? "",
+                                                        height: AppSize(context)
+                                                                .height *
+                                                            .05,
+                                                        width: AppSize(context)
+                                                                .width *
+                                                            .1,
+                                                      )
+                                                    : Image.network(
+                                                        advantage?.icon ?? "",
+                                                        height: AppSize(context)
+                                                                .height *
+                                                            .05,
+                                                        width: AppSize(context)
+                                                                .width *
+                                                            .1,
+                                                        errorBuilder: (context,
+                                                            error, stackTrace) {
+                                                          return Icon(
+                                                            Icons
+                                                                .image_not_supported,
+                                                            size:
+                                                                AppSize(context)
+                                                                        .width *
+                                                                    .1,
+                                                            color: AppColors
+                                                                .greyColor2,
+                                                          );
+                                                        },
+                                                      ),
+                                                title: Text(
+                                                  languageProvider.lang == "ar"
+                                                      ? advantage?.titleAr ?? ""
+                                                      : advantage?.titleEn ??
+                                                          "",
+                                                  style: TextStyle(
+                                                    fontSize: AppSize(context)
+                                                        .smallText2,
+                                                  ),
+                                                ),
+                                                inactiveThumbColor:
+                                                    AppColors.whiteColor1,
+                                                inactiveTrackColor:
+                                                    AppColors.greyColor1,
+                                                overlayColor:
+                                                    MaterialStateProperty.all(
+                                                  AppColors(context)
+                                                      .primaryColor
+                                                      .withOpacity(.2),
+                                                ),
+                                                value: isSelected,
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    final id = advantage?.id;
+                                                    final price =
+                                                        advantage?.price ?? 0.0;
+
+                                                    if (value && id != null) {
+                                                      if (!selectedServiceIds
+                                                          .contains(id)) {
+                                                        selectedServiceIds
+                                                            .add(id);
+                                                        totalPrice += price;
+                                                      }
+                                                    } else if (!value &&
+                                                        id != null) {
+                                                      selectedServiceIds
+                                                          .remove(id);
+                                                      totalPrice -= price;
+                                                    }
+                                                  });
+
+                                                  log(selectedServiceIds
+                                                      .toString());
+                                                  log("Total Price: $totalPrice");
+
+                                                  appProvider.saveAdvantages({
+                                                    "advantages":
+                                                        selectedServiceIds,
+                                                    "totalPrice": totalPrice,
+                                                  });
+                                                },
+                                              ),
+                                            );
+                                          },
+                                          itemCount: advantagesModel
+                                                  ?.advantages.length ??
+                                              0,
+                                          shrinkWrap: true,
+                                          physics:
+                                              NeverScrollableScrollPhysics(),
+                                        ),
+                                ],
+                              ),
                         const Divider(
                           color: AppColors.backgroundColor,
                         ),
@@ -382,13 +407,15 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
 
                         realEstatesModel?.realEstates.isEmpty == true
                             ? const SizedBox()
-                            : Text(
-                                "🏠	 ${AppText(context).propertyName}",
-                                style: TextStyle(
-                                  fontSize: AppSize(context).smallText1,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                            : appProvider.userModel?.customer.roleId == 2
+                                ? SizedBox()
+                                : Text(
+                                    "🏠	 ${AppText(context).propertyName}",
+                                    style: TextStyle(
+                                      fontSize: AppSize(context).smallText1,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                         const SizedBox(
                           height: 5,
                         ),
@@ -445,6 +472,57 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                             : const Divider(
                                 color: AppColors.backgroundColor,
                               ),
+                        Text(
+                          "🏠 Branch name",
+                          style: TextStyle(
+                            fontSize: AppSize(context).smallText1,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 5,
+                        ),
+
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            width: AppSize(context).width,
+                            height: AppSize(context).height * 0.06,
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundColor,
+                              borderRadius: BorderRadius.circular(7),
+                              border: Border.all(color: AppColors.greyColor3),
+                            ),
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: DropdownButton<String>(
+                                  isDense: true,
+                                  isExpanded: true,
+                                  underline: const SizedBox(),
+                                  value: selectedType,
+                                  hint: const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    child: Text(""),
+                                  ),
+                                  items: branchesModel?.branches
+                                      .map((item) => DropdownMenuItem(
+                                            value: item.id.toString(),
+                                            child: Text(item.name),
+                                          ))
+                                      .toList(),
+                                  onChanged: (value) {
+                                    appProvider.setRealStateId(value ?? "");
+                                    setState(() {
+                                      selectedType = value;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -468,6 +546,25 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
         ),
       ),
     );
+  }
+
+  Future getBranches() async {
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    setState(() {
+      loading = true;
+    });
+    B2bApi.getBranches(token: appProvider.userModel?.token ?? '').then((value) {
+      if (value != null) {
+        setState(() {
+          loading = false;
+          branchesModel = value;
+        });
+      } else {
+        setState(() {
+          loading = false;
+        });
+      }
+    });
   }
 
   void showAttachmentBottomSheet(BuildContext context) {

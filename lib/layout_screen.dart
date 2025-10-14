@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/appText/appText.dart';
+import 'package:wefix/Presentation/B2B/home_b2b.dart';
 import 'package:wefix/Presentation/Home/Screens/home_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/contact_us_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
@@ -43,9 +44,7 @@ class _HomeLayoutState extends State<HomeLayout> {
   }
 
   List<Widget> screen = [
-    HomeScreen(
-  
-    ),
+    HomeScreen(),
     BookingScreen(),
     const SubscriptionScreen(),
     const ProfileScreen(),

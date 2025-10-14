@@ -67,10 +67,13 @@ class ProfileApis {
 
   static Future isSubsicribe({
     required String token,
+    bool? isCompany,
   }) async {
     try {
       final response = await HttpHelper.getData(
-        query: EndPoints.isSubsicribe,
+        query: isCompany == true
+            ? EndPoints.isSubscribeCompany
+            : EndPoints.isSubsicribe,
         token: token,
       );
 

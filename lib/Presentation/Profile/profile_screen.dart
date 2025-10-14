@@ -6,6 +6,9 @@ import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/appText/appText.dart';
+import 'package:wefix/Presentation/B2B/branch/add_branch_screen.dart'
+    show AddBranchScreen;
+import 'package:wefix/Presentation/B2B/branch/branches_list_screen.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Profile/Components/web_view_screen.dart';
@@ -20,7 +23,6 @@ import 'package:wefix/Presentation/Profile/Screens/profile_info_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/EditUser/edit_mobile_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/EditUser/change_password_screen.dart';
 import 'package:wefix/Presentation/wallet/screens/wallet_screen.dart';
-
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -60,22 +62,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       height: 10,
                     ),
               // WidgetCard(
-              //   title: "My Profile",
+              //   title: "Add Branch",
               //   onTap: () {
-              //     Navigator.push(context, rightToLeft(MyProfileScreen()));
+              //     Navigator.push(context, rightToLeft(AddBranchScreen()));
               //   },
               // ),
-              // const SizedBox(height: 10),
-              appProvider.userModel?.token == null
-                  ? const SizedBox()
+              const SizedBox(height: 10),
+              appProvider.userModel?.customer.roleId == 1
+                  ? SizedBox()
                   : WidgetCard(
-                      title: AppText(context).wallet,
+                      title: "Branches",
                       onTap: () {
                         Navigator.push(
-                            context, rightToLeft(const WalletScreen()));
+                            context, rightToLeft(BranchesListScreen()));
                       },
                     ),
               const SizedBox(height: 10),
+              appProvider.userModel?.token == null
+                  ? const SizedBox()
+                  : appProvider.userModel?.customer.roleId == 2
+                      ? SizedBox()
+                      : WidgetCard(
+                          title: AppText(context).wallet,
+                          onTap: () {
+                            Navigator.push(
+                                context, rightToLeft(const WalletScreen()));
+                          },
+                        ),
+              appProvider.userModel?.customer.roleId == 2
+                  ? SizedBox()
+                  : const SizedBox(height: 10),
               appProvider.userModel?.token == null
                   ? const SizedBox()
                   : WidgetCard(
@@ -88,18 +104,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               appProvider.userModel?.token == null
                   ? const SizedBox()
-                  : WidgetCard(
-                      title: AppText(context).myProperty,
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            rightToLeft(const ApartmentScreen(
-                              status: "Active",
-                              statusColor: AppColors.greenColor,
-                            )));
-                      },
-                    ),
-              const SizedBox(height: 10),
+                  : appProvider.userModel?.customer.roleId == 2
+                      ? SizedBox()
+                      : WidgetCard(
+                          title: AppText(context).myProperty,
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                rightToLeft(const ApartmentScreen(
+                                  status: "Active",
+                                  statusColor: AppColors.greenColor,
+                                )));
+                          },
+                        ),
+              appProvider.userModel?.customer.roleId == 2
+                  ? SizedBox()
+                  : const SizedBox(height: 10),
 
               appProvider.userModel?.token == null
                   ? const SizedBox()

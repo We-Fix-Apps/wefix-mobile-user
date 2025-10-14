@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
@@ -48,6 +49,7 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
 
   @override
   Widget build(BuildContext context) {
+    AppProvider appProvider = Provider.of<AppProvider>(context);
     LanguageProvider languageProvider =
         Provider.of<LanguageProvider>(context, listen: true);
     return Padding(
@@ -97,6 +99,7 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
                             ),
                           ],
                         ),
+                        SizedBox(height: AppSize(context).height * .01),
                         Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +108,11 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
                               children: [
                                 widget.isSubsicribed == true
                                     ? Text(
-                                        "${AppText(context).price} ${AppText(context).jod} ${widget.services?.subscriptionPrice}",
+                                        appProvider.userModel?.customer
+                                                    .roleId ==
+                                                2
+                                            ? "${widget.services?.numOfTicket ?? ''} ${AppText(context).ticket}"
+                                            : "${AppText(context).price} ${AppText(context).jod} ${widget.services?.subscriptionPrice}",
                                         style: TextStyle(
                                           color: AppColors.greyColor2,
                                           fontSize: AppSize(context).smallText3,
@@ -113,7 +120,11 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
                                         ),
                                       )
                                     : Text(
-                                        "${AppText(context).price} ${AppText(context).jod} ${widget.services?.discountPrice}",
+                                        appProvider.userModel?.customer
+                                                    .roleId ==
+                                                2
+                                            ? "${widget.services?.numOfTicket ?? ''} ${AppText(context).ticket}"
+                                            : "${AppText(context).price} ${AppText(context).jod} ${widget.services?.discountPrice}",
                                         style: TextStyle(
                                           color: AppColors.greyColor2,
                                           fontSize: AppSize(context).smallText3,
@@ -121,19 +132,22 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
                                         ),
                                       ),
                                 const SizedBox(width: 10),
-                                (widget.isSubsicribed == false ||
-                                        widget.isSubsicribed == null)
-                                    ? const SizedBox()
-                                    : Text(
-                                        "${AppText(context).jod} ${widget.services?.price}",
-                                        style: TextStyle(
-                                          color: AppColors.greyColor2,
-                                          decoration:
-                                              TextDecoration.lineThrough,
-                                          fontSize: AppSize(context).smallText3,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
+                                appProvider.userModel?.customer.roleId == 2
+                                    ? SizedBox()
+                                    : (widget.isSubsicribed == false ||
+                                            widget.isSubsicribed == null)
+                                        ? const SizedBox()
+                                        : Text(
+                                            "${AppText(context).jod} ${widget.services?.price}",
+                                            style: TextStyle(
+                                              color: AppColors.greyColor2,
+                                              decoration:
+                                                  TextDecoration.lineThrough,
+                                              fontSize:
+                                                  AppSize(context).smallText3,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
                               ],
                             ),
                           ],
@@ -217,36 +231,39 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
             ),
           ),
           if (widget.isSubsicribed == true)
-            Positioned(
-              top: -10,
-              left: -5, // Move to top-left corner
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors(context).primaryColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SvgPicture.asset(
-                      "assets/icon/support-ticket.svg",
-                      height: 20,
-                      width: 20,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      "${widget.services?.numOfTicket ?? ''} ${AppText(context).ticket}",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+            appProvider.userModel?.customer.roleId == 2
+                ? SizedBox()
+                : Positioned(
+                    top: -10,
+                    left: -5, // Move to top-left corner
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors(context).primaryColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset(
+                            "assets/icon/support-ticket.svg",
+                            height: 20,
+                            width: 20,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "${widget.services?.numOfTicket ?? ''} ${AppText(context).ticket}",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
         ],
       ),
     );

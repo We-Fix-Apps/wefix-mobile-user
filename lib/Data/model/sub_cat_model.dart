@@ -33,10 +33,10 @@ class SubServiceModel {
 class Service {
   int id;
   int categoryId;
-  String name;
-  String nameAr;
-  String icon;
-  String image;
+  String? name;
+  String? nameAr;
+  String? icon;
+  String? image;
   dynamic price;
   dynamic discountPrice;
   dynamic subscriptionPrice;

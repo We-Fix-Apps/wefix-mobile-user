@@ -1040,6 +1040,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
     try {
       HomeApis.getSubCatService(
               token: appProvider.userModel?.token ?? "",
+              roleId: appProvider.userModel?.customer.roleId,
               id: widget.catId.toString())
           .then((value) {
         setState(() {

@@ -1,6 +1,7 @@
 class EndPoints {
-  static String baseUrl = 'https://api.wefixjo.com/';
+  // static String baseUrl = 'https://api.wefixjo.com/';
   // static String baseUrl = 'https://apitestwefix.oneit.website/';
+  static String baseUrl = 'https://wefixapi.oneit.website/';
 
   // * Authantication
   static String signUp = 'users/Signup';
@@ -14,7 +15,7 @@ class EndPoints {
   static String contractDetails = 'Customer/MyContract';
   static String createOrder = 'Customer/ServiceRequest';
   static String booking = 'customer/Tickets';
-  static String packages = 'customer/Packages';
+  static String packages = 'customer/Packages/';
   static String questions = 'customer/Questions';
   static String contactInfo = 'Common/ContactInfo';
   static String contactUs = 'Common/ContatcForm';
@@ -27,6 +28,8 @@ class EndPoints {
   static String rate = 'Customer/CreateReview';
   static String renew = 'customer/RenewSubscribe';
   static String activeTickets = 'Common/ActiveTickets';
+  static String buissnessType = 'Common/BusinessType';
+
   static String calculateSubPrice = 'customer/Calculate';
   static String getRealState = 'customer/RealEstate';
   static String addReview = 'customer/CreateCustomerQuestions';
@@ -114,4 +117,11 @@ class EndPoints {
   static String lang = 'common/Languages';
   static String langCode = 'common/AppLanguages';
   static String facebook = 'user/HideGoogleAndFaceBook';
+
+  // * B2B
+
+  static String createBranch = 'customer/Branch';
+  static String getAllBranch = 'customer/GetAllBranch';
+  static String isSubscribeCompany = 'customer/IsSubscribeCompany';
+  static String serviceCompany = 'customer/ServiceCompany';
 }

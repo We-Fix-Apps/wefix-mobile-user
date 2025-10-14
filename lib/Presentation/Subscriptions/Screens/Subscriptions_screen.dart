@@ -258,7 +258,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      BookingApi.getPackagesDetails(token: appProvider.userModel?.token ?? "")
+      BookingApi.getPackagesDetails(
+              token: appProvider.userModel?.token ?? "",
+              id: appProvider.userModel?.customer.roleId == 2 ? "2" : "1")
           .then((value) {
         setState(() {
           packageModel = value;

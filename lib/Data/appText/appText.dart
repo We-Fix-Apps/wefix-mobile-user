@@ -37,17 +37,22 @@ class AppText {
   String get unlimited => getTranslation('unlimited');
 
   String get editAppointmentTime => getTranslation('editAppointmentTime');
-String get editAppointmentTimeDescription => getTranslation('editAppointmentTimeDescription');
+  String get editAppointmentTimeDescription =>
+      getTranslation('editAppointmentTimeDescription');
 
-String get addAdditionalServices => getTranslation('addAdditionalServices');
-String get addAdditionalServicesDescription => getTranslation('addAdditionalServicesDescription');
+  String get addAdditionalServices => getTranslation('addAdditionalServices');
+  String get addAdditionalServicesDescription =>
+      getTranslation('addAdditionalServicesDescription');
 
-String get viewYourAttachments => getTranslation('viewYourAttachments');
-String get viewYourAttachmentsDescription => getTranslation('viewYourAttachmentsDescription');
+  String get viewYourAttachments => getTranslation('viewYourAttachments');
+  String get viewYourAttachmentsDescription =>
+      getTranslation('viewYourAttachmentsDescription');
 
-String get continueYourAppointment => getTranslation('continueYourAppointment');
-String get continueYourAppointmentDescription => getTranslation('continueYourAppointmentDescription');
-String get pleaseSelectTime => getTranslation('pleaseSelectTime');
+  String get continueYourAppointment =>
+      getTranslation('continueYourAppointment');
+  String get continueYourAppointmentDescription =>
+      getTranslation('continueYourAppointmentDescription');
+  String get pleaseSelectTime => getTranslation('pleaseSelectTime');
 
   String get discount => getTranslation('discount');
   String get startfrom => getTranslation('startfrom');
@@ -62,17 +67,20 @@ String get pleaseSelectTime => getTranslation('pleaseSelectTime');
   String get waitingforConfirmation => getTranslation('waitingforConfirmation');
 
   String get changeLocation => getTranslation('changeLocation');
-String get changeLocationDescription => getTranslation('changeLocationDescription');
+  String get changeLocationDescription =>
+      getTranslation('changeLocationDescription');
 
-String get getDiscount => getTranslation('getDiscount');
-String get getDiscountDescription => getTranslation('getDiscountDescription');
+  String get getDiscount => getTranslation('getDiscount');
+  String get getDiscountDescription => getTranslation('getDiscountDescription');
 
-String get paymentSummary => getTranslation('paymentSummary');
-String get paymentSummaryDescription => getTranslation('paymentSummaryDescription');
+  String get paymentSummary => getTranslation('paymentSummary');
+  String get paymentSummaryDescription =>
+      getTranslation('paymentSummaryDescription');
 
-String get placeOrderAndChoosePaymentMethod => getTranslation('placeOrderAndChoosePaymentMethod');
-String get placeOrderAndChoosePaymentMethodDescription => getTranslation('placeOrderAndChoosePaymentMethodDescription');
-
+  String get placeOrderAndChoosePaymentMethod =>
+      getTranslation('placeOrderAndChoosePaymentMethod');
+  String get placeOrderAndChoosePaymentMethodDescription =>
+      getTranslation('placeOrderAndChoosePaymentMethodDescription');
 
   String get proAtt => getTranslation('proAtt');
   String get corrective => getTranslation('corrective');
@@ -211,8 +219,6 @@ String get placeOrderAndChoosePaymentMethodDescription => getTranslation('placeO
 
   String get contractDetails => getTranslation('contractDetails');
 
-
-
   String get nowYouCanSelect => getTranslation('nowYouCanSelect');
 
   String get addYourService => getTranslation('addYourService');
@@ -225,17 +231,7 @@ String get placeOrderAndChoosePaymentMethodDescription => getTranslation('placeO
 
   String get youcandescripe => getTranslation('youcandescripe');
 
-
   String get afteraddingAll => getTranslation('afteraddingAll');
-
-
-
-
-
-
-
-
-
 
   String get contractSummary => getTranslation('contractSummary');
   String get endDate => getTranslation('endDate');
