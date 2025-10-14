@@ -68,17 +68,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List colors = [
-      AppColors.pink,
-      AppColors(context).primaryColor,
-      AppColors.green,
-      AppColors.pink,
-      AppColors(context).primaryColor,
-      AppColors.green
-    ];
+    List colors = [AppColors.pink, AppColors(context).primaryColor, AppColors.green, AppColors.pink, AppColors(context).primaryColor, AppColors.green];
     final primaryColor = AppColors(context).primaryColor;
-    LanguageProvider languageProvider =
-        Provider.of<LanguageProvider>(context, listen: true);
+    LanguageProvider languageProvider = Provider.of<LanguageProvider>(context, listen: true);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -95,31 +87,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           : DefaultTabController(
               length: packageModel?.packages.length ?? 0,
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(3.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      AppText(context)
-                          .dontmissoutSubscribenowforspecialServices,
-                      style: TextStyle(
-                        fontSize: AppSize(context).mediumText3,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    // Text(
+                    //   AppText(context).dontmissoutSubscribenowforspecialServices,
+                    //   style: TextStyle(
+                    //     fontSize: AppSize(context).mediumText3,
+                    //     fontWeight: FontWeight.bold,
+                    //   ),
+                    // ),
                     // const SizedBox(height: 20),
                     TabBar(
                       isScrollable: true,
                       indicatorColor: primaryColor,
                       labelColor: primaryColor,
                       unselectedLabelColor: Colors.black54,
-                      tabs: packageModel?.packages
-                              .map((e) => Tab(
-                                  text: languageProvider.lang == "ar"
-                                      ? e.titleAr
-                                      : e.title))
-                              .toList() ??
-                          [],
+                      tabs: packageModel?.packages.map((e) => Tab(text: languageProvider.lang == "ar" ? e.titleAr : e.title)).toList() ?? [],
                     ),
                     // SizedBox(height: AppSize(context).height * .01),
                     Expanded(
@@ -131,34 +116,25 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                     itemCount: e.package.length,
                                     itemBuilder: (context, index) {
                                       final sub = e.package[index];
-                                      final isSelected =
-                                          selectedIndexes.contains(index);
-
+                                      final isSelected = selectedIndexes.contains(index);
                                       return Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 10),
+                                        padding: const EdgeInsets.only(right: 10),
                                         child: Stack(
                                           children: [
                                             GestureDetector(
-                                              onTap: () =>
-                                                  toggleSelection(index),
+                                              onTap: () => toggleSelection(index),
                                               child: SubscriptionCard(
                                                 imageFoter: imagefooter[index],
                                                 color: colors[index],
                                                 title: sub.title,
                                                 isLoading: loading2,
                                                 image: image[index],
-                                                isRecommended:
-                                                    sub.title?.toLowerCase() ==
-                                                        "premium",
+                                                isRecommended: sub.title?.toLowerCase() == "premium",
                                                 onTap: () {
-                                                  subsicribeNow(sub.id)
-                                                      .then((value) {});
+                                                  subsicribeNow(sub.id).then((value) {});
                                                 },
-                                                price:
-                                                    "${sub.price.toString()}",
-                                                priceAnnual:
-                                                    sub.price.toString(),
+                                                price: "${sub.price.toString()}",
+                                                priceAnnual: sub.price.toString(),
                                                 features: sub.features,
                                                 isSelected: isSelected,
                                                 package: sub, // Add this line
@@ -167,20 +143,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                             Positioned(
                                               top: 20,
                                               child: GestureDetector(
-                                                onTap: () =>
-                                                    toggleSelection(index),
+                                                onTap: () => toggleSelection(index),
                                                 child: Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 6),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                                   decoration: BoxDecoration(
-                                                    color: isSelected
-                                                        ? primaryColor
-                                                        : Colors.grey.shade400,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            16),
+                                                    color: isSelected ? primaryColor : Colors.grey.shade400,
+                                                    borderRadius: BorderRadius.circular(16),
                                                     boxShadow: const [
                                                       BoxShadow(
                                                         color: Colors.black12,
@@ -189,8 +157,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                     ],
                                                   ),
                                                   child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
+                                                    mainAxisSize: MainAxisSize.min,
                                                     children: [
                                                       const Icon(
                                                         Icons.compare_arrows,
@@ -199,14 +166,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                       ),
                                                       const SizedBox(width: 4),
                                                       Text(
-                                                        isSelected
-                                                            ? AppText(context)
-                                                                .added
-                                                            : AppText(context)
-                                                                .compare,
-                                                        style: const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 12),
+                                                        isSelected ? AppText(context).added : AppText(context).compare,
+                                                        style: const TextStyle(color: Colors.white, fontSize: 12),
                                                       ),
                                                     ],
                                                   ),
@@ -230,16 +191,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         child: CustomBotton(
                           title: AppText(context).compare,
                           onTap: () {
-                            final selectedPlans = selectedIndexes
-                                .map((index) =>
-                                    packageModel?.packages[0].package[index])
-                                .whereType<PackagePackage>()
-                                .toList();
+                            final selectedPlans = selectedIndexes.map((index) => packageModel?.packages[0].package[index]).whereType<PackagePackage>().toList();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    ComparisonScreen(plans: selectedPlans),
+                                builder: (context) => ComparisonScreen(plans: selectedPlans),
                               ),
                             );
                           },
@@ -258,10 +214,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
+<<<<<<< HEAD
       BookingApi.getPackagesDetails(
               token: appProvider.userModel?.token ?? "",
               id: appProvider.userModel?.customer.roleId == 2 ? "2" : "1")
           .then((value) {
+=======
+      BookingApi.getPackagesDetails(token: appProvider.userModel?.token ?? "").then((value) {
+>>>>>>> 5d42c9e4fc50b0a2dcd59c937c8b008894b5fbf5
         setState(() {
           packageModel = value;
           loading = false;

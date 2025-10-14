@@ -62,18 +62,13 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
 
   @override
   Widget build(BuildContext context) {
-    LanguageProvider languageProvider =
-        Provider.of<LanguageProvider>(context, listen: true);
+    LanguageProvider languageProvider = Provider.of<LanguageProvider>(context, listen: true);
     return Center(
       child: Container(
         width: AppSize(context).width * 0.7,
-        padding: const EdgeInsets.only(top: 0, bottom: 0, left: 0, right: 0),
         decoration: BoxDecoration(
           color: AppColors.whiteColor1,
-          border: Border.all(
-              color: widget.isSelected == true
-                  ? AppColors(context).primaryColor
-                  : AppColors.greyColor),
+          border: Border.all(color: widget.isSelected == true ? AppColors(context).primaryColor : AppColors.greyColor),
           borderRadius: BorderRadius.circular(0),
         ),
         child: Container(
@@ -112,8 +107,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                                 color: widget.color,
                               ),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 child: Text(
                                   widget.title?.toUpperCase() ?? "Google One",
                                   style: TextStyle(
@@ -145,8 +139,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8.0, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2),
                               child: Text(
                                 AppText(context).jODMonth,
                                 style: TextStyle(
@@ -162,92 +155,82 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                   ),
                 ),
               ),
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: AppSize(context).width * 0.45,
-                          child: Text(
-                            AppText(context).feature,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              width: AppSize(context).width * 0.45,
+                              child: Text(
+                                AppText(context).feature,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                          ),
+                            Text(
+                              AppText(context).value,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          AppText(context).value,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      Divider(
+                        height: AppSize(context).height * .01,
+                        color: AppColors.backgroundColor,
+                      ),
+                      FeatureWidget(
+                        color: widget.color,
+                        feature: AppText(context).correctivevisits,
+                        value:
+                            widget.package?.numberOfRegularVisit == 100 ? AppText(context).unlimited : widget.package?.numberOfRegularVisit.toString() ?? "0",
+                      ),
+                      FeatureWidget(
+                        color: widget.color,
+                        feature: AppText(context).preventivevisits,
+                        value: widget.package?.numberOnDemandVisit == 100 ? AppText(context).unlimited : widget.package?.numberOnDemandVisit.toString() ?? "0",
+                      ),
+                      FeatureWidget(
+                        color: widget.color,
+                        feature: AppText(context).consultations,
+                        value: widget.package?.consultation == 100 ? AppText(context).unlimited : widget.package?.consultation.toString() ?? "0",
+                      ),
+                      FeatureWidget(
+                        color: widget.color,
+                        feature: AppText(context).emeregencyService,
+                        value:
+                            widget.package?.numberOfUrgentVisits == 100 ? AppText(context).unlimited : widget.package?.numberOfUrgentVisits.toString() ?? "0",
+                      ),
+                      FeatureWidget(
+                        color: widget.color,
+                        feature: AppText(context).femaleService,
+                        value: widget.package?.numberOfFemalUse == 100 ? AppText(context).unlimited : widget.package?.numberOfFemalUse.toString() ?? "0",
+                      ),
+                      FeatureWidget(
+                        color: widget.color,
+                        feature: AppText(context).interiorDesign,
+                        value: widget.package?.interiorDesign == "0" ? "- \n  \n" : widget.package?.interiorDesign.toString() ?? "-  \n \n",
+                      ),
+                    ],
                   ),
-                  Divider(
-                    height: AppSize(context).height * .01,
-                    color: AppColors.backgroundColor,
-                  ),
-                  FeatureWidget(
-                    color: widget.color,
-                    feature: AppText(context).correctivevisits,
-                    value: widget.package?.numberOfRegularVisit == 100
-                        ? AppText(context).unlimited
-                        : widget.package?.numberOfRegularVisit.toString() ??
-                            "0",
-                  ),
-                  FeatureWidget(
-                    color: widget.color,
-                    feature: AppText(context).preventivevisits,
-                    value: widget.package?.numberOnDemandVisit == 100
-                        ? AppText(context).unlimited
-                        : widget.package?.numberOnDemandVisit.toString() ?? "0",
-                  ),
-                  FeatureWidget(
-                    color: widget.color,
-                    feature: AppText(context).consultations,
-                    value: widget.package?.consultation == 100
-                        ? AppText(context).unlimited
-                        : widget.package?.consultation.toString() ?? "0",
-                  ),
-                  FeatureWidget(
-                    color: widget.color,
-                    feature: AppText(context).emeregencyService,
-                    value: widget.package?.numberOfUrgentVisits == 100
-                        ? AppText(context).unlimited
-                        : widget.package?.numberOfUrgentVisits.toString() ??
-                            "0",
-                  ),
-                  FeatureWidget(
-                    color: widget.color,
-                    feature: AppText(context).femaleService,
-                    value: widget.package?.numberOfFemalUse == 100
-                        ? AppText(context).unlimited
-                        : widget.package?.numberOfFemalUse.toString() ?? "0",
-                  ),
-                  FeatureWidget(
-                    color: widget.color,
-                    feature: AppText(context).interiorDesign,
-                    value: widget.package?.interiorDesign == "0"
-                        ? "- \n  \n"
-                        : widget.package?.interiorDesign.toString() ??
-                            "-  \n \n",
-                  ),
-                ],
+                ),
               ),
               // SizedBox(height: AppSize(context).height * .02),
               Stack(
                 alignment: Alignment.bottomCenter,
                 children: [
                   Image(
-                    image: AssetImage(
-                        widget.imageFoter ?? "assets/image/green.png"),
+                    image: AssetImage(widget.imageFoter ?? "assets/image/green.png"),
                     fit: BoxFit.cover,
                   ),
                   Padding(
@@ -262,10 +245,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                             alignment: Alignment.center,
                             children: [
                               widget.isLoading == true
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator())
+                                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator())
                                   : Text(
                                       widget.price ?? "JOD 90 / month",
                                       style: TextStyle(
@@ -278,8 +258,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                                 height: AppSize(context).height * .05,
                                 width: AppSize(context).width * .5,
                                 alignment: Alignment.center,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: AppSize(context).width * .1),
+                                padding: EdgeInsets.symmetric(horizontal: AppSize(context).width * .1),
                                 decoration: BoxDecoration(
                                   color: widget.color,
                                   borderRadius: BorderRadius.circular(8),
@@ -329,9 +308,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                   Center(
                     child: Text(
                       AppText(context).enterDetails,
-                      style: TextStyle(
-                          fontSize: AppSize(context).smallText1,
-                          fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -368,9 +345,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                             if (key.currentState!.validate()) {
                               if (distanceController.text.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(AppText(context)
-                                          .pleaseFillAllFields)),
+                                  SnackBar(content: Text(AppText(context).pleaseFillAllFields)),
                                 );
                                 return;
                               }
@@ -395,10 +370,8 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                                 context: context,
                                 builder: (context) {
                                   return WidgetDialog(
-                                      title: AppText(context, isFunction: true)
-                                          .warning,
-                                      desc: AppText(context, isFunction: true)
-                                          .pleaseCalculateFirst,
+                                      title: AppText(context, isFunction: true).warning,
+                                      desc: AppText(context, isFunction: true).pleaseCalculateFirst,
                                       isError: true);
                                 },
                               );
@@ -442,37 +415,15 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         Center(
                           child: Text(
                             AppText(context).selectPaymentMethods,
-                            style: TextStyle(
-                                fontSize: AppSize(context).smallText1,
-                                fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold),
                           ),
                         ),
                         const SizedBox(height: 10),
-                        _paymentOption(
-                            "visa",
-                            AppText(context, isFunction: true).visa,
-                            "assets/icon/bank-card_17727858.svg",
-                            set),
-                        _paymentOption(
-                            "qlic",
-                            AppText(context, isFunction: true).cliq,
-                            "assets/icon/final_cliq_logo-02_1.svg",
-                            set),
-                        _paymentOption(
-                            "wallet",
-                            AppText(context, isFunction: true).wallet,
-                            "assets/icon/wallet.svg",
-                            set),
-                        _paymentOption(
-                            "Paybal",
-                            AppText(context, isFunction: true).paypal,
-                            "assets/icon/paybal.svg",
-                            set),
-                        _paymentOption(
-                            "later",
-                            "${AppText(context, isFunction: true).paylater}",
-                            "assets/icon/delay_3360328.svg",
-                            set),
+                        _paymentOption("visa", AppText(context, isFunction: true).visa, "assets/icon/bank-card_17727858.svg", set),
+                        _paymentOption("qlic", AppText(context, isFunction: true).cliq, "assets/icon/final_cliq_logo-02_1.svg", set),
+                        _paymentOption("wallet", AppText(context, isFunction: true).wallet, "assets/icon/wallet.svg", set),
+                        _paymentOption("Paybal", AppText(context, isFunction: true).paypal, "assets/icon/paybal.svg", set),
+                        _paymentOption("later", "${AppText(context, isFunction: true).paylater}", "assets/icon/delay_3360328.svg", set),
                         const Divider(),
                         const SizedBox(height: 20),
                         Center(
@@ -547,8 +498,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
     }
   }
 
-  Widget _paymentOption(String value, String label, String icon,
-      void Function(void Function()) localSetState) {
+  Widget _paymentOption(String value, String label, String icon, void Function(void Function()) localSetState) {
     final isSelected = selectedPayment == value;
     return InkWell(
       onTap: () => localSetState(() => selectedPayment = value),
@@ -557,15 +507,11 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           border: Border.all(
-            color: isSelected
-                ? AppColors(context).primaryColor
-                : Colors.grey.shade300,
+            color: isSelected ? AppColors(context).primaryColor : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(12),
-          color: isSelected
-              ? AppColors(context).primaryColor.withOpacity(0.05)
-              : AppColors.whiteColor1,
+          color: isSelected ? AppColors(context).primaryColor.withOpacity(0.05) : AppColors.whiteColor1,
         ),
         child: Row(
           children: [
@@ -576,8 +522,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
             const SizedBox(width: 12),
             Text(label, style: const TextStyle(fontSize: 16)),
             const Spacer(),
-            if (isSelected)
-              Icon(Icons.check_circle, color: AppColors(context).primaryColor),
+            if (isSelected) Icon(Icons.check_circle, color: AppColors(context).primaryColor),
           ],
         ),
       ),
