@@ -31,9 +31,11 @@ android {
 
     defaultConfig {
         applicationId = "com.tenderjo.wefixapp"
+        // Kotlin DSL syntax: use 'minSdk =' (not 'minSdkVersion')
+        // Ensure it's at least 23 for firebase_auth
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 17
+        versionCode = 19
         versionName = flutter.versionName
     }
 

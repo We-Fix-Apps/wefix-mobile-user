@@ -38,6 +38,7 @@ import '../../Components/tour_widget.dart';
 class SubServicesScreen extends StatefulWidget {
   final String title;
   final int catId;
+  
 
   const SubServicesScreen({
     super.key,
@@ -142,27 +143,28 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          actions: const [
-            LanguageButton(),
-          ],
-          centerTitle: true,
-          titleTextStyle: TextStyle(
-              fontSize: AppSize(context).mediumText3,
-              color: AppColors.blackColor1,
-              fontWeight: FontWeight.bold),
-          title: Text(widget.title),
-        ),
-        body: (isLoading == true) && (loadingTime == true)
-            ? LinearProgressIndicator(
-                color: AppColors(context).primaryColor,
-                backgroundColor: AppColors.secoundryColor,
-              )
-            : subServiceModel?.service.length == 0
-                ? const EmptyScreen()
-                : SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(
+        actions: const [
+          LanguageButton(),
+        ],
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+            fontSize: AppSize(context).mediumText3,
+            color: AppColors.blackColor1,
+            fontWeight: FontWeight.bold),
+        title: Text(widget.title), 
+      ),
+      body: (isLoading == true) && (loadingTime == true)
+          ? LinearProgressIndicator(
+              color: AppColors(context).primaryColor,
+              backgroundColor: AppColors.secoundryColor,
+            )
+          : subServiceModel?.service.length == 0
+              ? const EmptyScreen()
+              : SafeArea(
+                child: SingleChildScrollView(
+                  
                     child: Column(
                       children: [
                         ListView.builder(
@@ -192,7 +194,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                 ?.service[index].numOfTicket ??
                                             0;
                                       });
-
+                    
                                       // Check if service already exists in the list
                                       final existingIndex =
                                           serviceId.indexWhere(
@@ -200,7 +202,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                             element["ServiceId"] ==
                                             subServiceModel!.service[index].id,
                                       );
-
+                    
                                       if (existingIndex != -1) {
                                         // Update quantity if exists
                                         serviceId[existingIndex]["quantity"] =
@@ -215,7 +217,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                               .service[index].quantity,
                                         });
                                       }
-
+                    
                                       log(serviceId.toString());
                                     },
                                     decrement: () {
@@ -237,7 +239,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                   .numOfTicket ??
                                               0;
                                         });
-
+                    
                                         final existingIndex =
                                             serviceId.indexWhere(
                                           (element) =>
@@ -245,7 +247,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                               subServiceModel!
                                                   .service[index].id,
                                         );
-
+                    
                                         if (existingIndex != -1) {
                                           if (subServiceModel!
                                                   .service[index].quantity ==
@@ -261,7 +263,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                           }
                                         }
                                       }
-
+                    
                                       log(serviceId.toString());
                                     },
                                     count: subServiceModel!
@@ -311,7 +313,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                         } catch (e) {
                                           log(e.toString());
                                         }
-
+                    
                                         // createTutorial(_createTargets2());
                                         // Future.delayed(
                                         //     const Duration(seconds: 0),
@@ -321,7 +323,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                   .service[index].isSelected =
                                               !subServiceModel!
                                                   .service[index].isSelected;
-
+                    
                                           if (subServiceModel!
                                                   .service[index].isSelected ==
                                               true) {
@@ -338,7 +340,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                         .service[index]
                                                         .subscriptionPrice ??
                                                     0;
-
+                    
                                             totalTickets += subServiceModel
                                                     ?.service[index]
                                                     .numOfTicket ??
@@ -352,9 +354,9 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                   subServiceModel!
                                                       .service[index].id,
                                             );
-
+                    
                                             serviceId.removeAt(existingIndex);
-
+                    
                                             subsicripeModel?.status == false
                                                 ? totalPrice -= subServiceModel!
                                                     .service[index]
@@ -363,7 +365,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                         .service[index]
                                                         .subscriptionPrice ??
                                                     0;
-
+                    
                                             totalTickets -= subServiceModel
                                                     ?.service[index]
                                                     .numOfTicket ??
@@ -382,55 +384,55 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                       ],
                     ),
                   ),
-        bottomNavigationBar: serviceId.isEmpty
-            ? const SizedBox()
-            : Material(
-                elevation: 20,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SizedBox(
-                    height: AppSize(context).height * .1,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              AppText(context).total,
-                              style: TextStyle(
-                                fontSize: AppSize(context).smallText1,
-                                color: AppColors.secoundryColor,
-                              ),
+              ),
+      bottomNavigationBar: serviceId.isEmpty
+          ? const SizedBox()
+          : Material(
+              elevation: 20,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: SizedBox(
+                  height: AppSize(context).height * .1,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            AppText(context).total,
+                            style: TextStyle(
+                              fontSize: AppSize(context).smallText1,
+                              color: AppColors.secoundryColor,
                             ),
-                            Text(
-                              "${AppText(context).jod} ${totalPrice.toStringAsFixed(2)}",
-                              style: TextStyle(
-                                fontSize: AppSize(context).smallText2,
-                                color: AppColors(context).primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
-                          ],
-                        ),
-                        Container(
-                          key: keyButtons[0],
-                          child: CustomBotton(
-                            title: AppText(context).continuesss,
-                            width: AppSize(context).width * .3,
-                            onTap: () {
-                              showBottomSheetFun();
-                            },
                           ),
-                        )
-                      ],
-                    ),
+                          Text(
+                            "${AppText(context).jod} ${totalPrice.toStringAsFixed(2)}",
+                            style: TextStyle(
+                              fontSize: AppSize(context).smallText2,
+                              color: AppColors(context).primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        ],
+                      ),
+                      Container(
+                        key: keyButtons[0],
+                        child: CustomBotton(
+                          title: AppText(context).continuesss,
+                          width: AppSize(context).width * .3,
+                          onTap: () {
+                            showBottomSheetFun();
+                          },
+                        ),
+                      )
+                    ],
                   ),
                 ),
               ),
-      ),
+            ),
     );
   }
 
@@ -1040,7 +1042,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
     try {
       HomeApis.getSubCatService(
               token: appProvider.userModel?.token ?? "",
-              roleId: appProvider.userModel?.customer.roleId,
+              roleId: appProvider.userModel?.customer.roleId ?? 1,
               id: widget.catId.toString())
           .then((value) {
         setState(() {

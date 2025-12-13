@@ -23,9 +23,9 @@ import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Components/widget_phone_form_fields.dart';
-import 'package:wefix/Presentation/Auth/sign_up_screen.dart';
 import 'package:wefix/Presentation/auth/Screens/forget_password_screen.dart';
 import 'package:wefix/Presentation/auth/Screens/otp_screen.dart';
+import 'package:wefix/Presentation/auth/sign_up_screen.dart';
 import 'package:wefix/layout_screen.dart';
 
 import 'package:local_auth/local_auth.dart';

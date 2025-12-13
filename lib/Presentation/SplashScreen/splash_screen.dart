@@ -13,7 +13,7 @@ import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 
 import 'package:wefix/Data/model/user_model.dart';
-import 'package:wefix/Presentation/Auth/login_screen.dart';
+import 'package:wefix/Presentation/auth/login_screen.dart';
 import 'package:wefix/layout_screen.dart';
 
 class SplashScreen extends StatefulWidget {

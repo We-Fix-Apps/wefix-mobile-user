@@ -28,9 +28,9 @@ import 'package:wefix/Presentation/Components/tour_widget.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Home/Components/popular_section_widget.dart';
 import 'package:wefix/Presentation/Home/Components/services_list_widget.dart';
+import 'package:wefix/Presentation/Home/Components/slider_widget.dart';
 import 'package:wefix/Presentation/Home/Components/special_offer_widget.dart';
 import 'package:wefix/Presentation/Home/Components/steps_widget.dart';
-import 'package:wefix/Presentation/Home/components/slider_widget.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
 import 'package:wefix/Presentation/SubCategory/Screens/sub_services_screen.dart';
@@ -202,29 +202,39 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                       const SizedBox(width: 5),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: AppSize(context).width * .3,
-                            child: Text(
-                              "${AppText(context).hello} ${appProvider.userModel?.customer.name ?? "Guest"} 🖐",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: AppSize(context).smallText2,
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              fit: FlexFit.loose,
+                              child: Text(
+                                "${AppText(context).hello} ${appProvider.userModel?.customer.name ?? "Guest"} 🖐",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: AppSize(context).smallText2,
+                                  height: 1.2,
+                                ),
                               ),
                             ),
-                          ),
-                          Text(
-                            DateFormat('MMM d, yyyy').format(DateTime.now()),
-                            style: TextStyle(
-                              fontSize: AppSize(context).smallText1,
+                            Flexible(
+                              fit: FlexFit.loose,
+                              child: Text(
+                                DateFormat('MMM d, yyyy').format(DateTime.now()),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: AppSize(context).smallText1,
+                                  height: 1.2,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       )
                     ],
                   ),
@@ -789,6 +799,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     SizedBox(
                                         height: AppSize(context).height * .01),
                                     ServicesWidget(
+                                      roleId:homeModel?.roleId ?? 0,
                                         categories: startsSearch == false
                                             ? homeModel?.categories ?? []
                                             : allSearchCategories),

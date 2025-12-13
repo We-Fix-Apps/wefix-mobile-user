@@ -16,6 +16,13 @@ class CustomeTutorialCoachMark {
     return keys
         .asMap()
         .entries
+        .where((entry) {
+          // Filter out null keys and keys without attached widgets
+          final key = entry.value;
+          if (key == null) return false;
+          // Check if key has a current context (widget is attached)
+          return key.currentContext != null;
+        })
         .map((entry) {
           final index = entry.key;
           final key = entry.value;

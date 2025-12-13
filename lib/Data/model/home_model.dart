@@ -9,6 +9,7 @@ class HomeModel {
   List<Category> categories;
   List<Service> serviceOffers;
   List<Service> servicePopular;
+  int ? roleId ;
   Tickets? tickets;
 
   HomeModel({
@@ -17,11 +18,13 @@ class HomeModel {
     required this.serviceOffers,
     required this.servicePopular,
     required this.tickets,
+    required this.roleId
   });
 
   factory HomeModel.fromJson(Map<String, dynamic> json) => HomeModel(
         sliders: List<SliderModel>.from(
             json["sliders"].map((x) => SliderModel.fromJson(x))),
+            roleId : json["roleId"],
         categories: List<Category>.from(
             json["categories"].map((x) => Category.fromJson(x))),
         serviceOffers: List<Service>.from(

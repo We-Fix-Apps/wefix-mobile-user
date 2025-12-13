@@ -2,7 +2,7 @@ name: wefix
 description: A new Flutter project.
 publish_to: "none"
 
-version: 1.1.6+1
+version: 1.1.8+1
 
 environment:
   sdk: ">=2.17.0 <3.0.0"
@@ -18,9 +18,10 @@ dependencies:
   # Rating
   flutter_rating_stars: ^1.1.0
   # SVG
-  flutter_svg: ^2.2.1
+  flutter_svg: ^2.0.0
   # Date
-  intl: ^0.20.2
+  # intl MUST be 0.20.2 (pinned by flutter_localizations in Flutter SDK 3.27.0)
+  intl: 0.20.2
   # Phone Number
   intl_phone_number_input: ^0.7.4
 
@@ -59,7 +60,7 @@ dependencies:
   # flutter_paypal_checkout: ^1.0.1
   image_picker: ^1.2.0
   # Html Widget
-  flutter_widget_from_html: ^0.17.1
+  flutter_widget_from_html: ^0.15.2
   # Icon Luncher
   flutter_launcher_icons: ^0.14.4
   # readmore: ^3.0.0
@@ -74,7 +75,7 @@ dependencies:
   local_auth: ^2.3.0
   flutter_rating_bar: ^4.0.1
   convex_bottom_bar: ^3.2.0
-  table_calendar: ^3.2.0
+  table_calendar: ^3.1.0
   file_picker: ^10.3.2
   flutter_sound: ^9.28.0
   permission_handler: ^12.0.1
@@ -85,7 +86,7 @@ dependencies:
   signalr_netcore: ^1.4.4
   googleapis: ^14.0.0
   googleapis_auth: ^2.0.0
-  url_launcher_ios: ^6.3.4
+  url_launcher_ios: ^6.3.1
   # google_sign_in: ^7.1.1
   # showcaseview: ^4.0.1
 
@@ -114,6 +115,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^2.0.1
   cupertino_icons: ^1.0.2
+  build_runner: ^2.4.0
 
 flutter:
   uses-material-design: true
