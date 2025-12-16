@@ -124,4 +124,12 @@ class EndPoints {
   static String getAllBranch = 'customer/GetAllBranch';
   static String isSubscribeCompany = 'customer/IsSubscribeCompany';
   static String serviceCompany = 'customer/ServiceCompany';
+
+  // * MMS API (Backend MMS)
+  static String mmsBaseUrl = 'https://wefix-backend-mms.ngrok.app/api/v1/'; // Update with your backend URL
+  static String mmsLogin = 'users/login';
+  static String mmsRegister = 'users/register';
+  static String mmsTickets = 'tickets';
+  static String mmsTicketStatistics = 'tickets/statistics';
+  static String mmsTicketDetails = 'tickets/'; // Append ticket ID
 }

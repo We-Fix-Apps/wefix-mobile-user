@@ -232,7 +232,14 @@
 
 
 , 
-"Youhavetochooseproparety" : "You have to choose proparety"
+"Youhavetochooseproparety" : "You have to choose proparety",
+"companyPersonnel" : "Company Personnel",
+"regularUser" : "Regular User",
+"invalidEmail" : "Invalid email address",
+"emailRequired" : "Email is required",
+"passwordRequired" : "Password is required",
+"loginFailed" : "Login failed",
+"invalidCredentials" : "Invalid login credentials"
 
 
 

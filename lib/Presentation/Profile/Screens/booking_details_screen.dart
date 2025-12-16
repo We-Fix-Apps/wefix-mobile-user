@@ -664,8 +664,13 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
+      // Check if user is company admin (roleId == 2)
+      final isCompanyAdmin = appProvider.userModel?.customer.roleId == 2;
+      
       BookingApi.getBookingDetails(
-              token: appProvider.userModel?.token ?? "", id: widget.id)
+              token: appProvider.userModel?.token ?? "",
+              id: widget.id,
+              isCompanyAdmin: isCompanyAdmin)
           .then((value) {
         setState(() {
           bookingDetailsModel = value;
@@ -673,7 +678,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
         });
       });
     } catch (e) {
-      log(e.toString());
+      log('getBookingDetails() [ ERROR ] -> $e');
       setState(() {
         loading = false;
       });

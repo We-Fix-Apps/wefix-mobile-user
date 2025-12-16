@@ -7,6 +7,7 @@ import 'package:wefix/Data/Api/http_request.dart';
 import 'package:wefix/Data/model/buissness_type_model.dart';
 
 import 'package:wefix/Data/model/login_model.dart';
+import 'package:wefix/Data/model/mms_user_model.dart';
 import 'package:wefix/Data/model/signup_model.dart';
 import 'package:wefix/Data/model/user_model.dart';
 
@@ -186,6 +187,45 @@ class Authantication {
     } catch (e) {
       log('updatePassword() [ ERROR ] -> $e');
       return false;
+    }
+  }
+
+  // * MMS Login (Company Personnel)
+  static MmsUserModel? mmsUserModel;
+  static Future<MmsUserModel?> mmsLogin({
+    required String email,
+    required String password,
+    required String deviceId,
+    required String fcmToken,
+  }) async {
+    try {
+      final response = await HttpHelper.postData2(
+        query: EndPoints.mmsBaseUrl + EndPoints.mmsLogin,
+        data: {
+          'email': email,
+          'password': password,
+          'deviceId': deviceId,
+          'fcmToken': fcmToken,
+        },
+      );
+
+      log('mmsLogin() [ STATUS ] -> ${response.body}');
+
+      final body = json.decode(response.body);
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        mmsUserModel = MmsUserModel.fromJson(body);
+        if (mmsUserModel != null) {
+          return mmsUserModel;
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } catch (e) {
+      log('mmsLogin() [ ERROR ] -> $e');
+      return null;
     }
   }
 }

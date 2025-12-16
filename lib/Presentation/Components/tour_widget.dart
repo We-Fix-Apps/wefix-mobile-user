@@ -9,6 +9,7 @@ import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 class CustomeTutorialCoachMark {
   CustomeTutorialCoachMark._();
   static late TutorialCoachMark tutorialCoachMark;
+  static bool _isTutorialCreated = false;
   static List<TargetFocus> addTargets(
     List<Map<dynamic, dynamic>> content,
     List<GlobalKey<State<StatefulWidget>>?> keys,
@@ -105,9 +106,17 @@ class CustomeTutorialCoachMark {
 
   static void createTutorial(List<GlobalKey<State<StatefulWidget>>?> keys,
       List<Map<dynamic, dynamic>> content) {
+    final targets = addTargets(content, keys);
+    
+    // Only create tutorial if there are valid targets
+    if (targets.isEmpty) {
+      _isTutorialCreated = false;
+      return;
+    }
+    
     tutorialCoachMark = TutorialCoachMark(
       skipWidget: SizedBox(),
-      targets: addTargets(content, keys),
+      targets: targets,
       colorShadow: Colors.black,
       textSkip: "SKIP",
       paddingFocus: 10,
@@ -118,11 +127,18 @@ class CustomeTutorialCoachMark {
       onClickTargetWithTapPosition: (target, tapDetails) {},
       onClickOverlay: (target) {},
     );
+    _isTutorialCreated = true;
   }
 
   static void showTutorial(BuildContext context, {bool? isShow = true}) {
-    if (isShow == true) {
-      tutorialCoachMark.show(context: context);
+    if (isShow == true && _isTutorialCreated) {
+      // Check if tutorial was created (has targets) before showing
+      try {
+        tutorialCoachMark.show(context: context);
+      } catch (e) {
+        // Silently fail if tutorial wasn't created or has no targets
+        _isTutorialCreated = false;
+      }
     }
   }
 }

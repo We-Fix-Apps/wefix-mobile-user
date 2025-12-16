@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Data/Functions/cash_strings.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
+import 'package:wefix/Data/model/app_languege_model.dart';
 
 class AppText {
   BuildContext context;
@@ -17,14 +18,50 @@ class AppText {
   String get langCode => languages ?? 'en';
 
   String getTranslation(String key) {
-    return languageProvider.allLanguage
-            .where((element) => element.key == langCode)
-            .toList()
-            .first
-            .languages
-            ?.firstWhere((element) => element.wordKey == key)
-            .value ??
-        '';
+    try {
+      final languageList = languageProvider.allLanguage
+          .where((element) => element.key == langCode)
+          .toList();
+      
+      if (languageList.isEmpty) {
+        return _getFallbackTranslation(key);
+      }
+      
+      final languages = languageList.first.languages;
+      if (languages == null || languages.isEmpty) {
+        return _getFallbackTranslation(key);
+      }
+      
+      final found = languages.firstWhere(
+        (element) => element.wordKey == key,
+        orElse: () => Languages(wordKey: key, value: ''),
+      );
+      
+      final value = found.value ?? '';
+      // If translation is empty, use fallback
+      if (value.isEmpty) {
+        return _getFallbackTranslation(key);
+      }
+      
+      return value;
+    } catch (e) {
+      return _getFallbackTranslation(key);
+    }
+  }
+
+  String _getFallbackTranslation(String key) {
+    // Fallback translations for new keys until they're added to backend
+    final fallbacks = {
+      'companyPersonnel': langCode == 'ar' ? 'افراد شركات' : 'Company Personnel',
+      'regularUser': langCode == 'ar' ? 'مستخدم عادي' : 'Regular User',
+      'invalidEmail': langCode == 'ar' ? 'البريد الإلكتروني غير صحيح' : 'Invalid email address',
+      'emailRequired': langCode == 'ar' ? 'البريد الإلكتروني مطلوب' : 'Email is required',
+      'passwordRequired': langCode == 'ar' ? 'كلمة السر مطلوبة' : 'Password is required',
+      'loginFailed': langCode == 'ar' ? 'فشل تسجيل الدخول' : 'Login failed',
+      'invalidCredentials': langCode == 'ar' ? 'بيانات الدخول غير صحيحة' : 'Invalid login credentials',
+    };
+    
+    return fallbacks[key] ?? '';
   }
 
   String get home => getTranslation('home');
@@ -331,6 +368,13 @@ class AppText {
   String get detailsoptional => getTranslation('detailsoptional');
   String get edit => getTranslation('edit');
   String get email => getTranslation('email');
+  String get companyPersonnel => getTranslation('companyPersonnel');
+  String get regularUser => getTranslation('regularUser');
+  String get invalidEmail => getTranslation('invalidEmail');
+  String get emailRequired => getTranslation('emailRequired');
+  String get passwordRequired => getTranslation('passwordRequired');
+  String get loginFailed => getTranslation('loginFailed');
+  String get invalidCredentials => getTranslation('invalidCredentials');
   String get ex => getTranslation('ex');
   String get expenses => getTranslation('expenses');
   String get friday => getTranslation('friday');
@@ -425,7 +469,6 @@ class AppText {
   String get editCar => getTranslation('editCar');
   String get editWishlist => getTranslation('editWishlist');
   String get required => getTranslation('required');
-  String get invalidEmail => getTranslation('invalidEmail');
   String get invoiceInformation => getTranslation('invoiceInformation');
   String get show => getTranslation('show');
   String get solid => getTranslation('solid');

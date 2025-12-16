@@ -93,8 +93,16 @@ class _HomeScreenState extends State<HomeScreen>
         WidgetsBinding.instance.addPostFrameCallback((_) {
           CustomeTutorialCoachMark.createTutorial(keyButtons, contents);
           Future.delayed(const Duration(seconds: 2), () {
-            Map showTour =
-                json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+            final tourData = CacheHelper.getData(key: CacheHelper.showTour);
+            Map showTour = tourData != null && tourData != 'null'
+                ? json.decode(tourData)
+                : {
+                    "home": true,
+                    "subCategory": true,
+                    "addAttachment": true,
+                    "appointmentDetails": true,
+                    "checkout": true,
+                  };
             CustomeTutorialCoachMark.showTutorial(context,
                 isShow: showTour["home"] ?? true);
             setState(() {

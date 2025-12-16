@@ -121,8 +121,13 @@ class _BookingScreenState extends State<BookingScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      BookingApi.getBookingsHistory(token: appProvider.userModel?.token ?? "")
-          .then((value) {
+      // Check if user is company admin (roleId == 2)
+      final isCompanyAdmin = appProvider.userModel?.customer.roleId == 2;
+      
+      BookingApi.getBookingsHistory(
+        token: appProvider.userModel?.token ?? "",
+        isCompanyAdmin: isCompanyAdmin,
+      ).then((value) {
         setState(() {
           ticketModel = value;
           loading = false;

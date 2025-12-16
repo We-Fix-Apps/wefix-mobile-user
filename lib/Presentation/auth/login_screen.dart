@@ -19,6 +19,7 @@ import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/login_model.dart';
 import 'package:wefix/Data/model/user_model.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
@@ -46,9 +47,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final key = GlobalKey<FormState>();
   TextEditingController phone = TextEditingController();
   TextEditingController password = TextEditingController();
+  TextEditingController email = TextEditingController();
 
   bool isVisiable = false;
   bool loading = false;
+  bool isCompanyPersonnel = false; // Toggle for company personnel login
   bool facebookStatus = false;
 
   final GoogleAuthProvider googleProvider = GoogleAuthProvider();
@@ -111,8 +114,83 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       SizedBox(height: AppSize(context).height * 0.02),
-                      // * Phone Number
-                      WidgetPhoneField(
+                      
+                      // * Login Type Toggle
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isCompanyPersonnel = false;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: !isCompanyPersonnel
+                                      ? AppColors(context).primaryColor
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors(context).primaryColor,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    AppText(context).regularUser,
+                                    style: TextStyle(
+                                      color: !isCompanyPersonnel
+                                          ? Colors.white
+                                          : AppColors(context).primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  isCompanyPersonnel = true;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isCompanyPersonnel
+                                      ? AppColors(context).primaryColor
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors(context).primaryColor,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    AppText(context).companyPersonnel,
+                                    style: TextStyle(
+                                      color: isCompanyPersonnel
+                                          ? Colors.white
+                                          : AppColors(context).primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: AppSize(context).height * 0.02),
+                      
+                      // * Conditional Fields: Phone or Email/Password
+                      if (!isCompanyPersonnel) ...[
+                        // * Phone Number (Regular User)
+                        WidgetPhoneField(
                         // validator: (p0) {
                         //   if (phone.text.isEmpty) {
                         //     return "Requierd";
@@ -122,13 +200,98 @@ class _LoginScreenState extends State<LoginScreen> {
                         // },
                         message:
                             phone.text.isEmpty ? "required" : "invalidPhone",
-                        onCountryChanged: (value) {
-                          phone.text = value.phoneNumber.toString();
-                        },
-                      ),
-                      SizedBox(height: AppSize(context).height * 0.01),
-                      // * Password
-
+                          onCountryChanged: (value) {
+                            phone.text = value.phoneNumber.toString();
+                          },
+                        ),
+                      ] else ...[
+                        // * Email Field (Company Personnel)
+                        TextFormField(
+                          controller: email,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            fillColor: AppColors.greyColorback,
+                            filled: true,
+                            hintText: AppText(context).email,
+                            prefixIcon: const Icon(Icons.email_outlined),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: BorderSide(
+                                color: AppColors(context).primaryColor,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: BorderSide(
+                                color: AppColors.backgroundColor,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: BorderSide(
+                                color: AppColors(context).primaryColor,
+                              ),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return AppText(context).emailRequired;
+                            }
+                            if (!value.contains('@')) {
+                              return AppText(context).invalidEmail;
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: AppSize(context).height * 0.01),
+                        // * Password Field (Company Personnel)
+                        TextFormField(
+                          controller: password,
+                          obscureText: !isVisiable,
+                          decoration: InputDecoration(
+                            fillColor: AppColors.greyColorback,
+                            filled: true,
+                            hintText: AppText(context).password,
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                isVisiable
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  isVisiable = !isVisiable;
+                                });
+                              },
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: BorderSide(
+                                color: AppColors(context).primaryColor,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: BorderSide(
+                                color: AppColors.backgroundColor,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: BorderSide(
+                                color: AppColors(context).primaryColor,
+                              ),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return AppText(context).passwordRequired;
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
                       SizedBox(height: AppSize(context).height * .01),
                       // * Forget Password
                       Row(
@@ -268,7 +431,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> authenticate() async {
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     setState(() {
       isLoadingFace = true;
     });
@@ -289,7 +451,7 @@ class _LoginScreenState extends State<LoginScreen> {
           userData != 'USER_DATA_Clear') {
         final body = json.decode(userData);
         user = UserModel.fromJson(body);
-        log(user.token ?? '');
+        log(user.token);
         if (mounted) {
           // setState(() => appProvider.addUserData(user!));
           setState(() {
@@ -369,7 +531,16 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future login() async {
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    if (isCompanyPersonnel) {
+      // MMS login for company personnel
+      await mmsLogin();
+    } else {
+      // Regular phone-based login
+      await regularLogin();
+    }
+  }
+
+  Future regularLogin() async {
     try {
       setState(() {
         loading = true;
@@ -415,7 +586,108 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       });
     } catch (e) {
-      log('Login Is Error');
+      log('Login Is Error: $e');
+      setState(() {
+        loading = false;
+      });
+    }
+  }
+
+  Future mmsLogin() async {
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    
+    try {
+      setState(() {
+        loading = true;
+      });
+
+      // Get FCM token
+      String? fcmToken;
+      try {
+        fcmToken = await FirebaseMessaging.instance.getToken();
+      } catch (e) {
+        log('Error getting FCM token: $e');
+        fcmToken = 'device-token-placeholder';
+      }
+
+      // Generate a simple device ID (you may want to use device_info_plus package)
+      String deviceId = 'device-${DateTime.now().millisecondsSinceEpoch}';
+
+      final mmsUser = await Authantication.mmsLogin(
+        email: email.text.trim(),
+        password: password.text,
+        deviceId: deviceId,
+        fcmToken: fcmToken ?? 'device-token-placeholder',
+      );
+
+      if (mmsUser != null && mmsUser.success && mmsUser.user != null) {
+        // Convert MmsUserModel to UserModel format
+        // Company personnel should have roleId = 2
+        final userModel = UserModel(
+          status: true,
+          token: mmsUser.token?.accessToken ?? '',
+          message: mmsUser.message,
+          qrCodePath: null,
+          wallet: 0,
+          customer: Customer(
+            id: mmsUser.user!.id,
+            roleId: 2, // Company role (2 = Company, 1 = User)
+            name: mmsUser.user!.fullName,
+            mobile: mmsUser.user!.mobileNumber ?? '',
+            email: mmsUser.user!.email ?? '',
+            createdDate: mmsUser.user!.createdAt,
+            password: null,
+            oldPassword: null,
+            otp: 0,
+            address: '',
+            providerId: 0,
+          ),
+        );
+
+        // Update AppProvider with user data
+        appProvider.addUser(user: userModel);
+
+        // Navigate to home - HomeScreen will automatically show B2BHome for company personnel (roleId == 2)
+        Navigator.pushAndRemoveUntil(
+          context,
+          downToTop(const HomeLayout()),
+          (route) => false,
+        );
+
+        setState(() {
+          loading = false;
+        });
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => WidgetDialog(
+            title: AppText(context, isFunction: true).someThingError,
+            desc: AppText(context, isFunction: true).invalidCredentials,
+            bottonText: AppText(context, isFunction: true).ok,
+            onTap: () {
+              Navigator.pop(context);
+            },
+            isError: true,
+          ),
+        );
+        setState(() {
+          loading = false;
+        });
+      }
+    } catch (e) {
+      log('MMS Login Error: $e');
+      showDialog(
+        context: context,
+        builder: (context) => WidgetDialog(
+          title: AppText(context, isFunction: true).someThingError,
+          desc: AppText(context, isFunction: true).loginFailed,
+          bottonText: AppText(context, isFunction: true).ok,
+          onTap: () {
+            Navigator.pop(context);
+          },
+          isError: true,
+        ),
+      );
       setState(() {
         loading = false;
       });

@@ -1,16 +1,12 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
-import 'package:simple_circular_progress_bar/simple_circular_progress_bar.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Bookings/bookings_apis.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
-import 'package:wefix/Data/Functions/color.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
@@ -20,7 +16,6 @@ import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
 import 'package:wefix/Presentation/SubCategory/Screens/sub_services_screen.dart';
-import 'package:wefix/layout_screen.dart';
 
 class B2BHome extends StatefulWidget {
   final SubsicripeModel? subsicripeModel;
@@ -34,10 +29,12 @@ class B2BHome extends StatefulWidget {
 class _B2BHomeState extends State<B2BHome> {
   bool? loading = false;
   TicketModel? ticketModel;
+  Map<String, dynamic>? ticketStatistics;
 
   @override
   void initState() {
-    getBookingHistory();
+    getCompanyTickets();
+    getTicketStatistics();
     super.initState();
   }
 
@@ -53,7 +50,10 @@ class _B2BHomeState extends State<B2BHome> {
             children: [
               const _HeaderSection(),
               const SizedBox(height: 20),
-              _TicketSummarySection(subsicripeModel: widget.subsicripeModel),
+              _TicketSummarySection(
+                subsicripeModel: widget.subsicripeModel,
+                ticketStatistics: ticketStatistics,
+              ),
               const SizedBox(height: 25),
               loading == true
                   ? LinearProgressIndicator(
@@ -84,24 +84,90 @@ class _B2BHomeState extends State<B2BHome> {
     );
   }
 
-  Future getBookingHistory() async {
+  Future getCompanyTickets() async {
     setState(() {
       loading = true;
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      BookingApi.getBookingsHistory(token: appProvider.userModel?.token ?? "")
-          .then((value) {
+      final ticketsData = await BookingApi.getCompanyTicketsFromMMS(
+        token: appProvider.userModel?.token ?? "",
+      );
+
+      if (ticketsData != null) {
+        // Convert MMS tickets format to TicketModel format
+        final allTickets = ticketsData['all']?['tickets'] ?? [];
+        final tickets = allTickets.map<Ticket>((ticket) {
+          final ticketDate = ticket['ticketDate'] != null
+              ? DateTime.parse(ticket['ticketDate'])
+              : DateTime.now();
+          
+          return Ticket(
+            id: ticket['id'] ?? 0,
+            customerId: 0, // Not available from MMS
+            statusAr: ticket['ticketStatus']?['nameArabic'] ?? 'قيد الانتظار',
+            ticketTypeId: ticket['ticketType']?['id'] ?? 0,
+            rating: null,
+            icon: null,
+            cancelButton: null,
+            isRated: null,
+            type: ticket['ticketType']?['name'],
+            serviceprovideImage: null,
+            promoCode: null,
+            requestedDate: ticketDate,
+            selectedDate: ticketDate,
+            selectedDateTime: ticket['ticketTimeFrom'] != null && ticket['ticketTimeTo'] != null
+                ? '${ticket['ticketTimeFrom']} - ${ticket['ticketTimeTo']}'
+                : null,
+            timeFrom: ticket['ticketTimeFrom'],
+            timeTo: ticket['ticketTimeTo'],
+            teamNo: null,
+            status: ticket['ticketStatus']?['name'] ?? 'Pending',
+            location: ticket['locationDescription'] ?? '',
+            longitude: null,
+            latitude: null,
+            gender: null,
+            isWithMaterial: ticket['withMaterial'] ?? false,
+            priority: null,
+            createdBy: 0,
+            customerPackageId: null,
+            totalPrice: 0.0,
+            serviceprovide: null,
+            description: ticket['ticketDescription'] ?? '',
+            descriptionAr: ticket['ticketDescription'] ?? '',
+          );
+        }).toList();
+
         setState(() {
-          ticketModel = value;
+          ticketModel = TicketModel(tickets: tickets);
           loading = false;
         });
-      });
+      } else {
+        setState(() {
+          ticketModel = TicketModel(tickets: []);
+          loading = false;
+        });
+      }
     } catch (e) {
-      log(e.toString());
       setState(() {
         loading = false;
       });
+    }
+  }
+
+  Future getTicketStatistics() async {
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    try {
+      final stats = await BookingApi.getTicketStatisticsFromMMS(
+        token: appProvider.userModel?.token ?? "",
+      );
+
+      if (stats != null) {
+        setState(() {
+          ticketStatistics = stats;
+        });
+      }
+    } catch (e) {
     }
   }
 }
@@ -151,8 +217,12 @@ class _HeaderSectionState extends State<_HeaderSection> {
 // ---------------- Ticket Summary ----------------
 class _TicketSummarySection extends StatefulWidget {
   final SubsicripeModel? subsicripeModel;
+  final Map<String, dynamic>? ticketStatistics;
 
-  const _TicketSummarySection({this.subsicripeModel});
+  const _TicketSummarySection({
+    this.subsicripeModel,
+    this.ticketStatistics,
+  });
 
   @override
   State<_TicketSummarySection> createState() => _TicketSummarySectionState();
@@ -161,11 +231,38 @@ class _TicketSummarySection extends StatefulWidget {
 class _TicketSummarySectionState extends State<_TicketSummarySection> {
   @override
   Widget build(BuildContext context) {
+    // Get ticket counts from MMS statistics
+    // New format: {corrective: {total: X, completed: Y}, ...}
+    // Old format (fallback): {corrective: X, ...}
+    final correctiveData = widget.ticketStatistics?['byType']?['corrective'];
+    final correctiveCompleted = (correctiveData is Map)
+        ? (correctiveData['completed'] ?? 0).toString()
+        : (correctiveData?.toString() ?? "0");
+    final correctiveTotal = (correctiveData is Map)
+        ? (correctiveData['total'] ?? 0).toString()
+        : (correctiveData?.toString() ?? widget.subsicripeModel?.objSubscribe?.onDemandVisit.toString() ?? "0");
+
+    final preventiveData = widget.ticketStatistics?['byType']?['preventive'];
+    final preventiveCompleted = (preventiveData is Map)
+        ? (preventiveData['completed'] ?? 0).toString()
+        : (preventiveData?.toString() ?? "0");
+    final preventiveTotal = (preventiveData is Map)
+        ? (preventiveData['total'] ?? 0).toString()
+        : (preventiveData?.toString() ?? widget.subsicripeModel?.objSubscribe?.recurringVist.toString() ?? "0");
+
+    final emergencyData = widget.ticketStatistics?['byType']?['emergency'];
+    final emergencyCompleted = (emergencyData is Map)
+        ? (emergencyData['completed'] ?? 0).toString()
+        : (emergencyData?.toString() ?? "0");
+    final emergencyTotal = (emergencyData is Map)
+        ? (emergencyData['total'] ?? 0).toString()
+        : (emergencyData?.toString() ?? widget.subsicripeModel?.objSubscribe?.emeregencyVisit.toString() ?? "0");
+
     return Column(
       children: [
         _CorrectiveTicketCard(
-          used: widget.subsicripeModel?.onDemandVisit.toString() ?? "0",
-          total: widget.subsicripeModel?.objSubscribe?.onDemandVisit.toString(),
+          used: correctiveCompleted,
+          total: correctiveTotal,
         ),
         const SizedBox(height: 10),
         Row(
@@ -174,18 +271,16 @@ class _TicketSummarySectionState extends State<_TicketSummarySection> {
                 child: _SmallTicketCard(
               title: "Preventive Tickets",
               imagePath: 'assets/icon/image copy 2.png',
-              used: widget.subsicripeModel?.recurringVistUse.toString() ?? "0",
-              total: widget.subsicripeModel?.objSubscribe?.recurringVist
-                  .toString(),
+              used: preventiveCompleted,
+              total: preventiveTotal,
             )),
             const SizedBox(width: 12),
             Expanded(
                 child: _SmallTicketCard(
               title: "Emergency Tickets",
               imagePath: 'assets/icon/image.png',
-              used: widget.subsicripeModel?.emergancyVisit.toString() ?? "0",
-              total: widget.subsicripeModel?.objSubscribe?.emeregencyVisit
-                  .toString(),
+              used: emergencyCompleted,
+              total: emergencyTotal,
             )),
           ],
         ),
@@ -198,7 +293,7 @@ class _CorrectiveTicketCard extends StatefulWidget {
   final String? used;
   final String? total;
 
-  const _CorrectiveTicketCard({super.key, this.used, this.total});
+  const _CorrectiveTicketCard({this.used, this.total});
 
   @override
   State<_CorrectiveTicketCard> createState() => _CorrectiveTicketCardState();
@@ -288,15 +383,18 @@ class _SmallTicketCardState extends State<_SmallTicketCard> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 7),
-          Text(
-            widget.title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.w600),
-          ),
           const SizedBox(height: 5),
+          Flexible(
+            child: Text(
+              widget.title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 3),
           CircularPercentIndicator(
             radius: 45,
             lineWidth: 6,

@@ -160,12 +160,23 @@ class _HomeLayoutState extends State<HomeLayout> {
   }
 
   void showTutorial() {
-    tutorialCoachMark.show(context: context);
+    try {
+      tutorialCoachMark.show(context: context);
+    } catch (e) {
+      // Silently fail if tutorial wasn't created or has no targets
+    }
   }
 
   void createTutorial() {
+    final targets = _createTargets();
+    
+    // Only create tutorial if there are valid targets
+    if (targets.isEmpty) {
+      return;
+    }
+    
     tutorialCoachMark = TutorialCoachMark(
-      targets: _createTargets(),
+      targets: targets,
       colorShadow: Colors.red,
       textSkip: "SKIP",
       paddingFocus: 10,
