@@ -7,7 +7,7 @@ import 'package:wefix/Business/Bookings/bookings_apis.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
-import 'package:wefix/Data/appText/appText.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Data/model/ticket_model.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
@@ -64,12 +64,12 @@ class _B2BHomeState extends State<B2BHome> {
                     ),
               const SizedBox(height: 4),
               CustomBotton(
-                title: "Add Ticket",
+                title: AppLocalizations.of(context)!.addTicket,
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SubServicesScreen(title: "Add Ticket", catId: 0),
+                      builder: (context) => SubServicesScreen(title: AppLocalizations.of(context)!.addTicket, catId: 0),
                     ),
                   );
                 },
@@ -189,7 +189,7 @@ class _HeaderSectionState extends State<_HeaderSection> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Hello ${appProvider.userModel?.customer.name ?? ""}",
+              "${AppLocalizations.of(context)!.hello} ${appProvider.userModel?.customer.name ?? ""}",
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             Text(
@@ -247,7 +247,7 @@ class _TicketSummarySectionState extends State<_TicketSummarySection> {
         SizedBox(
           width: double.infinity,
           child: _SmallTicketCard(
-            title: "Emergency Tickets",
+            title: AppLocalizations.of(context)!.emergencyTickets,
             imagePath: 'assets/icon/image.png',
             used: emergencyCompleted,
             total: emergencyTotal,
@@ -284,9 +284,9 @@ class _CorrectiveTicketCardState extends State<_CorrectiveTicketCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Corrective Tickets",
-            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+          Text(
+            AppLocalizations.of(context)!.correctiveTickets,
+            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const Spacer(),
           Row(
@@ -421,7 +421,7 @@ class _LastTicketsSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Text("Last Tickets", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
+            Text(AppLocalizations.of(context)!.lastTickets, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
             const Spacer(),
             InkWell(
               onTap: () {
@@ -430,7 +430,7 @@ class _LastTicketsSection extends StatelessWidget {
                   rightToLeft(BookingScreen()),
                 );
               },
-              child: const Text("View All", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w500)),
+              child: Text(AppLocalizations.of(context)!.viewAll, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w500)),
             ),
           ],
         ),
@@ -494,7 +494,7 @@ class _LastTicketsSection extends StatelessWidget {
                             ),
                             Text(
                                 ticketModel?.tickets[ticketIndex].description == null
-                                    ? AppText(context).preventivevisits
+                                    ? AppLocalizations.of(context)!.preventivevisits
                                     : ticketModel?.tickets[ticketIndex].description ?? "",
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -544,47 +544,6 @@ class _LastTicketsSection extends StatelessWidget {
               );
             },
           ),
-        ),
-      ],
-    );
-  }
-}
-// ---------------- Shortcuts ----------------
-class _ShortcutsSection extends StatelessWidget {
-  const _ShortcutsSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final shortcuts = [
-      {"icon": Icons.add_circle_outline, "label": "Add Ticket"},
-      {"icon": Icons.attach_money, "label": "Subscriptions"},
-      {"icon": Icons.account_tree, "label": "Add Branch"},
-      {"icon": Icons.person_add_alt, "label": "Add Employee"},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Shortcuts", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: shortcuts.map((s) {
-            return Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.orange),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(s["icon"] as IconData, color: Colors.orange, size: 28),
-                ),
-                const SizedBox(height: 6),
-                Text(s["label"].toString(), style: const TextStyle(fontSize: 13)),
-              ],
-            );
-          }).toList(),
         ),
       ],
     );

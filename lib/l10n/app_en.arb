@@ -294,7 +294,22 @@
 
 
 "verify" : "verify",
-"verifyYourMobailNumber" : "Verify Your Mobail Number"
+"verifyYourMobailNumber" : "Verify Your Mobail Number",
+"addTicket" : "Add Ticket",
+"lastTickets" : "Last Tickets",
+"correctiveTickets" : "Corrective Tickets",
+"emergencyTickets" : "Emergency Tickets",
+"shortcuts" : "Shortcuts",
+"subscriptions" : "Subscriptions",
+"addBranch" : "Add Branch",
+"addEmployee" : "Add Employee",
+"preventivevisits" : "Preventive Visits",
+"passwordRequired" : "Password is required",
+"invalidCredentials" : "Invalid login credentials",
+"loginFailed" : "Login failed",
+"regularUser" : "Regular User",
+"companyPersonnel" : "Companies",
+"emailRequired" : "Email is required"
 
 
 

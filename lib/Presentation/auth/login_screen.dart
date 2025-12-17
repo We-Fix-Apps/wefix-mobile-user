@@ -17,6 +17,7 @@ import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:wefix/Data/model/login_model.dart';
 import 'package:wefix/Data/model/user_model.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -138,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    AppText(context).regularUser,
+                                    AppLocalizations.of(context)!.regularUser,
                                     style: TextStyle(
                                       color: !isCompanyPersonnel
                                           ? Colors.white
@@ -171,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    AppText(context).companyPersonnel,
+                                    AppLocalizations.of(context)!.companyPersonnel,
                                     style: TextStyle(
                                       color: isCompanyPersonnel
                                           ? Colors.white
@@ -235,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return AppText(context).emailRequired;
+                              return AppLocalizations.of(context)!.emailRequired;
                             }
                             if (!value.contains('@')) {
                               return AppText(context).invalidEmail;
@@ -286,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return AppText(context).passwordRequired;
+                              return AppLocalizations.of(context)!.passwordRequired;
                             }
                             return null;
                           },
@@ -662,7 +663,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context: context,
           builder: (context) => WidgetDialog(
             title: AppText(context, isFunction: true).someThingError,
-            desc: AppText(context, isFunction: true).invalidCredentials,
+            desc: AppLocalizations.of(context)!.invalidCredentials,
             bottonText: AppText(context, isFunction: true).ok,
             onTap: () {
               Navigator.pop(context);
@@ -680,7 +681,7 @@ class _LoginScreenState extends State<LoginScreen> {
         context: context,
         builder: (context) => WidgetDialog(
           title: AppText(context, isFunction: true).someThingError,
-          desc: AppText(context, isFunction: true).loginFailed,
+          desc: AppLocalizations.of(context)!.loginFailed,
           bottonText: AppText(context, isFunction: true).ok,
           onTap: () {
             Navigator.pop(context);

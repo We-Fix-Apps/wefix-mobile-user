@@ -10,7 +10,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:wefix/firebase_options.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart'; 
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; 
 import 'package:wefix/main_managements.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
@@ -173,6 +173,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: AppConstans.appName,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

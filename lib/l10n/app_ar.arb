@@ -283,5 +283,20 @@
     "shippingcost": "تكلفة الشحن",
     "totalafterdiscount": "الإجمالي بعد الخصم",
     "orderSentSuuc": "تم إرسال الطلب بنجاح",
-    "weArePless": "يسعدنا إبلاغك بأن طلبك قد تمت معالجته وإرساله بنجاح."
+    "weArePless": "يسعدنا إبلاغك بأن طلبك قد تمت معالجته وإرساله بنجاح.",
+    "addTicket": "إضافة تذكرة",
+    "lastTickets": "آخر التذاكر",
+    "correctiveTickets": "تذاكر تصحيحية",
+    "emergencyTickets": "تذاكر طوارئ",
+    "shortcuts": "اختصارات",
+    "subscriptions": "الاشتراكات",
+    "addBranch": "إضافة فرع",
+    "addEmployee": "إضافة موظف",
+    "preventivevisits": "زيارات وقائية",
+    "passwordRequired": "كلمة السر مطلوبة",
+    "invalidCredentials": "بيانات الدخول غير صحيحة",
+    "loginFailed": "فشل تسجيل الدخول",
+    "regularUser": "مستخدم عادي",
+    "companyPersonnel": "شركات",
+    "emailRequired": "البريد الإلكتروني مطلوب"
 } 
