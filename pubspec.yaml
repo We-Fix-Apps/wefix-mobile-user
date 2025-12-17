@@ -20,8 +20,8 @@ dependencies:
   # SVG
   flutter_svg: ^2.0.0
   # Date
-  # intl MUST be 0.20.2 (pinned by flutter_localizations in Flutter SDK 3.27.0)
-  intl: 0.20.2
+  # intl version is managed by flutter_localizations
+  # intl: 0.20.2
   # Phone Number
   intl_phone_number_input: ^0.7.4
 
@@ -54,7 +54,7 @@ dependencies:
   geocoding: ^4.0.0
   geolocator: ^9.0.2
   # location: ^4.4.0
-  google_api_headers: ^1.5.0+1
+  google_api_headers: ^5.0.0
   # google_maps_webservice: ^0.0.20-nullsafety.5
   # fluttertoast: ^8.2.5
   # flutter_paypal_checkout: ^1.0.1
@@ -103,6 +103,8 @@ dependencies:
 
 dependency_overrides:
   http: ^0.13.1
+  package_info_plus: ^8.0.0
+  google_api_headers: ^5.0.0
 
 flutter_icons:
   android: launcher_icon
