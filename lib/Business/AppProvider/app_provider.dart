@@ -18,6 +18,7 @@ class AppProvider with ChangeNotifier {
   String? refreshToken;
   String? tokenType; // Token type (e.g., "Bearer")
   int? expiresIn; // Token expiration time in seconds
+  DateTime? tokenExpiresAt; // Token expiration timestamp (calculated on login)
   LatLng? currentLocation;
 
   List<Placemark>? places;
@@ -177,6 +178,7 @@ class AppProvider with ChangeNotifier {
     final cachedRefreshToken = CacheHelper.getData(key: CacheHelper.refreshToken);
     final cachedTokenType = CacheHelper.getData(key: CacheHelper.tokenType);
     final cachedExpiresIn = CacheHelper.getData(key: CacheHelper.expiresIn);
+    final cachedTokenExpiresAt = CacheHelper.getData(key: CacheHelper.tokenExpiresAt);
     
     if (cachedAccessToken != null && cachedAccessToken.toString().isNotEmpty) {
       accessToken = cachedAccessToken.toString();
@@ -189,6 +191,13 @@ class AppProvider with ChangeNotifier {
     }
     if (cachedExpiresIn != null && cachedExpiresIn.toString().isNotEmpty) {
       expiresIn = int.tryParse(cachedExpiresIn.toString());
+    }
+    if (cachedTokenExpiresAt != null && cachedTokenExpiresAt.toString().isNotEmpty) {
+      try {
+        tokenExpiresAt = DateTime.parse(cachedTokenExpiresAt.toString());
+      } catch (e) {
+        tokenExpiresAt = null;
+      }
     }
   }
 
@@ -213,6 +222,13 @@ class AppProvider with ChangeNotifier {
     if (expires != null) {
       expiresIn = expires;
       CacheHelper.saveData(key: CacheHelper.expiresIn, value: expires.toString());
+      
+      // Calculate tokenExpiresAt: current time + expiresIn (seconds)
+      tokenExpiresAt = DateTime.now().add(Duration(seconds: expires));
+      CacheHelper.saveData(
+        key: CacheHelper.tokenExpiresAt,
+        value: tokenExpiresAt!.toIso8601String(),
+      );
     }
     notifyListeners();
   }
@@ -222,10 +238,12 @@ class AppProvider with ChangeNotifier {
     refreshToken = null;
     tokenType = null;
     expiresIn = null;
+    tokenExpiresAt = null;
     CacheHelper.saveData(key: CacheHelper.accessToken, value: '');
     CacheHelper.saveData(key: CacheHelper.refreshToken, value: '');
     CacheHelper.saveData(key: CacheHelper.tokenType, value: '');
     CacheHelper.saveData(key: CacheHelper.expiresIn, value: '');
+    CacheHelper.saveData(key: CacheHelper.tokenExpiresAt, value: '');
     notifyListeners();
   }
 

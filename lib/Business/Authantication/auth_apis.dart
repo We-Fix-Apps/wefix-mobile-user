@@ -249,4 +249,36 @@ class Authantication {
       return false;
     }
   }
+
+  // * MMS Refresh Token (Company Personnel)
+  static Future<Map<String, dynamic>?> mmsRefreshToken({
+    required String refreshToken,
+  }) async {
+    try {
+      final response = await HttpHelper.postData2(
+        query: EndPoints.mmsBaseUrl + EndPoints.mmsRefreshToken,
+        data: {
+          'token': refreshToken,
+        },
+      );
+
+      log('mmsRefreshToken() [ STATUS ] -> ${response.statusCode}');
+
+      final body = json.decode(response.body);
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        return {
+          'accessToken': body['accessToken'],
+          'refreshToken': body['refreshToken'],
+          'tokenType': body['tokenType'] ?? 'Bearer',
+          'expiresIn': body['expiresIn'] ?? 3600,
+        };
+      } else {
+        return null;
+      }
+    } catch (e) {
+      log('mmsRefreshToken() [ ERROR ] -> $e');
+      return null;
+    }
+  }
 }

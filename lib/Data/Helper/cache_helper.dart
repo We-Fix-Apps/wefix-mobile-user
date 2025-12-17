@@ -34,5 +34,6 @@ class CacheHelper {
   static String refreshToken = 'REFRESH_TOKEN';
   static String tokenType = 'TOKEN_TYPE';
   static String expiresIn = 'EXPIRES_IN';
+  static String tokenExpiresAt = 'TOKEN_EXPIRES_AT';
   
 }

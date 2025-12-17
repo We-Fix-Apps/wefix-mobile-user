@@ -1,5 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wefix/Business/end_points.dart';
+import 'package:wefix/Business/AppProvider/app_provider.dart';
+import 'package:wefix/Data/Functions/token_refresh.dart';
 import 'package:http/http.dart' as http;
 
 class HttpHelper {
@@ -8,6 +12,18 @@ class HttpHelper {
         'Accept': '*/*',
         "Connection": "keep-alive",
       };
+
+  /// Check and refresh token if needed before making request
+  /// Only for MMS API calls (backend-mms) which require token refresh
+  static Future<void> _ensureValidTokenForMMS(BuildContext? context) async {
+    // Call ensureValidToken which will try to get AppProvider from context or navigatorKey
+    // Pass null as appProvider to let it get it automatically
+    try {
+      await ensureValidToken(null, context);
+    } catch (e) {
+      // Provider might not be available, continue anyway
+    }
+  }
 
 // Todo :-  Get Data
   static Future<http.Response> getData({
@@ -27,7 +43,30 @@ class HttpHelper {
   static Future<http.Response> getData2({
     required String query,
     dynamic token,
+    BuildContext? context,
   }) async {
+    // Check and refresh token if needed (only for MMS API calls with token)
+    if (token != null && query.contains(EndPoints.mmsBaseUrl)) {
+      await _ensureValidTokenForMMS(context);
+      
+      // Get updated token from provider after potential refresh
+      // Try to get AppProvider from context or navigatorKey
+      try {
+        BuildContext? ctx = context;
+        if (ctx == null) {
+          // Try to get context from navigatorKey (imported from main.dart via token_refresh)
+          // For now, we'll skip if context is not available
+        } else {
+          final appProvider = Provider.of<AppProvider>(ctx, listen: false);
+          if (appProvider.accessToken != null) {
+            token = appProvider.accessToken;
+          }
+        }
+      } catch (e) {
+        // Continue with original token if provider not available
+      }
+    }
+
     var headers = _setHeaders();
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
@@ -60,7 +99,34 @@ class HttpHelper {
     String? token,
     Map<String, dynamic>? data,
     Map<String, String>? headers,
+    BuildContext? context,
   }) async {
+    // Check and refresh token if needed (only for MMS API calls with token)
+    // Skip for login and refresh-token endpoints
+    if (token != null && 
+        query.contains(EndPoints.mmsBaseUrl) &&
+        !query.contains(EndPoints.mmsLogin) &&
+        !query.contains(EndPoints.mmsRefreshToken)) {
+      await _ensureValidTokenForMMS(context);
+      
+      // Get updated token from provider after potential refresh
+      // Try to get AppProvider from context or navigatorKey
+      try {
+        BuildContext? ctx = context;
+        if (ctx == null) {
+          // Try to get context from navigatorKey (imported from main.dart via token_refresh)
+          // For now, we'll skip if context is not available
+        } else {
+          final appProvider = Provider.of<AppProvider>(ctx, listen: false);
+          if (appProvider.accessToken != null) {
+            token = appProvider.accessToken;
+          }
+        }
+      } catch (e) {
+        // Continue with original token if provider not available
+      }
+    }
+
     var requestHeaders = _setHeaders();
     if (token != null) {
       requestHeaders['Authorization'] = 'Bearer $token';
