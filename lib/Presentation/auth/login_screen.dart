@@ -654,6 +654,8 @@ class _LoginScreenState extends State<LoginScreen> {
           appProvider.setTokens(
             access: mmsUser.token!.accessToken,
             refresh: mmsUser.token!.refreshToken,
+            type: mmsUser.token!.tokenType,
+            expires: mmsUser.token!.expiresIn,
           );
         }
 

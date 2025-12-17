@@ -32,5 +32,7 @@ class CacheHelper {
   static String showTour = 'SHOW_TOUR';
   static String accessToken = 'ACCESS_TOKEN';
   static String refreshToken = 'REFRESH_TOKEN';
+  static String tokenType = 'TOKEN_TYPE';
+  static String expiresIn = 'EXPIRES_IN';
   
 }

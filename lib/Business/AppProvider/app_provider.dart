@@ -16,6 +16,8 @@ class AppProvider with ChangeNotifier {
   String? fcmToken;
   String? accessToken;
   String? refreshToken;
+  String? tokenType; // Token type (e.g., "Bearer")
+  int? expiresIn; // Token expiration time in seconds
   LatLng? currentLocation;
 
   List<Placemark>? places;
@@ -173,15 +175,29 @@ class AppProvider with ChangeNotifier {
   void loadTokensFromCache() {
     final cachedAccessToken = CacheHelper.getData(key: CacheHelper.accessToken);
     final cachedRefreshToken = CacheHelper.getData(key: CacheHelper.refreshToken);
+    final cachedTokenType = CacheHelper.getData(key: CacheHelper.tokenType);
+    final cachedExpiresIn = CacheHelper.getData(key: CacheHelper.expiresIn);
+    
     if (cachedAccessToken != null && cachedAccessToken.toString().isNotEmpty) {
       accessToken = cachedAccessToken.toString();
     }
     if (cachedRefreshToken != null && cachedRefreshToken.toString().isNotEmpty) {
       refreshToken = cachedRefreshToken.toString();
     }
+    if (cachedTokenType != null && cachedTokenType.toString().isNotEmpty) {
+      tokenType = cachedTokenType.toString();
+    }
+    if (cachedExpiresIn != null && cachedExpiresIn.toString().isNotEmpty) {
+      expiresIn = int.tryParse(cachedExpiresIn.toString());
+    }
   }
 
-  void setTokens({String? access, String? refresh}) {
+  void setTokens({
+    String? access,
+    String? refresh,
+    String? type,
+    int? expires,
+  }) {
     if (access != null) {
       accessToken = access;
       CacheHelper.saveData(key: CacheHelper.accessToken, value: access);
@@ -190,14 +206,26 @@ class AppProvider with ChangeNotifier {
       refreshToken = refresh;
       CacheHelper.saveData(key: CacheHelper.refreshToken, value: refresh);
     }
+    if (type != null) {
+      tokenType = type;
+      CacheHelper.saveData(key: CacheHelper.tokenType, value: type);
+    }
+    if (expires != null) {
+      expiresIn = expires;
+      CacheHelper.saveData(key: CacheHelper.expiresIn, value: expires.toString());
+    }
     notifyListeners();
   }
 
   void clearTokens() {
     accessToken = null;
     refreshToken = null;
+    tokenType = null;
+    expiresIn = null;
     CacheHelper.saveData(key: CacheHelper.accessToken, value: '');
     CacheHelper.saveData(key: CacheHelper.refreshToken, value: '');
+    CacheHelper.saveData(key: CacheHelper.tokenType, value: '');
+    CacheHelper.saveData(key: CacheHelper.expiresIn, value: '');
     notifyListeners();
   }
 
