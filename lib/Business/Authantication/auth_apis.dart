@@ -228,4 +228,25 @@ class Authantication {
       return null;
     }
   }
+
+  // * MMS Logout (Company Personnel)
+  static Future<bool> mmsLogout({required String token}) async {
+    try {
+      final response = await HttpHelper.postData2(
+        query: EndPoints.mmsBaseUrl + EndPoints.mmsLogout,
+        token: token,
+        data: {},
+        headers: {'x-client-type': 'mobile'}, // Indicate this is from mobile client
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        return body['success'] == true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
 }

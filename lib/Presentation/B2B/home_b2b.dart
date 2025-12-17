@@ -7,7 +7,6 @@ import 'package:wefix/Business/Bookings/bookings_apis.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Data/model/ticket_model.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
@@ -15,6 +14,8 @@ import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
 import 'package:wefix/Presentation/SubCategory/Screens/sub_services_screen.dart';
+
+import '../../l10n/app_localizations.dart';
 
 class B2BHome extends StatefulWidget {
   final SubsicripeModel? subsicripeModel;

@@ -15,6 +15,7 @@ class AppProvider with ChangeNotifier {
   UserModel? userModel;
   String? fcmToken;
   String? accessToken;
+  String? refreshToken;
   LatLng? currentLocation;
 
   List<Placemark>? places;
@@ -109,7 +110,7 @@ class AppProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void createSelectedDate(DateTime date) {
+  void createSelectedDate(DateTime? date) {
     selectedDate = date ?? DateTime.now();
     notifyListeners();
   }
@@ -159,8 +160,44 @@ class AppProvider with ChangeNotifier {
 
   void addUser({UserModel? user}) {
     userModel = user;
+    // Save access token from userModel
+    if (user != null && user.token.isNotEmpty) {
+      accessToken = user.token;
+      CacheHelper.saveData(key: CacheHelper.accessToken, value: accessToken!);
+    }
     CacheHelper.saveData(
         key: CacheHelper.userData, value: json.encode(userModel));
+    notifyListeners();
+  }
+
+  void loadTokensFromCache() {
+    final cachedAccessToken = CacheHelper.getData(key: CacheHelper.accessToken);
+    final cachedRefreshToken = CacheHelper.getData(key: CacheHelper.refreshToken);
+    if (cachedAccessToken != null && cachedAccessToken.toString().isNotEmpty) {
+      accessToken = cachedAccessToken.toString();
+    }
+    if (cachedRefreshToken != null && cachedRefreshToken.toString().isNotEmpty) {
+      refreshToken = cachedRefreshToken.toString();
+    }
+  }
+
+  void setTokens({String? access, String? refresh}) {
+    if (access != null) {
+      accessToken = access;
+      CacheHelper.saveData(key: CacheHelper.accessToken, value: access);
+    }
+    if (refresh != null) {
+      refreshToken = refresh;
+      CacheHelper.saveData(key: CacheHelper.refreshToken, value: refresh);
+    }
+    notifyListeners();
+  }
+
+  void clearTokens() {
+    accessToken = null;
+    refreshToken = null;
+    CacheHelper.saveData(key: CacheHelper.accessToken, value: '');
+    CacheHelper.saveData(key: CacheHelper.refreshToken, value: '');
     notifyListeners();
   }
 
@@ -209,12 +246,13 @@ class AppProvider with ChangeNotifier {
   TextEditingController desc = TextEditingController();
 
   saveDesc(String? value) {
-    desc.text = value ?? '';
+    desc.text = value != null ? value : '';
     notifyListeners();
   }
 
   void clearUser() {
     userModel = null;
+    clearTokens();
     CacheHelper.saveData(
         key: CacheHelper.userData, value: CacheHelper.clearUserData);
     notifyListeners();

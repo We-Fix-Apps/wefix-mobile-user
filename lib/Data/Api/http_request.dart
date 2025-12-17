@@ -59,15 +59,20 @@ class HttpHelper {
     required String query,
     String? token,
     Map<String, dynamic>? data,
+    Map<String, String>? headers,
   }) async {
-    var headers = _setHeaders();
+    var requestHeaders = _setHeaders();
     if (token != null) {
-      headers['Authorization'] = 'Bearer $token';
+      requestHeaders['Authorization'] = 'Bearer $token';
+    }
+    // Merge additional headers if provided
+    if (headers != null) {
+      requestHeaders.addAll(headers);
     }
     return await http.post(
       Uri.parse(query),
       body: jsonEncode(data),
-      headers: headers,
+      headers: requestHeaders,
     );
   }
 

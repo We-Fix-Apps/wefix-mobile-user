@@ -30,5 +30,7 @@ class CacheHelper {
   static String userData = 'USER_DATA';
   static String clearUserData = 'CLEAR_USER_DATA';
   static String showTour = 'SHOW_TOUR';
+  static String accessToken = 'ACCESS_TOKEN';
+  static String refreshToken = 'REFRESH_TOKEN';
   
 }

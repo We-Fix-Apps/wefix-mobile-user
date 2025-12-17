@@ -10,7 +10,6 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:wefix/firebase_options.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; 
 import 'package:wefix/main_managements.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
@@ -21,6 +20,7 @@ import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Presentation/SplashScreen/splash_screen.dart';
 import 'Data/model/user_model.dart';
+import 'l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

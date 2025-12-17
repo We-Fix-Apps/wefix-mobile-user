@@ -128,6 +128,7 @@ class EndPoints {
   // * MMS API (Backend MMS)
   static String mmsBaseUrl = 'https://wefix-backend-mms.ngrok.app/api/v1/'; // Update with your backend URL
   static String mmsLogin = 'users/login';
+  static String mmsLogout = 'users/logout';
   static String mmsRegister = 'users/register';
   static String mmsTickets = 'tickets';
   static String mmsTicketStatistics = 'tickets/statistics';

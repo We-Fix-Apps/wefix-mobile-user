@@ -86,6 +86,8 @@ class _SplashScreenState extends State<SplashScreen> {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     if (widget.userModel != null) {
       appProvider.addUser(user: widget.userModel);
+      // Load tokens from cache when restoring user data
+      appProvider.loadTokensFromCache();
       getAppLanguage().whenComplete(() {
         return Navigator.pushReplacement(
           context,

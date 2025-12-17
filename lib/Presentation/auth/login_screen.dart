@@ -17,7 +17,6 @@ import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:wefix/Data/model/login_model.dart';
 import 'package:wefix/Data/model/user_model.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -31,6 +30,8 @@ import 'package:wefix/Presentation/auth/sign_up_screen.dart';
 import 'package:wefix/layout_screen.dart';
 
 import 'package:local_auth/local_auth.dart';
+
+import '../../l10n/app_localizations.dart';
 
 List<String> scopes = const <String>[
   'email',
@@ -647,6 +648,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Update AppProvider with user data
         appProvider.addUser(user: userModel);
+        
+        // Save both access token and refresh token in AppProvider
+        if (mmsUser.token != null) {
+          appProvider.setTokens(
+            access: mmsUser.token!.accessToken,
+            refresh: mmsUser.token!.refreshToken,
+          );
+        }
 
         // Navigate to home - HomeScreen will automatically show B2BHome for company personnel (roleId == 2)
         Navigator.pushAndRemoveUntil(

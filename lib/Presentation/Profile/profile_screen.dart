@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
+import 'package:wefix/Business/Authantication/auth_apis.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/appText/appText.dart';
-import 'package:wefix/Presentation/B2B/branch/add_branch_screen.dart'
-    show AddBranchScreen;
 import 'package:wefix/Presentation/B2B/branch/branches_list_screen.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
@@ -192,7 +191,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: appProvider.userModel?.token == null
                     ? AppText(context).login
                     : AppText(context).logout,
-                onTap: () {
+                onTap: () async {
+                  // Check if user has a mobile token in database
+                  // If user is company personnel (roleId == 2) and has accessToken, 
+                  // assume it's a mobile login and token in DB starts with "mobile-access-token:"
+                  if (appProvider.userModel?.customer.roleId == 2 && appProvider.accessToken != null) {
+                    // This is a mobile login - token in DB should start with "mobile-access-token:"
+                    // Call backend logout to remove from DB (backend will verify token prefix)
+                    await Authantication.mmsLogout(token: appProvider.accessToken!);
+                  }
+                  // Clear from provider (local storage and memory) regardless
                   setState(() {
                     appProvider.clearUser();
                   });
