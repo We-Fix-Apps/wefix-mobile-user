@@ -646,15 +646,51 @@ class BookingApi {
       request.fields['referenceId'] = ticketId.toString();
       request.fields['referenceType'] = 'TICKET_ATTACHMENT';
 
-      // Add files to the request
+      // Add files to the request with metadata
+      int fileIndex = 0;
       for (var filePath in filePaths) {
         final file = File(filePath);
         if (file.existsSync()) {
-          // Determine field name based on file type
-          // For backend-mms, we use 'files' array for all file types
+          // Get file stats
+          final fileStats = await file.stat();
+          final fileSizeBytes = fileStats.size;
+          final fileSizeMB = (fileSizeBytes / (1024 * 1024)).toStringAsFixed(2);
+          
+          // Get file extension
+          final fileExtension = filePath.split('.').last.toLowerCase();
+          
+          // Determine file type
+          String fileType;
+          if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].contains(fileExtension)) {
+            fileType = 'image';
+          } else if (fileExtension == 'pdf') {
+            fileType = 'pdf';
+          } else if (['doc', 'docx'].contains(fileExtension)) {
+            fileType = 'doc';
+          } else if (['xls', 'xlsx'].contains(fileExtension)) {
+            fileType = 'excel';
+          } else if (['mp4', 'avi', 'mov', 'wmv'].contains(fileExtension)) {
+            fileType = 'video';
+          } else if (['mp3', 'wav', 'm4a', 'aac'].contains(fileExtension)) {
+            fileType = 'audio';
+          } else {
+            fileType = 'other';
+          }
+          
+          // Add file
           request.files.add(
             await http.MultipartFile.fromPath('files', file.path),
           );
+          
+          // Add file metadata as fields (indexed by file)
+          request.fields['fileMetadata[$fileIndex][extension]'] = fileExtension;
+          request.fields['fileMetadata[$fileIndex][sizeMB]'] = fileSizeMB;
+          request.fields['fileMetadata[$fileIndex][type]'] = fileType;
+          request.fields['fileMetadata[$fileIndex][path]'] = filePath;
+          request.fields['fileMetadata[$fileIndex][storageProvider]'] = 'LOCAL';
+          request.fields['fileMetadata[$fileIndex][description]'] = '';
+          
+          fileIndex++;
         }
       }
 
