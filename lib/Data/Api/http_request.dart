@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:wefix/Business/end_points.dart';
-import 'package:wefix/Business/AppProvider/app_provider.dart';
-import 'package:wefix/Data/Functions/token_refresh.dart';
+import 'package:wefix/Data/Api/auth_helper.dart';
 import 'package:http/http.dart' as http;
 
 class HttpHelper {
@@ -13,17 +11,6 @@ class HttpHelper {
         "Connection": "keep-alive",
       };
 
-  /// Check and refresh token if needed before making request
-  /// Only for MMS API calls (backend-mms) which require token refresh
-  static Future<void> _ensureValidTokenForMMS(BuildContext? context) async {
-    // Call ensureValidToken which will try to get AppProvider from context or navigatorKey
-    // Pass null as appProvider to let it get it automatically
-    try {
-      await ensureValidToken(null, context);
-    } catch (e) {
-      // Provider might not be available, continue anyway
-    }
-  }
 
 // Todo :-  Get Data
   static Future<http.Response> getData({
@@ -34,10 +21,15 @@ class HttpHelper {
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
-    return await http.get(
+    final response = await http.get(
       Uri.parse(EndPoints.baseUrl + query),
       headers: headers,
     );
+    
+    // Check for 401/403 responses and handle auth errors
+    await AuthHelper.checkResponseStatus(response.statusCode, query, null, isMMS: false);
+    
+    return response;
   }
 
   static Future<http.Response> getData2({
@@ -47,34 +39,26 @@ class HttpHelper {
   }) async {
     // Check and refresh token if needed (only for MMS API calls with token)
     if (token != null && query.contains(EndPoints.mmsBaseUrl)) {
-      await _ensureValidTokenForMMS(context);
+      // Ensure token is valid for company personnel before making request
+      await AuthHelper.ensureTokenValidForCompanyPersonnel(context);
       
       // Get updated token from provider after potential refresh
-      // Try to get AppProvider from context or navigatorKey
-      try {
-        BuildContext? ctx = context;
-        if (ctx == null) {
-          // Try to get context from navigatorKey (imported from main.dart via token_refresh)
-          // For now, we'll skip if context is not available
-        } else {
-          final appProvider = Provider.of<AppProvider>(ctx, listen: false);
-          if (appProvider.accessToken != null) {
-            token = appProvider.accessToken;
-          }
-        }
-      } catch (e) {
-        // Continue with original token if provider not available
-      }
+      token = await AuthHelper.getUpdatedToken(context, token);
     }
 
     var headers = _setHeaders();
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
-    return await http.get(
+    final response = await http.get(
       Uri.parse(query),
       headers: headers,
     );
+    
+    // Check for 401/403 responses and handle auth errors
+    await AuthHelper.checkResponseStatus(response.statusCode, query, context, isMMS: query.contains(EndPoints.mmsBaseUrl));
+    
+    return response;
   }
 
 // Todo :- Post Data
@@ -87,11 +71,16 @@ class HttpHelper {
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
-    return await http.post(
+    final response = await http.post(
       Uri.parse(EndPoints.baseUrl + query),
       body: jsonEncode(data),
       headers: headers,
     );
+    
+    // Check for 401/403 responses and handle auth errors
+    await AuthHelper.checkResponseStatus(response.statusCode, query, null, isMMS: false);
+    
+    return response;
   }
 
   static Future<http.Response> postData2({
@@ -107,24 +96,11 @@ class HttpHelper {
         query.contains(EndPoints.mmsBaseUrl) &&
         !query.contains(EndPoints.mmsLogin) &&
         !query.contains(EndPoints.mmsRefreshToken)) {
-      await _ensureValidTokenForMMS(context);
+      // Ensure token is valid for company personnel before making request
+      await AuthHelper.ensureTokenValidForCompanyPersonnel(context);
       
       // Get updated token from provider after potential refresh
-      // Try to get AppProvider from context or navigatorKey
-      try {
-        BuildContext? ctx = context;
-        if (ctx == null) {
-          // Try to get context from navigatorKey (imported from main.dart via token_refresh)
-          // For now, we'll skip if context is not available
-        } else {
-          final appProvider = Provider.of<AppProvider>(ctx, listen: false);
-          if (appProvider.accessToken != null) {
-            token = appProvider.accessToken;
-          }
-        }
-      } catch (e) {
-        // Continue with original token if provider not available
-      }
+      token = await AuthHelper.getUpdatedToken(context, token);
     }
 
     var requestHeaders = _setHeaders();
@@ -135,11 +111,16 @@ class HttpHelper {
     if (headers != null) {
       requestHeaders.addAll(headers);
     }
-    return await http.post(
+    final response = await http.post(
       Uri.parse(query),
       body: jsonEncode(data),
       headers: requestHeaders,
     );
+    
+    // Check for 401/403 responses and handle auth errors
+    await AuthHelper.checkResponseStatus(response.statusCode, query, context, isMMS: query.contains(EndPoints.mmsBaseUrl));
+    
+    return response;
   }
 
   // Todo :- Put Data

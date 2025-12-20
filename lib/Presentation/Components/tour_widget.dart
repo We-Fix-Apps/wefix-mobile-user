@@ -134,7 +134,7 @@ class CustomeTutorialCoachMark {
     if (isShow == true && _isTutorialCreated) {
       // Check if tutorial was created (has targets) before showing
       try {
-        tutorialCoachMark.show(context: context);
+      tutorialCoachMark.show(context: context);
       } catch (e) {
         // Silently fail if tutorial wasn't created or has no targets
         _isTutorialCreated = false;

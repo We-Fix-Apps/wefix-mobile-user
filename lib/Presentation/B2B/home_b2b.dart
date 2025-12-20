@@ -84,14 +84,19 @@ class _B2BHomeState extends State<B2BHome> {
   }
 
   Future getCompanyTickets() async {
+    if (!mounted) return;
     setState(() {
       loading = true;
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
+      // Use accessToken for MMS APIs, not userModel.token
+      final token = appProvider.accessToken ?? appProvider.userModel?.token ?? "";
       final ticketsData = await BookingApi.getCompanyTicketsFromMMS(
-        token: appProvider.userModel?.token ?? "",
+        token: token,
       );
+
+      if (!mounted) return;
 
       if (ticketsData != null) {
         // Convert MMS tickets format to TicketModel format
@@ -133,17 +138,20 @@ class _B2BHomeState extends State<B2BHome> {
           );
         }).toList();
 
+        if (!mounted) return;
         setState(() {
           ticketModel = TicketModel(tickets: tickets);
           loading = false;
         });
       } else {
+        if (!mounted) return;
         setState(() {
           ticketModel = TicketModel(tickets: []);
           loading = false;
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         loading = false;
       });
@@ -151,18 +159,25 @@ class _B2BHomeState extends State<B2BHome> {
   }
 
   Future getTicketStatistics() async {
+    if (!mounted) return;
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
+      // Use accessToken for MMS APIs, not userModel.token
+      final token = appProvider.accessToken ?? appProvider.userModel?.token ?? "";
       final stats = await BookingApi.getTicketStatisticsFromMMS(
-        token: appProvider.userModel?.token ?? "",
+        token: token,
       );
+
+      if (!mounted) return;
 
       if (stats != null) {
         setState(() {
           ticketStatistics = stats;
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      // Silently handle errors
+    }
   }
 }
 

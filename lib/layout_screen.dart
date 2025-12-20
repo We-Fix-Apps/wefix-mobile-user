@@ -161,7 +161,7 @@ class _HomeLayoutState extends State<HomeLayout> {
 
   void showTutorial() {
     try {
-      tutorialCoachMark.show(context: context);
+    tutorialCoachMark.show(context: context);
     } catch (e) {
       // Silently fail if tutorial wasn't created or has no targets
     }

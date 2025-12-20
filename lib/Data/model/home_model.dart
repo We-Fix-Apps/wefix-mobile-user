@@ -25,20 +25,20 @@ class HomeModel {
         sliders: json["sliders"] == null
             ? []
             : List<SliderModel>.from(
-                json["sliders"].map((x) => SliderModel.fromJson(x))),
+            json["sliders"].map((x) => SliderModel.fromJson(x))),
         roleId: json["roleId"],
         categories: json["categories"] == null
             ? []
             : List<Category>.from(
-                json["categories"].map((x) => Category.fromJson(x))),
+            json["categories"].map((x) => Category.fromJson(x))),
         serviceOffers: json["serviceOffers"] == null
             ? []
             : List<Service>.from(
-                json["serviceOffers"].map((x) => Service.fromJson(x))),
+            json["serviceOffers"].map((x) => Service.fromJson(x))),
         servicePopular: json["servicePopular"] == null
             ? []
             : List<Service>.from(
-                json["servicePopular"].map((x) => Service.fromJson(x))),
+            json["servicePopular"].map((x) => Service.fromJson(x))),
         tickets:
             json["tickets"] != null ? Tickets.fromJson(json["tickets"]) : null,
       );

@@ -83,8 +83,8 @@ class ProfileApis {
         // Check if response body is not empty before decoding
         if (response.body.isNotEmpty) {
           final body = json.decode(response.body);
-          subsicripeModel = SubsicripeModel.fromJson(body);
-          return subsicripeModel;
+        subsicripeModel = SubsicripeModel.fromJson(body);
+        return subsicripeModel;
         } else {
           return null;
         }

@@ -93,6 +93,9 @@ class _HomeScreenState extends State<HomeScreen>
         WidgetsBinding.instance.addPostFrameCallback((_) {
           CustomeTutorialCoachMark.createTutorial(keyButtons, contents);
           Future.delayed(const Duration(seconds: 2), () {
+            // Check if widget is still mounted before using context
+            if (!mounted) return;
+            
             final tourData = CacheHelper.getData(key: CacheHelper.showTour);
             Map showTour = tourData != null && tourData != 'null'
                 ? json.decode(tourData)
@@ -103,8 +106,16 @@ class _HomeScreenState extends State<HomeScreen>
                     "appointmentDetails": true,
                     "checkout": true,
                   };
+            
+            // Double check mounted before using context
+            if (!mounted) return;
+            
             CustomeTutorialCoachMark.showTutorial(context,
                 isShow: showTour["home"] ?? true);
+            
+            // Double check mounted before calling setState
+            if (!mounted) return;
+            
             setState(() {
               showTour["home"] = false;
             });
@@ -843,6 +854,16 @@ class _HomeScreenState extends State<HomeScreen>
   Future isSubsicribed({isfromPlaceOreder = true}) async {
     AppProvider appProvider = Provider.of(context, listen: false);
 
+    // Skip isSubsicribe if user logged in via backend-mms (has accessToken)
+    // This endpoint is only for backend-oms users
+    if (appProvider.accessToken != null && appProvider.userModel?.customer.roleId == 2) {
+      // User is logged in via backend-mms, skip backend-oms subscription check
+      setState(() {
+        loading5 = false;
+      });
+      return;
+    }
+
     setState(() {
       loading5 = true;
     });
@@ -870,6 +891,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future getActiveTicket() async {
+    if (!mounted) return;
     setState(() {
       loading2 = true;
     });
@@ -877,6 +899,7 @@ class _HomeScreenState extends State<HomeScreen>
     try {
       BookingApi.getActiveTicket(token: appProvider.userModel?.token ?? "")
           .then((value) {
+        if (!mounted) return;
         setState(() {
           ticketModel = value;
           loading2 = false;
@@ -884,6 +907,7 @@ class _HomeScreenState extends State<HomeScreen>
       });
     } catch (e) {
       log(e.toString());
+      if (!mounted) return;
       setState(() {
         loading2 = false;
       });
@@ -891,7 +915,9 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future getAllHomeApis() async {
+    if (!mounted) return;
     await Permission.notification.request();
+    if (!mounted) return;
     setState(() {
       loading = true;
     });
@@ -899,6 +925,7 @@ class _HomeScreenState extends State<HomeScreen>
     try {
       HomeApis.allHomeApis(token: appProvider.userModel?.token ?? "")
           .then((value) {
+        if (!mounted) return;
         setState(() {
           homeModel = value;
           loading = false;
@@ -906,6 +933,7 @@ class _HomeScreenState extends State<HomeScreen>
       });
     } catch (e) {
       log(e.toString());
+      if (!mounted) return;
       setState(() {
         loading = false;
       });

@@ -656,7 +656,7 @@ class _LoginScreenState extends State<LoginScreen> {
             refresh: mmsUser.token!.refreshToken,
             type: mmsUser.token!.tokenType,
             expires: mmsUser.token!.expiresIn,
-          );
+        );
         }
 
         // Navigate to home - HomeScreen will automatically show B2BHome for company personnel (roleId == 2)

@@ -11,6 +11,7 @@ import 'package:wefix/Business/language/language_api.dart';
 
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Functions/token_utils.dart';
 
 import 'package:wefix/Data/model/user_model.dart';
 import 'package:wefix/Presentation/auth/login_screen.dart';
@@ -88,6 +89,26 @@ class _SplashScreenState extends State<SplashScreen> {
       appProvider.addUser(user: widget.userModel);
       // Load tokens from cache when restoring user data
       appProvider.loadTokensFromCache();
+      
+      // Check if token is expired after loading from cache
+      // Only check for MMS users (company personnel with roleId == 2)
+      if (appProvider.userModel?.customer.roleId == 2) {
+        final tokenExpiresAt = appProvider.tokenExpiresAt;
+        if (tokenExpiresAt != null && !isTokenValid(tokenExpiresAt)) {
+          // Token is expired - force logout
+          log('SplashScreen: Token expired - forcing logout');
+          appProvider.clearUser();
+          appProvider.clearTokens();
+          getAppLanguage().whenComplete(() {
+            return Navigator.pushReplacement(
+              context,
+              downToTop(const LoginScreen()),
+            );
+          });
+          return;
+        }
+      }
+      
       getAppLanguage().whenComplete(() {
         return Navigator.pushReplacement(
           context,

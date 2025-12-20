@@ -68,16 +68,16 @@ class BookingApi {
         }
       } else {
         // Regular user - use OMS endpoint
-        final response = await HttpHelper.getData(
-          query: EndPoints.booking,
-          token: token,
-        );
+      final response = await HttpHelper.getData(
+        query: EndPoints.booking,
+        token: token,
+      );
 
         if (response.statusCode == 200) {
-          final body = json.decode(response.body);
-          ticketModel = TicketModel.fromJson(body);
-          return ticketModel;
-        } else {
+      final body = json.decode(response.body);
+        ticketModel = TicketModel.fromJson(body);
+        return ticketModel;
+      } else {
           ticketModel = TicketModel(tickets: []);
           return ticketModel;
         }
@@ -141,9 +141,9 @@ class BookingApi {
               token: token,
             )
           : await HttpHelper.getData(
-              query: EndPoints.bookingDetails + id,
-              token: token,
-            );
+        query: EndPoints.bookingDetails + id,
+        token: token,
+      );
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
@@ -205,8 +205,8 @@ class BookingApi {
           }
         } else {
           // Handle OMS response format (existing)
-          bookingDetailsModel = BookingDetailsModel.fromJson(body);
-          return bookingDetailsModel;
+        bookingDetailsModel = BookingDetailsModel.fromJson(body);
+        return bookingDetailsModel;
         }
       } else {
         return null;

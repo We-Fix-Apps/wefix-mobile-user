@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 /// Minimum session length before token expiration to trigger refresh (30 minutes)
 const int MIN_SESSION_LENGTH_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
 
@@ -45,4 +43,5 @@ int getTimeRemaining(DateTime? tokenExpiresAt) {
 
   return diff > 0 ? diff : 0;
 }
+
 
