@@ -308,7 +308,8 @@
 "invalidCredentials" : "Invalid login credentials",
 "loginFailed" : "Login failed",
 "regularUser" : "Regular User",
-"companyPersonnel" : "Companies","emailRequired" : "Email is required",
+"companyPersonnel" : "Companies",
+"emailRequired" : "Email is required",
 "createTicket" : "Create Ticket",
 "editTicket" : "Edit Ticket",
 "updateTicket" : "Update Ticket",
@@ -344,5 +345,3 @@
 "optional" : "Optional",
 "ticketStatus" : "Ticket Status"
 }
-
-"companyPersonnel" : "Companies",

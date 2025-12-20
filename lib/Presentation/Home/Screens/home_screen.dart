@@ -940,30 +940,3 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 }
-
-    if (!mounted) return;
-    await Permission.notification.request();
-    if (!mounted) return;
-    setState(() {
-      loading = true;
-    });
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    try {
-      HomeApis.allHomeApis(token: appProvider.userModel?.token ?? "")
-          .then((value) {
-        if (!mounted) return;
-        setState(() {
-          homeModel = value;
-          loading = false;
-        });
-      });
-    } catch (e) {
-      log(e.toString());
-      if (!mounted) return;
-      setState(() {
-        loading = false;
-      });
-    }
-  }
-}
-}

@@ -297,7 +297,8 @@
     "invalidCredentials": "بيانات الدخول غير صحيحة",
     "loginFailed": "فشل تسجيل الدخول",
     "regularUser": "مستخدم عادي",
-    "companyPersonnel": "شركات",    "emailRequired": "البريد الإلكتروني مطلوب",
+    "companyPersonnel": "شركات",
+    "emailRequired": "البريد الإلكتروني مطلوب",
     "createTicket": "إنشاء تذكرة",
     "editTicket": "تعديل تذكرة",
     "updateTicket": "تحديث تذكرة",
@@ -333,5 +334,3 @@
     "optional": "اختياري",
     "ticketStatus": "حالة التذكرة"
 }
-
-    "companyPersonnel": "شركات",
