@@ -343,5 +343,6 @@
 "next" : "Next",
 "attachment" : "Attachment",
 "optional" : "Optional",
-"ticketStatus" : "Ticket Status"
+"ticketStatus" : "Ticket Status",
+"ticketSummary" : "Ticket Summary"
 }
