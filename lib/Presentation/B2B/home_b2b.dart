@@ -14,6 +14,8 @@ import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
 import 'package:wefix/Presentation/B2B/ticket/create_update_ticket_screen_v2.dart';
+import 'package:wefix/Business/orders/profile_api.dart';
+import 'package:wefix/Data/model/profile_model.dart';
 
 import '../../l10n/app_localizations.dart';
 
@@ -40,47 +42,63 @@ class _B2BHomeState extends State<B2BHome> {
 
   @override
   Widget build(BuildContext context) {
+    // Get bottom navigation bar height to add proper padding
+    const bottomNavBarHeight = 32.0; // ConvexAppBar height from layout_screen
+    final safeAreaBottom = MediaQuery.of(context).padding.bottom;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom:  bottomNavBarHeight + safeAreaBottom, // Extra padding for bottom nav
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const _HeaderSection(),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               _TicketSummarySection(
                 subsicripeModel: widget.subsicripeModel,
                 ticketStatistics: ticketStatistics,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               loading == true
-                  ? LinearProgressIndicator(
-                      backgroundColor: AppColors.secoundryColor,
-                      color: AppColors(context).primaryColor,
+                  ? const SizedBox(
+                      height: 4,
+                      child: LinearProgressIndicator(
+                        backgroundColor: AppColors.secoundryColor,
+                        color: Colors.orange,
+                      ),
                     )
-                  : _LastTicketsSection(
-                      ticketModel: ticketModel,
+                  : Expanded(
+                      child: _LastTicketsSection(
+                        ticketModel: ticketModel,
+                      ),
                     ),
-              const SizedBox(height: 4),
-              CustomBotton(
-                title: AppLocalizations.of(context)!.addTicket,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreateUpdateTicketScreenV2(),
-                    ),
-                  ).then((success) {
-                    // Refresh tickets list if ticket was created/updated successfully
-                    if (success == true) {
-                      getCompanyTickets();
-                    }
-                  });
-                },
-              ),
               const SizedBox(height: 16),
+              SizedBox(
+                height: 60,
+                width: double.infinity,
+                child: CustomBotton(
+                  title: AppLocalizations.of(context)!.addTicket,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CreateUpdateTicketScreenV2(),
+                      ),
+                    ).then((success) {
+                      // Refresh tickets list if ticket was created/updated successfully
+                      if (success == true) {
+                        getCompanyTickets();
+                      }
+                    });
+                  },
+                ),
+              ),
             ],
           ),
         ),
@@ -119,7 +137,6 @@ class _B2BHomeState extends State<B2BHome> {
             cancelButton: null,
             isRated: null,
             type: ticket['ticketType']?['name'],
-            serviceprovideImage: null,
             promoCode: null,
             requestedDate: ticketDate,
             selectedDate: ticketDate,
@@ -138,6 +155,7 @@ class _B2BHomeState extends State<B2BHome> {
             customerPackageId: null,
             totalPrice: 0.0,
             serviceprovide: ticket['technician']?['name'] ?? null,
+            serviceprovideImage: ticket['technician']?['image'] ?? ticket['technician']?['profileImage'] ?? null,
             description: ticket['ticketDescription'] ?? '',
             descriptionAr: ticket['ticketDescription'] ?? '',
           );
@@ -195,22 +213,96 @@ class _HeaderSection extends StatefulWidget {
 }
 
 class _HeaderSectionState extends State<_HeaderSection> {
+  ProfileModel? profileModel;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    if (!mounted) return;
+    setState(() {
+      isLoading = true;
+    });
+    try {
+      AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+      final token = appProvider.accessToken ?? appProvider.userModel?.token ?? "";
+      if (token.isNotEmpty) {
+        final profile = await ProfileApis.getProfileData(token: token);
+        if (mounted) {
+          setState(() {
+            profileModel = profile;
+            isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _getInitials(String? name) {
+    if (name == null || name.isEmpty) return "U";
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return "${parts[0][0]}${parts[1][0]}".toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     AppProvider appProvider = Provider.of<AppProvider>(context);
+    final profileImage = profileModel?.profile?.profileImage;
+    final userName = appProvider.userModel?.customer.name ?? "";
+
     return Row(
       children: [
-        CircleAvatar(
-          backgroundColor: Colors.orange.shade100,
-          radius: 24,
-          child: Icon(Icons.business_center, color: Colors.orange.shade700),
-        ),
+        profileImage != null && profileImage.isNotEmpty
+            ? ClipOval(
+                child: WidgetCachNetworkImage(
+                  image: profileImage,
+                  width: 48,
+                  height: 48,
+                ),
+              )
+            : CircleAvatar(
+                backgroundColor: Colors.orange.shade100,
+                radius: 24,
+                child: isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        _getInitials(userName),
+                        style: TextStyle(
+                          color: Colors.orange.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+              ),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "${AppLocalizations.of(context)!.hello} ${appProvider.userModel?.customer.name ?? ""}",
+              "${AppLocalizations.of(context)!.hello} $userName",
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             Text(
@@ -264,7 +356,7 @@ class _TicketSummarySectionState extends State<_TicketSummarySection> {
           used: correctiveCompleted,
           total: correctiveTotal,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
           child: _SmallTicketCard(
@@ -419,26 +511,20 @@ class _LastTicketsSection extends StatelessWidget {
   final TicketModel? ticketModel;
   const _LastTicketsSection({this.ticketModel});
 
+  String _getInitials(String? name) {
+    if (name == null || name.isEmpty) return "T";
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return "${parts[0][0]}${parts[1][0]}".toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // حساب الارتفاع المتاح للـ Tickets
-    double screenHeight = MediaQuery.of(context).size.height;
-    double safeAreaTop = MediaQuery.of(context).padding.top;
-    double safeAreaBottom = MediaQuery.of(context).padding.bottom;
-    
-    // العناصر الثابتة:
-    // Header ≈ 70
-    // Ticket Summary ≈ 200
-    // "Last Tickets" Row ≈ 40
-    // Add Ticket Button ≈ 60
-    // Spacing (16+16+25+4+16) ≈ 77
-    double fixedHeight = 125 + 200 + 40 + 60 + 77 + safeAreaTop + safeAreaBottom;
-    
-    // الارتفاع المتبقي للـ PageView
-    double availableHeight = screenHeight - fixedHeight;
-    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
@@ -455,19 +541,21 @@ class _LastTicketsSection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        SizedBox(
-          height: availableHeight.clamp(300, 500), // حد أدنى 300 وأقصى 500
+        const SizedBox(height: 6),
+        Expanded(
           child: PageView.builder(
             itemCount: (ticketModel?.tickets.length ?? 0) > 0 ? ((ticketModel!.tickets.length / 4).ceil()) : 0,
             itemBuilder: (context, pageIndex) {
               int startIndex = pageIndex * 4;
               int endIndex = (startIndex + 4).clamp(0, ticketModel?.tickets.length ?? 0);
               
-              return ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: endIndex - startIndex,
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.only(bottom: 8),
+                  itemCount: endIndex - startIndex,
                 itemBuilder: (context, index) {
                   int ticketIndex = startIndex + index;
                   
@@ -483,85 +571,104 @@ class _LastTicketsSection extends StatelessWidget {
                       );
                     },
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
+                      margin: const EdgeInsets.only(bottom: 4),
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColors(context).primaryColor.withOpacity(0.2)),
                         borderRadius: BorderRadius.circular(12),
                         color: Colors.white,
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        leading: ticketModel?.tickets[ticketIndex].icon == null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(30),
-                                child: Image.asset(
-                                  "assets/image/icon_logo.png",
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                ))
-                            : WidgetCachNetworkImage(
-                                image: ticketModel?.tickets[ticketIndex].icon ?? "",
-                                width: 40,
-                                height: 40,
-                              ),
-                        title: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        child: Row(
                           children: [
-                            Text(
-                              "#${ticketModel?.tickets[ticketIndex].id}",
-                              style: TextStyle(fontSize: 12, color: AppColors(context).primaryColor),
-                            ),
-                            Text(
-                                ticketModel?.tickets[ticketIndex].description == null
-                                    ? AppLocalizations.of(context)!.preventivevisits
-                                    : ticketModel?.tickets[ticketIndex].description ?? "",
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                          ],
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                DateFormat('MMM d, yyyy').format(
-                                    ticketModel?.tickets[ticketIndex].selectedDate ?? DateTime.now()),
-                                style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                            if (ticketModel?.tickets[ticketIndex].serviceprovide != null)
-                              Text(
-                                ticketModel?.tickets[ticketIndex].serviceprovide ?? "",
-                                style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
-                              ),
-                          ],
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: ticketModel?.tickets[ticketIndex].status == "Pending"
-                                ? AppColors(context).primaryColor.withOpacity(.2)
-                                : ticketModel?.tickets[ticketIndex].status == "Cancelled"
-                                    ? Colors.red.withOpacity(.2)
-                                    : Colors.green.withOpacity(.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            ticketModel?.tickets[ticketIndex].status ?? "",
-                            style: TextStyle(
+                            // Status badge on the left
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                              decoration: BoxDecoration(
                                 color: ticketModel?.tickets[ticketIndex].status == "Pending"
-                                    ? AppColors(context).primaryColor
+                                    ? AppColors(context).primaryColor.withOpacity(.2)
                                     : ticketModel?.tickets[ticketIndex].status == "Cancelled"
-                                        ? Colors.red
-                                        : Colors.green,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 11),
-                          ),
+                                        ? Colors.red.withOpacity(.2)
+                                        : Colors.green.withOpacity(.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                ticketModel?.tickets[ticketIndex].status ?? "",
+                                style: TextStyle(
+                                    color: ticketModel?.tickets[ticketIndex].status == "Pending"
+                                        ? AppColors(context).primaryColor
+                                        : ticketModel?.tickets[ticketIndex].status == "Cancelled"
+                                            ? Colors.red
+                                            : Colors.green,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            // Technician image or initials
+                            ticketModel?.tickets[ticketIndex].serviceprovideImage != null && 
+                            ticketModel?.tickets[ticketIndex].serviceprovideImage!.isNotEmpty == true
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(22),
+                                    child: WidgetCachNetworkImage(
+                                      image: ticketModel?.tickets[ticketIndex].serviceprovideImage ?? "",
+                                      width: 36,
+                                      height: 36,
+                                    ),
+                                  )
+                                : CircleAvatar(
+                                    radius: 18,
+                                    backgroundColor: Colors.orange.shade100,
+                                    child: Text(
+                                      _getInitials(ticketModel?.tickets[ticketIndex].serviceprovide ?? ""),
+                                      style: TextStyle(
+                                        color: Colors.orange.shade700,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                            const SizedBox(width: 12),
+                            // Ticket details
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    "#${ticketModel?.tickets[ticketIndex].id}",
+                                    style: TextStyle(fontSize: 13, color: AppColors(context).primaryColor),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                      ticketModel?.tickets[ticketIndex].description == null
+                                          ? AppLocalizations.of(context)!.preventivevisits
+                                          : ticketModel?.tickets[ticketIndex].description ?? "",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                      DateFormat('MMM d, yyyy').format(
+                                          ticketModel?.tickets[ticketIndex].selectedDate ?? DateTime.now()),
+                                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                  if (ticketModel?.tickets[ticketIndex].serviceprovide != null) ...[
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      ticketModel?.tickets[ticketIndex].serviceprovide ?? "",
+                                      style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   );
                 },
+                ),
               );
             },
           ),
