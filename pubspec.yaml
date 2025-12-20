@@ -39,7 +39,7 @@ dependencies:
   bot_toast: ^4.1.3
   # Check Network in Application
   connectivity_plus: ^6.1.5
-  # App Prvider
+  # App Provider
   provider: ^6.1.5+1
   # Shared Preferences
   shared_preferences: ^2.5.3
@@ -118,6 +118,7 @@ dev_dependencies:
   flutter_lints: ^2.0.1
   cupertino_icons: ^1.0.2
   build_runner: ^2.4.0
+  # riverpod_generator: ^2.3.9  # Not needed - using StateNotifier directly
 
 flutter:
   uses-material-design: true
