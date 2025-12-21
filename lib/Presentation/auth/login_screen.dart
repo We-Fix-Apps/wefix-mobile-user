@@ -624,7 +624,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mmsUser != null && mmsUser.success && mmsUser.user != null) {
         // Convert MmsUserModel to UserModel format
-        // Company personnel should have roleId = 2
+        // Use userRoleId from MMS response (from COMPANY_ROLE lookup table)
+        // This can be: 18 (Admin), 20 (Team Leader), 21 (Technician), 22 (Sub-Technician)
+        final userRoleId = mmsUser.user!.userRoleId;
         final userModel = UserModel(
           status: true,
           token: mmsUser.token?.accessToken ?? '',
@@ -633,7 +635,7 @@ class _LoginScreenState extends State<LoginScreen> {
           wallet: 0,
           customer: Customer(
             id: mmsUser.user!.id,
-            roleId: 2, // Company role (2 = Company, 1 = User)
+            roleId: userRoleId, // Use userRoleId from MMS response (from COMPANY_ROLE lookup table)
             name: mmsUser.user!.fullName,
             mobile: mmsUser.user!.mobileNumber ?? '',
             email: mmsUser.user!.email ?? '',
@@ -659,7 +661,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         }
 
-        // Navigate to home - HomeScreen will automatically show B2BHome for company personnel (roleId == 2)
+        // Navigate to home - HomeScreen will automatically show B2BHome for company personnel (roleId == 18)
         Navigator.pushAndRemoveUntil(
           context,
           downToTop(const HomeLayout()),

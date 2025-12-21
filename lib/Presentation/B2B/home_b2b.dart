@@ -79,7 +79,32 @@ class _B2BHomeState extends State<B2BHome> {
                       ),
                     ),
               const SizedBox(height: 16),
-              SizedBox(
+              // Hide "Add Ticket" button for Technicians and restricted roles
+              // Only Admin (18), Team Leader (20), and Super User (26) can create tickets
+              Builder(
+                builder: (context) {
+                  final appProvider = Provider.of<AppProvider>(context, listen: false);
+                  final currentUserRoleId = appProvider.userModel?.customer.roleId;
+                  
+                  // Parse roleId to integer
+                  int? roleIdInt;
+                  if (currentUserRoleId is int) {
+                    roleIdInt = currentUserRoleId;
+                  } else if (currentUserRoleId is String) {
+                    roleIdInt = int.tryParse(currentUserRoleId);
+                  } else if (currentUserRoleId != null) {
+                    roleIdInt = int.tryParse(currentUserRoleId.toString());
+                  }
+                  
+                  // Hide button for Technicians (21, 22) and restricted role (23)
+                  // Only Admin (18), Team Leader (20), and Super User (26) can create new tickets
+                  final canCreateTicket = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 26);
+                  
+                  if (!canCreateTicket) {
+                    return const SizedBox.shrink(); // Hide button
+                  }
+                  
+                  return SizedBox(
                 height: 60,
                 width: double.infinity,
                 child: CustomBotton(
@@ -98,6 +123,8 @@ class _B2BHomeState extends State<B2BHome> {
                     });
                   },
                 ),
+                  );
+                },
               ),
             ],
           ),

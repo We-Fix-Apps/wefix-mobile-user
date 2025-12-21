@@ -87,6 +87,7 @@ dependencies:
   googleapis: ^14.0.0
   googleapis_auth: ^2.0.0
   url_launcher_ios: ^6.3.1
+  share_plus: ^10.1.2
   # google_sign_in: ^7.1.1
   # showcaseview: ^4.0.1
 

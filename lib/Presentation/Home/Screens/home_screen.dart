@@ -84,9 +84,37 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     isSubsicribed();
 
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    // Slide from bottom to top (down to up)
+    _offsetAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 1.0), // start offscreen bottom
+      end: Offset.zero, // on screen
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutExpo,
+    ));
+
+    // Check if user is B2B user (MMS users) - skip getAllHomeApis for them
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    
+    // Only call getAllHomeApis for non-B2B users (backend-oms users)
+    if (!isB2BUser) {
     getAllHomeApis().then((value) {
       _controller.forward();
-
       getActiveTicket();
 
       try {
@@ -128,20 +156,11 @@ class _HomeScreenState extends State<HomeScreen>
         log(e.toString());
       }
     });
-
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
-    // Slide from bottom to top (down to up)
-    _offsetAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 1.0), // start offscreen bottom
-      end: Offset.zero, // on screen
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutExpo,
-    ));
+    } else {
+      // For B2B users, just forward the controller
+      _controller.forward();
+      getActiveTicket();
+    }
   }
 
   getCatId() {
@@ -166,7 +185,21 @@ class _HomeScreenState extends State<HomeScreen>
     LanguageProvider languageProvider = Provider.of<LanguageProvider>(context);
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
 
-    return appProvider.userModel?.customer.roleId == 2
+    // Check if user is B2B user (MMS users: Admin 18, Team Leader 20, Technician 21, Sub-Technician 22)
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    
+    log('HomeScreen - currentUserRoleId: $currentUserRoleId, roleIdInt: $roleIdInt, isB2BUser: $isB2BUser');
+    
+    return isB2BUser
         ? loading5 == true
             ? Center(
                 child: CircularProgressIndicator(
@@ -856,7 +889,19 @@ class _HomeScreenState extends State<HomeScreen>
 
     // Skip isSubsicribe if user logged in via backend-mms (has accessToken)
     // This endpoint is only for backend-oms users
-    if (appProvider.accessToken != null && appProvider.userModel?.customer.roleId == 2) {
+    // Check if user is B2B user (MMS users: Admin 18, Team Leader 20, Technician 21, Sub-Technician 22)
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    
+    if (appProvider.accessToken != null && isB2BUser) {
       // User is logged in via backend-mms, skip backend-oms subscription check
       setState(() {
         loading5 = false;

@@ -84,6 +84,7 @@ class BookingApi {
         }
       }
     } catch (e) {
+        log('getBookingsHistory exception: $e');
       ticketModel = TicketModel(tickets: []);
       return ticketModel;
     }
@@ -135,9 +136,13 @@ class BookingApi {
   static Future getBookingDetails({required String token, required String id, bool isCompanyAdmin = false}) async {
     try {
       // Use MMS endpoint for company admin, OMS endpoint for regular users
+      final url = isCompanyAdmin
+          ? EndPoints.mmsBaseUrl + EndPoints.mmsTicketDetails + id
+          : EndPoints.bookingDetails + id;
+      
       final response = isCompanyAdmin
           ? await HttpHelper.getData2(
-              query: EndPoints.mmsBaseUrl + EndPoints.mmsTicketDetails + id,
+              query: url,
               token: token,
             )
           : await HttpHelper.getData(
@@ -154,6 +159,49 @@ class BookingApi {
             // Convert MMS ticket format to BookingDetailsModel format
             final ticketData = body['data'];
             final ticketDate = ticketData['ticketDate'] != null ? DateTime.parse(ticketData['ticketDate']).toIso8601String() : DateTime.now().toIso8601String();
+
+            // Calculate estimated time from time slot (ticketTimeFrom and ticketTimeTo)
+            String estimatedTime = '';
+            if (ticketData['ticketTimeFrom'] != null && ticketData['ticketTimeTo'] != null) {
+              try {
+                final timeFrom = ticketData['ticketTimeFrom'].toString();
+                final timeTo = ticketData['ticketTimeTo'].toString();
+                
+                // Parse time strings (format: "HH:MM:SS" or "HH:MM")
+                final fromParts = timeFrom.split(':');
+                final toParts = timeTo.split(':');
+                
+                if (fromParts.length >= 2 && toParts.length >= 2) {
+                  final fromHour = int.tryParse(fromParts[0]) ?? 0;
+                  final fromMinute = int.tryParse(fromParts[1]) ?? 0;
+                  final toHour = int.tryParse(toParts[0]) ?? 0;
+                  final toMinute = int.tryParse(toParts[1]) ?? 0;
+                  
+                  // Calculate difference in minutes
+                  final fromTotalMinutes = fromHour * 60 + fromMinute;
+                  final toTotalMinutes = toHour * 60 + toMinute;
+                  final diffMinutes = toTotalMinutes - fromTotalMinutes;
+                  
+                  // Convert to hours (if >= 60 minutes, show as hours)
+                  if (diffMinutes >= 60) {
+                    final hours = diffMinutes ~/ 60;
+                    final minutes = diffMinutes % 60;
+                    if (minutes > 0) {
+                      estimatedTime = '$hours.${(minutes / 60 * 10).round()}';
+                    } else {
+                      estimatedTime = hours.toString();
+                    }
+                  } else {
+                    estimatedTime = (diffMinutes / 60).toStringAsFixed(1);
+                  }
+                }
+              } catch (e) {
+                log('Error calculating estimated time: $e');
+                estimatedTime = '2'; // Default to 2 hours if calculation fails
+              }
+            } else {
+              estimatedTime = '2'; // Default to 2 hours if time slot not available
+            }
 
             final bookingDetails = {
               'objTickets': {
@@ -175,13 +223,11 @@ class BookingApi {
                 'mobile': '',
                 'description': ticketData['ticketDescription'] ?? '',
                 'isWithMaterial': ticketData['withMaterial'] ?? false,
-                'esitmatedTime': '',
+                'esitmatedTime': estimatedTime,
                 'qrCodePath': '',
                 'qrCode': '',
                 'reportLink': '',
                 'isRated': false,
-                'ticketAttatchments': [],
-                'ticketImages': [],
                 'ticketTools': (ticketData['tools'] as List?)?.map((tool) {
                       if (tool is Map) {
                         return tool;
@@ -195,6 +241,17 @@ class BookingApi {
                 'maintenanceTickets': [],
                 'servcieTickets': [],
                 'advantageTickets': [],
+                // Add files from API response
+                'ticketAttatchments': (ticketData['files'] as List?)?.map((file) {
+                      return {
+                        'filePath': file['filePath'] ?? '',
+                        'fileName': file['fileName'] ?? '',
+                      };
+                    }).toList() ?? [],
+                'ticketImages': (ticketData['files'] as List?)?.where((file) {
+                      final category = file['category']?.toString().toLowerCase() ?? '';
+                      return category == 'image';
+                    }).map((file) => file['filePath'] ?? '').toList() ?? [],
               }
             };
             bookingDetailsModel = BookingDetailsModel.fromJson(bookingDetails);
@@ -338,7 +395,6 @@ class BookingApi {
     BuildContext? context,
   }) async {
     try {
-      log('createTicketInMMS: Sending payload: $ticketData');
       final response = await HttpHelper.postData2(
         query: EndPoints.mmsBaseUrl + EndPoints.mmsCreateTicket,
         token: token,
@@ -347,29 +403,56 @@ class BookingApi {
         context: context,
       );
 
-      log('createTicketInMMS: Response Status: ${response.statusCode}');
-      log('createTicketInMMS: Response Body: ${response.body}');
-
       final body = json.decode(response.body);
+
+      // Check for auth errors
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        await AuthHelper.handleAuthError(context, isMMS: true);
+        return null;
+      }
 
       if (response.statusCode == 201 && body['success'] == true) {
         return body['data'];
       } else {
-        // Log the error response for debugging
-        log('createTicketInMMS failed: Status ${response.statusCode}, Body: ${response.body}');
-        // Return error details if available
-        if (body['message'] != null) {
-          throw Exception(body['message'] as String);
+        // Extract error message from different possible locations
+        String errorMessage = 'Failed to create ticket';
+        
+        if (body['error'] != null) {
+          if (body['error'] is Map && body['error']['message'] != null) {
+            errorMessage = body['error']['message'] as String;
+          } else if (body['error'] is String) {
+            errorMessage = body['error'] as String;
+          }
+        } else if (body['message'] != null) {
+          errorMessage = body['message'] as String;
         }
-        return null;
+        
+        // Show error message to user
+        if (context != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red[600],
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        
+        throw Exception(errorMessage);
       }
     } catch (e) {
       log('createTicketInMMS exception: $e');
-      rethrow; // Re-throw to show actual error in UI
+      // Only rethrow if it's not already an Exception with a message
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Failed to create ticket: $e');
     }
   }
 
   // * MMS API - Update ticket
+  // Only Company Admin (18) and Team Leader (20) can update tickets
+  // Rejects unauthorized updates with clear error messages
   static Future<Map<String, dynamic>?> updateTicketInMMS({
     required String token,
     required int ticketId,
@@ -396,17 +479,104 @@ class BookingApi {
 
       final body = json.decode(response.body);
 
-      // Check for auth errors
-      if (response.statusCode == 401 || response.statusCode == 403) {
+      // Check for auth/authorization errors
+      if (response.statusCode == 401) {
+        // Unauthorized - token expired or invalid
         await AuthHelper.handleAuthError(context, isMMS: true);
+        return null;
+      } else if (response.statusCode == 403) {
+        // Forbidden - user doesn't have permission to update tickets
+        // Only Company Admins and Team Leaders can update tickets
+        log('Update ticket forbidden: ${body['message'] ?? 'Access denied'}');
+        if (context != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(body['message'] ?? 'You do not have permission to update tickets. Only Company Admins and Team Leaders can update tickets.'),
+              backgroundColor: Colors.red[600],
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return null;
+      } else if (response.statusCode == 404) {
+        // Ticket not found or access denied
+        if (context != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(body['message'] ?? 'Ticket not found or you do not have access to update this ticket.'),
+              backgroundColor: Colors.red[600],
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return null;
+      } else if (response.statusCode == 400) {
+        // Validation error
+        
+        // Extract error message from different possible locations
+        String errorMessage = 'Invalid ticket data. Please check all fields.';
+        
+        if (body['error'] != null) {
+          if (body['error'] is Map && body['error']['message'] != null) {
+            errorMessage = body['error']['message'] as String;
+          } else if (body['error'] is String) {
+            errorMessage = body['error'] as String;
+          }
+        } else if (body['message'] != null) {
+          errorMessage = body['message'] as String;
+        }
+        
+        if (context != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.orange[600],
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return null;
       }
 
       if (response.statusCode == 200 && body['success'] == true) {
         return body['data'];
       } else {
+        
+        // Extract error message from different possible locations
+        String errorMessage = 'Failed to update ticket';
+        
+        if (body['error'] != null) {
+          if (body['error'] is Map && body['error']['message'] != null) {
+            errorMessage = body['error']['message'] as String;
+          } else if (body['error'] is String) {
+            errorMessage = body['error'] as String;
+          }
+        } else if (body['message'] != null) {
+          errorMessage = body['message'] as String;
+        }
+        
+        if (context != null && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red[600],
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
         return null;
       }
     } catch (e) {
+      log('Update ticket exception: $e');
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update ticket: ${e.toString()}'),
+            backgroundColor: Colors.red[600],
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
       return null;
     }
   }
@@ -591,25 +761,44 @@ class BookingApi {
     BuildContext? context,
   }) async {
     try {
-      log('getTicketTypes: Fetching from ${EndPoints.mmsBaseUrl + EndPoints.mmsTicketTypes}');
       final response = await HttpHelper.getData2(
         query: EndPoints.mmsBaseUrl + EndPoints.mmsTicketTypes,
         token: token,
         context: context,
       );
-      log('getTicketTypes: Response status: ${response.statusCode}');
       final body = json.decode(response.body);
-      log('getTicketTypes: Response body: $body');
       if (response.statusCode == 200 && body['success'] == true) {
         final data = List<Map<String, dynamic>>.from(body['data'] ?? []);
-        log('getTicketTypes: Returning ${data.length} ticket types');
         return data;
       } else {
-        log('getTicketTypes: Failed - status: ${response.statusCode}, success: ${body['success']}');
         return null;
       }
     } catch (e) {
       log('getTicketTypes: Exception: $e');
+      return null;
+    }
+  }
+
+  // * MMS API - Get ticket statuses
+  static Future<List<Map<String, dynamic>>?> getTicketStatuses({
+    required String token,
+    BuildContext? context,
+  }) async {
+    try {
+      final response = await HttpHelper.getData2(
+        query: EndPoints.mmsBaseUrl + EndPoints.mmsTicketStatuses,
+        token: token,
+        context: context,
+      );
+      final body = json.decode(response.body);
+      if (response.statusCode == 200 && body['success'] == true) {
+        final data = List<Map<String, dynamic>>.from(body['data'] ?? []);
+        return data;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      log('getTicketStatuses: Exception: $e');
       return null;
     }
   }
@@ -636,8 +825,9 @@ class BookingApi {
       request.fields['referenceType'] = 'TICKET_ATTACHMENT';
 
       // Add entity fields for legacy database columns
+      // For ticket attachments, use 'ticket' as entityType (now supported in enum)
       request.fields['entityId'] = ticketId.toString();
-      request.fields['entityType'] = 'user'; // TICKET_ATTACHMENT maps to 'user' entity_type
+      request.fields['entityType'] = 'ticket'; // Use 'ticket' for ticket attachments
 
       // Add files to the request with metadata
       int fileIndex = 0;
@@ -747,7 +937,7 @@ class BookingApi {
           request.fields['fileMetadata[$fileIndex][mimeType]'] = mimeType;
           request.fields['fileMetadata[$fileIndex][size]'] = fileSizeBytes.toString();
           request.fields['fileMetadata[$fileIndex][category]'] = category;
-          request.fields['fileMetadata[$fileIndex][entityType]'] = 'user';
+          request.fields['fileMetadata[$fileIndex][entityType]'] = 'ticket'; // Use 'ticket' for ticket attachments
           request.fields['fileMetadata[$fileIndex][entityId]'] = ticketId.toString();
 
           fileIndex++;
@@ -773,7 +963,6 @@ class BookingApi {
         }
         return null;
       } else {
-        log('uploadFilesToMMS: Failed - status: ${response.statusCode}, body: ${response.body}');
         return null;
       }
     } catch (e) {

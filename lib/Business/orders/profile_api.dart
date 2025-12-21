@@ -383,12 +383,25 @@ class ProfileApis {
 
       log('getProfileData() [ STATUS ] -> ${response.statusCode}');
 
-      final body = json.decode(response.body);
-
+      // Check status code before parsing JSON
       if (response.statusCode == 200) {
+        // Check if response body is not empty
+        if (response.body.isEmpty || response.body.trim().isEmpty) {
+          log('getProfileData() [ WARNING ] -> Empty response body');
+          return null;
+        }
+        
+        try {
+          final body = json.decode(response.body);
         profileModel = ProfileModel.fromJson(body);
         return profileModel;
+        } catch (parseError) {
+          log('getProfileData() [ PARSE ERROR ] -> $parseError');
+          return null;
+        }
       } else {
+        // For non-200 status codes, don't try to parse JSON
+        log('getProfileData() [ ERROR ] -> Status ${response.statusCode}, body: ${response.body.isNotEmpty ? response.body.substring(0, response.body.length > 100 ? 100 : response.body.length) : "empty"}');
         return null;
       }
     } catch (e) {

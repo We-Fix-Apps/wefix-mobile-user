@@ -8,8 +8,19 @@ import 'package:wefix/Presentation/auth/login_screen.dart';
 /// Helper class for authentication-related operations
 class AuthHelper {
   /// Check if user is company personnel (logged in via backend-mms)
+  /// MMS users: Admin (18), Team Leader (20), Technician (21), Sub-Technician (22)
   static bool isCompanyPersonnel(AppProvider appProvider) {
-    return appProvider.userModel?.customer.roleId == 2 && appProvider.accessToken != null;
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    return isB2BUser && appProvider.accessToken != null;
   }
 
   /// Check and refresh token if needed before making request

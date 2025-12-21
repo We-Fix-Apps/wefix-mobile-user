@@ -17,8 +17,9 @@ import 'package:wefix/l10n/app_localizations.dart';
 
 class CreateUpdateTicketScreenV2 extends StatefulWidget {
   final Map<String, dynamic>? ticketData;
+  final bool isTechnician; // If true, only allow status updates
 
-  const CreateUpdateTicketScreenV2({super.key, this.ticketData});
+  const CreateUpdateTicketScreenV2({super.key, this.ticketData, this.isTechnician = false});
 
   @override
   State<CreateUpdateTicketScreenV2> createState() => _CreateUpdateTicketScreenV2State();
@@ -159,10 +160,12 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       });
     }
     
-    _loadInitialData();
-    if (widget.ticketData != null) {
-      _populateFieldsFromTicketData(widget.ticketData!);
-    }
+    // Load initial data first, then populate from ticket data
+    _loadInitialData().then((_) {
+      if (widget.ticketData != null && mounted) {
+        _populateFieldsFromTicketData(widget.ticketData!);
+      }
+    });
   }
 
   Future<void> _loadInitialData() async {
@@ -183,6 +186,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       BookingApi.getCompanyTeamLeaders(token: token, context: context),
       BookingApi.getCompanyTechnicians(token: token, context: context),
       BookingApi.getTicketTypes(token: token, context: context), // Fetch ticket types
+      BookingApi.getTicketStatuses(token: token, context: context), // Fetch ticket statuses
     ]);
 
     if (!mounted) return;
@@ -308,6 +312,28 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         log('Ticket Types Data is null');
       }
 
+      // Ticket Statuses
+      final ticketStatusesData = results[8];
+      log('Ticket Statuses Data: $ticketStatusesData');
+      if (ticketStatusesData != null) {
+        final ticketStatusesList = List<Map<String, dynamic>>.from(ticketStatusesData as List);
+        if (ticketStatusesList.isNotEmpty) {
+          ticketStatuses = ticketStatusesList.map((item) => DropdownCardItem(
+                id: item['id'] as int,
+                title: item['title'] as String? ?? item['name'] as String? ?? '',
+                subtitle: item['subtitle'] as String? ?? item['nameArabic'] as String?,
+                icon: Icons.info_outline,
+                data: item,
+              )).toList();
+          
+          log('Ticket Statuses mapped: ${ticketStatuses.length} items');
+        } else {
+          log('Ticket Statuses Data is empty list');
+        }
+      } else {
+        log('Ticket Statuses Data is null');
+      }
+
       // Auto-select first items
       if (contracts.isNotEmpty) selectedContract = contracts.first;
       if (branches.isNotEmpty) selectedBranch = branches.first;
@@ -323,7 +349,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       // Strategy: Check if current user is in the team leaders list
       // If user is in the list, they are a Team Leader - hide dropdown and auto-select themselves
       // If user is NOT in the list, they are likely an Admin - show dropdown
-      final currentUserId = appProvider.userModel?.customer.id;
+        final currentUserId = appProvider.userModel?.customer.id;
       final currentUserRoleId = appProvider.userModel?.customer.roleId;
       
       // Parse roleId for logging
@@ -402,7 +428,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           // If current user not found in team leaders list, use first one
           log('Warning: Current Team Leader (ID: $currentUserId) not found in team leaders list');
           if (teamLeaders.isNotEmpty) {
-            selectedTeamLeader = teamLeaders.first;
+          selectedTeamLeader = teamLeaders.first;
             log('Fallback: Using first team leader in list');
           }
         }
@@ -445,9 +471,34 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   }
 
   void _populateFieldsFromTicketData(Map<String, dynamic> data) {
-    locationDescription.text = data['locationDescription'] ?? '';
-    serviceDescription.text = data['serviceDescription'] ?? '';
-    // TODO: Map other fields when APIs are available
+    setState(() {
+      locationDescription.text = data['locationDescription'] ?? '';
+      serviceDescription.text = data['serviceDescription'] ?? '';
+      
+      // Populate ticket status if editing
+      if (data['ticketStatus'] != null && ticketStatuses.isNotEmpty) {
+        try {
+          final statusId = data['ticketStatus']['id'] as int?;
+          if (statusId != null) {
+            selectedTicketStatus = ticketStatuses.firstWhere(
+              (status) => status.id == statusId,
+            );
+            log('Populated ticket status: ${selectedTicketStatus?.title}');
+          }
+        } catch (e) {
+          log('Could not find matching ticket status: $e');
+          // Default to first status if available
+          if (ticketStatuses.isNotEmpty) {
+            selectedTicketStatus = ticketStatuses.first;
+          }
+        }
+      } else if (ticketStatuses.isNotEmpty) {
+        // If no status in ticket data, default to first status
+        selectedTicketStatus = ticketStatuses.first;
+        log('Defaulted to first ticket status: ${selectedTicketStatus?.title}');
+      }
+      // TODO: Map other fields when APIs are available
+    });
   }
 
   Future<void> _loadSubServices(int mainServiceId) async {
@@ -503,6 +554,15 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
     final localizations = AppLocalizations.of(context)!;
     fieldErrors.clear();
     bool isValid = true;
+
+    // For Technicians, only validate ticket status
+    if (widget.isTechnician) {
+      if (selectedTicketStatus == null) {
+        fieldErrors['ticketStatus'] = 'Ticket status is required';
+        isValid = false;
+      }
+      return isValid;
+    }
 
     if (_tabController.index == 0) {
       // Tab 1: Basic Info validation
@@ -586,8 +646,8 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
 
   void _goToNextTab() {
     if (_validateCurrentStep()) {
-      if (_tabController.index < _tabController.length - 1) {
-        _tabController.animateTo(_tabController.index + 1);
+    if (_tabController.index < _tabController.length - 1) {
+      _tabController.animateTo(_tabController.index + 1);
       }
     }
   }
@@ -599,13 +659,29 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   }
 
   Future<void> _submit() async {
+    // For Technicians, only validate ticket status
+    if (widget.isTechnician) {
+      if (selectedTicketStatus == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a ticket status'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    } else {
     // First validate form fields (text fields with validators)
     if (!_formKey.currentState!.validate()) {
       // Form validation will show field-specific errors
       return;
+      }
     }
 
-    // Then validate all required dropdown/selection fields
+    // Then validate all required dropdown/selection fields (only for Admin/Team Leader)
+    if (widget.isTechnician) {
+      // Skip validation for Technicians, they only update status
+    } else {
     final localizations = AppLocalizations.of(context)!;
     final List<String> missingFields = [];
 
@@ -670,65 +746,136 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       }
       
       return;
+      }
     }
 
     setState(() {
       isLoading = true;
     });
 
+    final localizations = AppLocalizations.of(context)!;
+
+    // Show loading dialog
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent dismissing by tapping outside
+        builder: (BuildContext context) {
+          return WillPopScope(
+            onWillPop: () async => false, // Prevent back button from dismissing
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.secoundryColor),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      widget.ticketData != null
+                          ? localizations.updateTicket
+                          : localizations.createTicket,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please wait...',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     try {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
       final token = appProvider.accessToken ?? appProvider.userModel?.token ?? '';
 
-      // Extract file paths from uploaded files
+      // For Technicians, only allow status updates
+      final ticketData = <String, dynamic>{};
+      
+      // Extract file paths from uploaded files (only used for Admin/Team Leader)
       final List<String> attachmentPaths = [];
-      for (var file in uploadedFiles) {
-        if (file['image'] != null && file['image']!.isNotEmpty) {
-          attachmentPaths.add(file['image']!);
-        }
-        if (file['file'] != null && file['file']!.isNotEmpty) {
-          attachmentPaths.add(file['file']!);
-        }
-        if (file['audio'] != null && file['audio']!.isNotEmpty) {
-          attachmentPaths.add(file['audio']!);
-        }
-      }
-
-      // Format location map as "latitude,longitude"
-      final locationMapStr = '${selectedLocation!.latitude},${selectedLocation!.longitude}';
       
-      // Use selected time strings directly (already in HH:mm:ss format)
-      final timeFromStr = selectedTimeFrom!;
-      final timeToStr = selectedTimeTo!;
-      
-      // Format date
-      final ticketDateStr = selectedTicketDate != null
-          ? DateFormat('yyyy-MM-dd').format(selectedTicketDate!)
-          : DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-      // Safety check: For Team Leaders, ensure they can only assign to themselves
-      final currentAppProvider = Provider.of<AppProvider>(context, listen: false);
-      final currentUserRoleId = currentAppProvider.userModel?.customer.roleId;
-      final roleIdInt = currentUserRoleId is int ? currentUserRoleId : (currentUserRoleId is String ? int.tryParse(currentUserRoleId.toString()) : null);
-      final currentUserId = currentAppProvider.userModel?.customer.id;
-      
-      int teamLeaderId;
-      if (roleIdInt == 20) {
-        // Team Leader: Must assign to themselves
-        if (selectedTeamLeader == null || selectedTeamLeader!.id != currentUserId) {
-          // Force assign to current user
-          teamLeaderId = currentUserId ?? selectedTeamLeader!.id;
-          log('Team Leader: Forcing assignment to current user (ID: $teamLeaderId)');
+      if (widget.isTechnician) {
+        // Technicians can ONLY update ticket status and add notes
+        if (widget.ticketData != null && selectedTicketStatus != null) {
+          ticketData['ticketStatusId'] = selectedTicketStatus!.id;
+          // Add notes/comments if provided
+          if (serviceDescription.text.trim().isNotEmpty) {
+            ticketData['serviceDescription'] = serviceDescription.text.trim();
+          }
         } else {
-          teamLeaderId = selectedTeamLeader!.id;
+          throw Exception('Ticket status is required');
         }
       } else {
-        // Admin: Can assign to any Team Leader
-        teamLeaderId = selectedTeamLeader!.id;
-      }
+        // For Admin/Team Leader, process all fields
+        // Extract file paths from uploaded files
+        for (var file in uploadedFiles) {
+          if (file['image'] != null && file['image']!.isNotEmpty) {
+            attachmentPaths.add(file['image']!);
+          }
+          if (file['file'] != null && file['file']!.isNotEmpty) {
+            attachmentPaths.add(file['file']!);
+          }
+          if (file['audio'] != null && file['audio']!.isNotEmpty) {
+            attachmentPaths.add(file['audio']!);
+          }
+        }
 
+        // Format location map as "latitude,longitude"
+        final locationMapStr = '${selectedLocation!.latitude},${selectedLocation!.longitude}';
+        
+        // Use selected time strings directly (already in HH:mm:ss format)
+        final timeFromStr = selectedTimeFrom!;
+        final timeToStr = selectedTimeTo!;
+        
+        // Format date
+        final ticketDateStr = selectedTicketDate != null
+            ? DateFormat('yyyy-MM-dd').format(selectedTicketDate!)
+            : DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+        // Safety check: For Team Leaders, ensure they can only assign to themselves
+        final currentAppProvider = Provider.of<AppProvider>(context, listen: false);
+        final currentUserRoleId = currentAppProvider.userModel?.customer.roleId;
+        final roleIdInt = currentUserRoleId is int ? currentUserRoleId : (currentUserRoleId is String ? int.tryParse(currentUserRoleId.toString()) : null);
+        final currentUserId = currentAppProvider.userModel?.customer.id;
+        
+        int teamLeaderId;
+        if (roleIdInt == 20) {
+          // Team Leader: Must assign to themselves
+          if (selectedTeamLeader == null || selectedTeamLeader!.id != currentUserId) {
+            // Force assign to current user
+            teamLeaderId = currentUserId ?? selectedTeamLeader!.id;
+            log('Team Leader: Forcing assignment to current user (ID: $teamLeaderId)');
+          } else {
+            teamLeaderId = selectedTeamLeader!.id;
+          }
+        } else {
+          // Admin: Can assign to any Team Leader
+          teamLeaderId = selectedTeamLeader!.id;
+        }
+        // Admin/Team Leader can update all fields
       // Remove subServiceId if it's null (backend doesn't accept undefined fields)
-      final ticketData = <String, dynamic>{
+        ticketData.addAll({
         'contractId': selectedContract!.id,
         'branchId': selectedBranch!.id,
         'zoneId': selectedZone!.id,
@@ -738,7 +885,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         'ticketDate': ticketDateStr,
         'ticketTimeFrom': timeFromStr,
         'ticketTimeTo': timeToStr,
-        'assignToTeamLeaderId': teamLeaderId, // Use validated team leader ID
+          'assignToTeamLeaderId': teamLeaderId, // Use validated team leader ID
         'assignToTechnicianId': selectedTechnician!.id,
         'ticketDescription': locationDescription.text.trim(),
         'havingFemaleEngineer': false,
@@ -748,14 +895,20 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         if (serviceDescription.text.trim().isNotEmpty) 'serviceDescription': serviceDescription.text.trim(),
         // Note: fileIds will be sent separately after uploading files
         // Note: customerName, tools can be added later
-      };
+        });
 
-      // Add ticket status if editing (only admins and team leaders can change it)
+        // Add ticket status if editing
       if (widget.ticketData != null && selectedTicketStatus != null) {
         ticketData['ticketStatusId'] = selectedTicketStatus!.id;
+        }
       }
 
       // Step 1: Create or update the ticket first
+      // Technicians can only update existing tickets, not create new ones
+      if (widget.isTechnician && widget.ticketData == null) {
+        throw Exception('Technicians can only update existing tickets, not create new ones');
+      }
+      
       Map<String, dynamic>? result;
       if (widget.ticketData != null) {
         result = await BookingApi.updateTicketInMMS(
@@ -773,7 +926,8 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       }
 
       // Step 2: If ticket created successfully and there are attachments, upload them with the ticket ID
-      if (result != null && attachmentPaths.isNotEmpty) {
+      // Only upload files for Admin/Team Leader (not for Technicians)
+      if (!widget.isTechnician && result != null && attachmentPaths.isNotEmpty) {
         final ticketId = result['id'] as int;
         
         // Upload files with the ticket ID so they're linked immediately
@@ -803,23 +957,38 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         isLoading = false;
       });
 
+      // Hide loading dialog
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+      }
+
       if (result != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.ticketData != null
                 ? AppLocalizations.of(context)!.ticketUpdatedSuccessfully
                 : AppLocalizations.of(context)!.ticketCreatedSuccessfully),
+            backgroundColor: Colors.green[600],
+            duration: const Duration(seconds: 2),
           ),
         );
+        // Small delay before navigating back to show success message
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
         Navigator.pop(context, true);
+        }
       } else if (mounted) {
         // Log the error for debugging
         log('Ticket creation/update failed - check backend response');
+        // Error message is already shown by updateTicketInMMS/createTicketInMMS
+        // Only show generic message if no specific error was shown
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.ticketData != null
                 ? AppLocalizations.of(context)!.ticketUpdateFailed
                 : AppLocalizations.of(context)!.ticketCreateFailed),
+            backgroundColor: Colors.red[600],
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -827,11 +996,31 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       setState(() {
         isLoading = false;
       });
+      
+      // Hide loading dialog
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+      }
+      
       if (mounted) {
         log('_submit error: $e');
+        // Extract error message from exception
+        String errorMessage = e.toString();
+        if (e is Exception) {
+          errorMessage = e.toString().replaceFirst('Exception: ', '');
+        }
+        
+        // Show clear error message to user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${AppLocalizations.of(context)!.ticketCreateFailed}: $e'),
+            content: Text(
+              errorMessage.isNotEmpty && errorMessage != 'null'
+                  ? errorMessage
+                  : (widget.ticketData != null
+                      ? AppLocalizations.of(context)!.ticketUpdateFailed
+                      : AppLocalizations.of(context)!.ticketCreateFailed)
+            ),
+            backgroundColor: Colors.red[600],
             duration: const Duration(seconds: 5),
           ),
         );
@@ -853,10 +1042,17 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.ticketData != null ? localizations.editTicket : localizations.createTicket),
+        automaticallyImplyLeading: true,
+        title: Text(widget.isTechnician 
+            ? 'Change Ticket Status' 
+            : (widget.ticketData != null ? localizations.editTicket : localizations.createTicket)),
         elevation: 0,
         centerTitle: true,
-        bottom: TabBar(
+        bottom: widget.isTechnician
+            ? null // Hide TabBar for Technicians
+            : PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: TabBar(
           controller: _tabController,
           indicator: BoxDecoration(
             color: AppColors(context).primaryColor.withOpacity(0.2),
@@ -870,6 +1066,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             Tab(text: localizations.serviceDetails),
             Tab(text: localizations.ticketSummary),
           ],
+                ),
         ),
       ),
       body: Form(
@@ -877,7 +1074,9 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         child: Column(
           children: [
             Expanded(
-              child: TabBarView(
+              child: widget.isTechnician
+                  ? _buildTab1(localizations) // Show only status dropdown for Technicians
+                  : TabBarView(
                 controller: _tabController,
                 children: [
                   _buildTab1(localizations),
@@ -887,7 +1086,26 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               ),
             ),
             // Navigation buttons
-            AnimatedBuilder(
+            widget.isTechnician
+                ? Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: const Offset(0, -3),
+                        ),
+                      ],
+                    ),
+                    child: CustomBotton(
+                      title: localizations.updateTicket,
+                      onTap: _submit,
+                    ),
+                  )
+                : AnimatedBuilder(
               animation: _tabController,
               builder: (context, child) {
                 final isLastTab = _tabController.index == 2; // Tab 3 (summary) is index 2
@@ -938,6 +1156,92 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   }
 
   Widget _buildTab1(AppLocalizations localizations) {
+    // For Technicians, only show ticket status dropdown and notes field
+    if (widget.isTechnician) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Text(
+              'You can only change the ticket status and add notes.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Ticket Status Dropdown (only field for Technicians)
+            if (ticketStatuses.isNotEmpty) ...[
+              _buildDropdownCard(
+                title: 'Ticket Status *',
+                selectedItem: selectedTicketStatus,
+                items: ticketStatuses,
+                onTap: () => _showDropdownBottomSheet(
+                  title: 'Ticket Status',
+                  items: ticketStatuses,
+                  selectedItem: selectedTicketStatus,
+                  onSelected: (item) {
+                    setState(() {
+                      selectedTicketStatus = item;
+                      fieldErrors.remove('ticketStatus');
+                    });
+                  },
+                ),
+                errorMessage: fieldErrors['ticketStatus'],
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              // Show loading indicator if statuses are being loaded
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.greyColorback,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Loading ticket statuses...',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            // Notes/Comments Field for Technicians
+            Text(
+              'Notes/Comments',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            WidgetTextField(
+              'Add notes or comments about the status change',
+              controller: serviceDescription,
+              maxLines: 4,
+              fillColor: AppColors.greyColorback,
+              haveBorder: false,
+              radius: 5,
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // For Admin/Team Leader, show all fields
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1037,24 +1341,24 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
 
           // Team Leader Dropdown (hidden for Team Leaders, visible for Admins)
           if (isTeamLeaderVisible) ...[
-            _buildDropdownCard(
-              title: '${localizations.teamLeaderId} *',
-              selectedItem: selectedTeamLeader,
+          _buildDropdownCard(
+            title: '${localizations.teamLeaderId} *',
+            selectedItem: selectedTeamLeader,
+            items: teamLeaders,
+            onTap: () => _showDropdownBottomSheet(
+              title: localizations.teamLeaderId,
               items: teamLeaders,
-              onTap: () => _showDropdownBottomSheet(
-                title: localizations.teamLeaderId,
-                items: teamLeaders,
-                selectedItem: selectedTeamLeader,
-                onSelected: (item) {
-                  setState(() {
-                    selectedTeamLeader = item;
+              selectedItem: selectedTeamLeader,
+              onSelected: (item) {
+                setState(() {
+                  selectedTeamLeader = item;
                     fieldErrors.remove('teamLeader');
-                  });
-                },
-              ),
-              errorMessage: fieldErrors['teamLeader'],
+                });
+              },
             ),
-            const SizedBox(height: 16),
+              errorMessage: fieldErrors['teamLeader'],
+          ),
+          const SizedBox(height: 16),
           ],
 
           // Technician Dropdown
@@ -1101,19 +1405,19 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              WidgetTextField(
-                localizations.locationDescription,
-                controller: locationDescription,
-                maxLines: 4,
-                fillColor: AppColors.greyColorback,
-                haveBorder: false,
-                radius: 5,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return localizations.required;
-                  }
-                  return null;
-                },
+          WidgetTextField(
+            localizations.locationDescription,
+            controller: locationDescription,
+            maxLines: 4,
+            fillColor: AppColors.greyColorback,
+            haveBorder: false,
+            radius: 5,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return localizations.required;
+              }
+              return null;
+            },
                 onChanged: (value) {
                   if (value.isNotEmpty) {
                     setState(() {
@@ -1790,69 +2094,69 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       children: [
         InkWell(
           onTap: isDisabled ? null : onTap,
-          borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(8),
           child: Opacity(
             opacity: isDisabled ? 0.6 : 1.0,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.greyColorback,
-                borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.greyColorback,
+          borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: errorMessage != null ? Colors.red : Colors.grey[300]!,
                   width: errorMessage != null ? 2 : 1,
                 ),
+        ),
+        child: Row(
+          children: [
+            if (selectedItem?.icon != null) ...[
+              Icon(
+                selectedItem!.icon,
+                color: AppColors(context).primaryColor,
+                size: 24,
               ),
-              child: Row(
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (selectedItem?.icon != null) ...[
-                    Icon(
-                      selectedItem!.icon,
-                      color: AppColors(context).primaryColor,
-                      size: 24,
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
                     ),
-                    const SizedBox(width: 12),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    selectedItem?.title ?? 'Select',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: selectedItem != null ? Colors.black87 : Colors.grey,
+                    ),
+                  ),
+                  if (selectedItem?.subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      selectedItem!.subtitle!,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
                   ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          selectedItem?.title ?? 'Select',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: selectedItem != null ? Colors.black87 : Colors.grey,
-                          ),
-                        ),
-                        if (selectedItem?.subtitle != null) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            selectedItem!.subtitle!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    color: Colors.grey[600],
-                  ),
                 ],
               ),
             ),
+            Icon(
+              Icons.arrow_drop_down,
+              color: Colors.grey[600],
+            ),
+          ],
+        ),
+      ),
           ),
         ),
         if (errorMessage != null) ...[

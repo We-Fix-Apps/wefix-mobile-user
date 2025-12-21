@@ -121,12 +121,27 @@ class _BookingScreenState extends State<BookingScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      // Check if user is company admin (roleId == 2)
-      final isCompanyAdmin = appProvider.userModel?.customer.roleId == 2;
+      // Check if user is B2B user (Admin, Team Leader, Technician, or Sub-Technician)
+      // These users should use MMS API which filters tickets based on role
+      final currentUserRoleId = appProvider.userModel?.customer.roleId;
+      int? roleIdInt;
+      if (currentUserRoleId is int) {
+        roleIdInt = currentUserRoleId;
+      } else if (currentUserRoleId is String) {
+        roleIdInt = int.tryParse(currentUserRoleId);
+      } else if (currentUserRoleId != null) {
+        roleIdInt = int.tryParse(currentUserRoleId.toString());
+      }
+      
+      // Use MMS API for B2B users (roleId 18, 20, 21, 22)
+      // MMS API will automatically filter tickets based on role:
+      // - Technicians (21) and Sub-Technicians (22) see only their assigned tickets
+      // - Admins (18) and Team Leaders (20) see all company tickets
+      final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
       
       BookingApi.getBookingsHistory(
         token: appProvider.userModel?.token ?? "",
-        isCompanyAdmin: isCompanyAdmin,
+        isCompanyAdmin: isB2BUser, // Use MMS API for all B2B users
       ).then((value) {
         setState(() {
           ticketModel = value;
