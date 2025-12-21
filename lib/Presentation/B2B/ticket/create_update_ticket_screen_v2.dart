@@ -45,6 +45,10 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   DropdownCardItem? selectedTicketStatus; // For editing only
   DropdownCardItem? selectedTicketType; // Selected ticket type
 
+  // Validation state
+  Map<String, String?> fieldErrors = {}; // Field name -> error message
+  bool isTeamLeaderVisible = true; // Show/hide Team Leader DDL based on role
+
   // Lists (these should be fetched from APIs)
   List<DropdownCardItem> contracts = [];
   List<DropdownCardItem> branches = [];
@@ -110,6 +114,51 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Check role immediately to set isTeamLeaderVisible before UI renders
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    
+    // Parse roleId - handle int, string, or null
+    int? roleIdInt;
+    if (currentUserRoleId == null) {
+      roleIdInt = null;
+    } else if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else {
+      // Try to convert to string then parse
+      try {
+        roleIdInt = int.tryParse(currentUserRoleId.toString());
+      } catch (e) {
+        roleIdInt = null;
+      }
+    }
+    
+    log('Initial role check - roleId raw: $currentUserRoleId (${currentUserRoleId.runtimeType}), parsed: $roleIdInt');
+    log('User info - ID: ${appProvider.userModel?.customer.id}, Name: ${appProvider.userModel?.customer.name}');
+    
+    // Set visibility immediately based on role
+    // Role IDs: 18 = Admin, 20 = Team Leader
+    if (mounted) {
+      setState(() {
+        if (roleIdInt == 20) {
+          // Team Leader: Hide dropdown
+          isTeamLeaderVisible = false;
+          log('✅ Team Leader detected (roleId: 20) - hiding Team Leader dropdown');
+        } else if (roleIdInt == 18) {
+          // Admin: Show dropdown
+          isTeamLeaderVisible = true;
+          log('✅ Admin detected (roleId: 18) - showing Team Leader dropdown');
+        } else {
+          // Unknown role: Show dropdown by default
+          isTeamLeaderVisible = true;
+          log('⚠️ Unknown role (roleId: $roleIdInt) - showing Team Leader dropdown by default');
+        }
+      });
+    }
+    
     _loadInitialData();
     if (widget.ticketData != null) {
       _populateFieldsFromTicketData(widget.ticketData!);
@@ -270,23 +319,106 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       }
       if (subServices.isNotEmpty) selectedSubService = subServices.first;
       
-      // Auto-select team leader and technician based on current user role
+      // Role-based UI control: Hide/show Team Leader DDL based on role
+      // Strategy: Check if current user is in the team leaders list
+      // If user is in the list, they are a Team Leader - hide dropdown and auto-select themselves
+      // If user is NOT in the list, they are likely an Admin - show dropdown
+      final currentUserId = appProvider.userModel?.customer.id;
       final currentUserRoleId = appProvider.userModel?.customer.roleId;
-      if (currentUserRoleId == 20 && teamLeaders.isNotEmpty) { // Team Leader (roleId = 20)
-        // If current user is team leader, try to auto-select themselves
-        final currentUserId = appProvider.userModel?.customer.id;
+      
+      // Parse roleId for logging
+      int? roleIdInt;
+      if (currentUserRoleId != null) {
+        if (currentUserRoleId is int) {
+          roleIdInt = currentUserRoleId;
+        } else if (currentUserRoleId is String) {
+          roleIdInt = int.tryParse(currentUserRoleId);
+        } else {
+          try {
+            roleIdInt = int.tryParse(currentUserRoleId.toString());
+          } catch (e) {
+            roleIdInt = null;
+          }
+        }
+      }
+      
+      log('Role check in _loadInitialData - roleId: $currentUserRoleId (${currentUserRoleId.runtimeType}), parsed: $roleIdInt, userId: $currentUserId');
+      log('Team Leaders list size: ${teamLeaders.length}');
+      
+      // Check if current user is in the team leaders list
+      // Strategy: Check by ID first, then by name as fallback
+      bool isCurrentUserTeamLeader = false;
+      final currentUserName = appProvider.userModel?.customer.name;
+      
+      if (teamLeaders.isNotEmpty) {
+        // First, try to find by ID
+        if (currentUserId != null) {
+          try {
+            teamLeaders.firstWhere(
+              (leader) => leader.id == currentUserId,
+            );
+            isCurrentUserTeamLeader = true;
+            log('✅ Current user (ID: $currentUserId) found in Team Leaders list by ID - User is a Team Leader');
+          } catch (e) {
+            // If not found by ID, try to find by name
+            if (currentUserName != null && currentUserName.isNotEmpty) {
+              try {
+                teamLeaders.firstWhere(
+                  (leader) => leader.title.toLowerCase().contains(currentUserName.toLowerCase()) ||
+                             (leader.data?['fullName'] as String?)?.toLowerCase().contains(currentUserName.toLowerCase()) == true,
+                );
+                isCurrentUserTeamLeader = true;
+                log('✅ Current user (Name: $currentUserName) found in Team Leaders list by name - User is a Team Leader');
+              } catch (e2) {
+                isCurrentUserTeamLeader = false;
+                log('ℹ️ Current user (ID: $currentUserId, Name: $currentUserName) NOT found in Team Leaders list - User is likely an Admin');
+              }
+            } else {
+              isCurrentUserTeamLeader = false;
+              log('ℹ️ Current user (ID: $currentUserId) NOT found in Team Leaders list - User is likely an Admin');
+            }
+          }
+        } else {
+          log('⚠️ Current user ID is null - cannot determine role');
+        }
+      }
+      
+      // If user is Team Leader (found in list OR roleId == 20), hide Team Leader dropdown and auto-select themselves
+      // Team Leaders CANNOT create tickets for another Team Leader - they can only assign to themselves
+      if ((isCurrentUserTeamLeader || roleIdInt == 20) && teamLeaders.isNotEmpty) {
+        // Team Leader: Hide dropdown, auto-select themselves
+        setState(() {
+          isTeamLeaderVisible = false;
+        });
+        log('Team Leader confirmed - hiding dropdown');
+        
+        // Find current user in team leaders list
         try {
           selectedTeamLeader = teamLeaders.firstWhere(
             (leader) => leader.id == currentUserId,
           );
+          log('Team Leader auto-selected: ${selectedTeamLeader?.title} (ID: ${selectedTeamLeader?.id})');
         } catch (e) {
-          // If current user not found in team leaders list, select first one
-          selectedTeamLeader = teamLeaders.first;
+          // If current user not found in team leaders list, use first one
+          log('Warning: Current Team Leader (ID: $currentUserId) not found in team leaders list');
+          if (teamLeaders.isNotEmpty) {
+            selectedTeamLeader = teamLeaders.first;
+            log('Fallback: Using first team leader in list');
+          }
         }
       } else if (teamLeaders.isNotEmpty) {
+        // Admin or other role: Show dropdown, auto-select first
+        // Admins CAN create tickets for any Team Leader
+        setState(() {
+          isTeamLeaderVisible = true;
+        });
+        log('Admin or other role confirmed - showing dropdown');
         selectedTeamLeader = teamLeaders.first;
+      } else {
+        log('No team leaders available');
       }
       
+      // Auto-select first technician
       if (technicians.isNotEmpty) {
         selectedTechnician = technicians.first;
       }
@@ -366,9 +498,97 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
     );
   }
 
+  // Validate current step before navigation
+  bool _validateCurrentStep() {
+    final localizations = AppLocalizations.of(context)!;
+    fieldErrors.clear();
+    bool isValid = true;
+
+    if (_tabController.index == 0) {
+      // Tab 1: Basic Info validation
+      if (selectedContract == null) {
+        fieldErrors['contract'] = '${localizations.contractId} ${localizations.required}';
+        isValid = false;
+      }
+      if (selectedBranch == null) {
+        fieldErrors['branch'] = '${localizations.branchId} ${localizations.required}';
+        isValid = false;
+      }
+      if (selectedZone == null) {
+        fieldErrors['zone'] = '${localizations.zoneId} ${localizations.required}';
+        isValid = false;
+      }
+      if (selectedTicketType == null) {
+        fieldErrors['ticketType'] = '${localizations.ticketType} ${localizations.required}';
+        isValid = false;
+      }
+      if (locationDescription.text.trim().isEmpty) {
+        fieldErrors['locationDescription'] = '${localizations.locationDescription} ${localizations.required}';
+        isValid = false;
+      }
+      if (selectedLocation == null) {
+        fieldErrors['locationMap'] = '${localizations.locationMap} ${localizations.required}';
+        isValid = false;
+      }
+      if (selectedTicketDate == null) {
+        fieldErrors['date'] = '${localizations.date} ${localizations.required}';
+        isValid = false;
+      }
+      if (selectedTimeFrom == null || selectedTimeTo == null) {
+        fieldErrors['time'] = '${localizations.timeFrom} - ${localizations.timeTo} ${localizations.required}';
+        isValid = false;
+      }
+      if (isTeamLeaderVisible && selectedTeamLeader == null) {
+        fieldErrors['teamLeader'] = '${localizations.teamLeaderId} ${localizations.required}';
+        isValid = false;
+      }
+      if (selectedTechnician == null) {
+        fieldErrors['technician'] = '${localizations.technicianId} ${localizations.required}';
+        isValid = false;
+      }
+    } else if (_tabController.index == 1) {
+      // Tab 2: Service Details validation
+      if (selectedMainService == null) {
+        fieldErrors['mainService'] = '${localizations.mainService} ${localizations.required}';
+        isValid = false;
+      }
+      if (selectedSubService == null) {
+        fieldErrors['subService'] = '${localizations.subService} ${localizations.required}';
+        isValid = false;
+      }
+    }
+    // Tab 3 (Summary) doesn't need validation - it's read-only
+
+    if (!isValid) {
+      setState(() {});
+      // Show error message
+      final errorMessages = fieldErrors.values.where((e) => e != null).cast<String>().toList();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessages.length == 1
+              ? errorMessages.first
+              : '${localizations.required}: ${errorMessages.join(', ')}'),
+          duration: const Duration(seconds: 4),
+          backgroundColor: Colors.red[600],
+          action: SnackBarAction(
+            label: 'OK',
+            textColor: Colors.white,
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+        ),
+      );
+    }
+
+    return isValid;
+  }
+
   void _goToNextTab() {
-    if (_tabController.index < _tabController.length - 1) {
-      _tabController.animateTo(_tabController.index + 1);
+    if (_validateCurrentStep()) {
+      if (_tabController.index < _tabController.length - 1) {
+        _tabController.animateTo(_tabController.index + 1);
+      }
     }
   }
 
@@ -486,6 +706,27 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           ? DateFormat('yyyy-MM-dd').format(selectedTicketDate!)
           : DateFormat('yyyy-MM-dd').format(DateTime.now());
 
+      // Safety check: For Team Leaders, ensure they can only assign to themselves
+      final currentAppProvider = Provider.of<AppProvider>(context, listen: false);
+      final currentUserRoleId = currentAppProvider.userModel?.customer.roleId;
+      final roleIdInt = currentUserRoleId is int ? currentUserRoleId : (currentUserRoleId is String ? int.tryParse(currentUserRoleId.toString()) : null);
+      final currentUserId = currentAppProvider.userModel?.customer.id;
+      
+      int teamLeaderId;
+      if (roleIdInt == 20) {
+        // Team Leader: Must assign to themselves
+        if (selectedTeamLeader == null || selectedTeamLeader!.id != currentUserId) {
+          // Force assign to current user
+          teamLeaderId = currentUserId ?? selectedTeamLeader!.id;
+          log('Team Leader: Forcing assignment to current user (ID: $teamLeaderId)');
+        } else {
+          teamLeaderId = selectedTeamLeader!.id;
+        }
+      } else {
+        // Admin: Can assign to any Team Leader
+        teamLeaderId = selectedTeamLeader!.id;
+      }
+
       // Remove subServiceId if it's null (backend doesn't accept undefined fields)
       final ticketData = <String, dynamic>{
         'contractId': selectedContract!.id,
@@ -497,7 +738,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         'ticketDate': ticketDateStr,
         'ticketTimeFrom': timeFromStr,
         'ticketTimeTo': timeToStr,
-        'assignToTeamLeaderId': selectedTeamLeader!.id,
+        'assignToTeamLeaderId': teamLeaderId, // Use validated team leader ID
         'assignToTechnicianId': selectedTechnician!.id,
         'ticketDescription': locationDescription.text.trim(),
         'havingFemaleEngineer': false,
@@ -714,9 +955,11 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               onSelected: (item) {
                 setState(() {
                   selectedContract = item;
+                  fieldErrors.remove('contract');
                 });
               },
             ),
+            errorMessage: fieldErrors['contract'],
           ),
           const SizedBox(height: 16),
 
@@ -732,9 +975,11 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               onSelected: (item) {
                 setState(() {
                   selectedBranch = item;
+                  fieldErrors.remove('branch');
                 });
               },
             ),
+            errorMessage: fieldErrors['branch'],
           ),
           const SizedBox(height: 16),
 
@@ -750,9 +995,11 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               onSelected: (item) {
                 setState(() {
                   selectedZone = item;
+                  fieldErrors.remove('zone');
                 });
               },
             ),
+            errorMessage: fieldErrors['zone'],
           ),
           const SizedBox(height: 16),
 
@@ -768,9 +1015,11 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               onSelected: (item) {
                 setState(() {
                   selectedTicketType = item;
+                  fieldErrors.remove('ticketType');
                 });
               },
             ),
+            errorMessage: fieldErrors['ticketType'],
           ),
           const SizedBox(height: 16),
 
@@ -786,23 +1035,27 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           _buildTimeSlotDropdown(localizations),
           const SizedBox(height: 16),
 
-          // Team Leader Dropdown
-          _buildDropdownCard(
-            title: '${localizations.teamLeaderId} *',
-            selectedItem: selectedTeamLeader,
-            items: teamLeaders,
-            onTap: () => _showDropdownBottomSheet(
-              title: localizations.teamLeaderId,
-              items: teamLeaders,
+          // Team Leader Dropdown (hidden for Team Leaders, visible for Admins)
+          if (isTeamLeaderVisible) ...[
+            _buildDropdownCard(
+              title: '${localizations.teamLeaderId} *',
               selectedItem: selectedTeamLeader,
-              onSelected: (item) {
-                setState(() {
-                  selectedTeamLeader = item;
-                });
-              },
+              items: teamLeaders,
+              onTap: () => _showDropdownBottomSheet(
+                title: localizations.teamLeaderId,
+                items: teamLeaders,
+                selectedItem: selectedTeamLeader,
+                onSelected: (item) {
+                  setState(() {
+                    selectedTeamLeader = item;
+                    fieldErrors.remove('teamLeader');
+                  });
+                },
+              ),
+              errorMessage: fieldErrors['teamLeader'],
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
 
           // Technician Dropdown
           _buildDropdownCard(
@@ -816,9 +1069,11 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               onSelected: (item) {
                 setState(() {
                   selectedTechnician = item;
+                  fieldErrors.remove('technician');
                 });
               },
             ),
+            errorMessage: fieldErrors['technician'],
           ),
           const SizedBox(height: 16),
 
@@ -843,19 +1098,44 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           ],
 
           // Description Field
-          WidgetTextField(
-            localizations.locationDescription,
-            controller: locationDescription,
-            maxLines: 4,
-            fillColor: AppColors.greyColorback,
-            haveBorder: false,
-            radius: 5,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return localizations.required;
-              }
-              return null;
-            },
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              WidgetTextField(
+                localizations.locationDescription,
+                controller: locationDescription,
+                maxLines: 4,
+                fillColor: AppColors.greyColorback,
+                haveBorder: false,
+                radius: 5,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return localizations.required;
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  if (value.isNotEmpty) {
+                    setState(() {
+                      fieldErrors.remove('locationDescription');
+                    });
+                  }
+                },
+              ),
+              if (fieldErrors['locationDescription'] != null) ...[
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Text(
+                    fieldErrors['locationDescription']!,
+                    style: TextStyle(
+                      color: Colors.red[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
@@ -881,11 +1161,13 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                 setState(() {
                   selectedMainService = item;
                   selectedSubService = null; // Reset sub service when main service changes
+                  fieldErrors.remove('mainService');
                 });
                 // Load sub services based on selected main service
                 await _loadSubServices(item.id);
               },
             ),
+            errorMessage: fieldErrors['mainService'],
           ),
           const SizedBox(height: 16),
 
@@ -901,9 +1183,11 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               onSelected: (item) {
                 setState(() {
                   selectedSubService = item;
+                  fieldErrors.remove('subService');
                 });
               },
             ),
+            errorMessage: fieldErrors['subService'],
           ),
           const SizedBox(height: 16),
 
@@ -1498,67 +1782,93 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
     required DropdownCardItem? selectedItem,
     required List<DropdownCardItem> items,
     required VoidCallback onTap,
+    String? errorMessage,
+    bool isDisabled = false,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.greyColorback,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: isDisabled ? null : onTap,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        child: Row(
-          children: [
-            if (selectedItem?.icon != null) ...[
-              Icon(
-                selectedItem!.icon,
-                color: AppColors(context).primaryColor,
-                size: 24,
+          child: Opacity(
+            opacity: isDisabled ? 0.6 : 1.0,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.greyColorback,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: errorMessage != null ? Colors.red : Colors.grey[300]!,
+                  width: errorMessage != null ? 2 : 1,
+                ),
               ),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                  if (selectedItem?.icon != null) ...[
+                    Icon(
+                      selectedItem!.icon,
+                      color: AppColors(context).primaryColor,
+                      size: 24,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    selectedItem?.title ?? 'Select',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: selectedItem != null ? Colors.black87 : Colors.grey,
-                    ),
-                  ),
-                  if (selectedItem?.subtitle != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      selectedItem!.subtitle!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                    const SizedBox(width: 12),
                   ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          selectedItem?.title ?? 'Select',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: selectedItem != null ? Colors.black87 : Colors.grey,
+                          ),
+                        ),
+                        if (selectedItem?.subtitle != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            selectedItem!.subtitle!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.grey[600],
+                  ),
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              color: Colors.grey[600],
-            ),
-          ],
+          ),
         ),
-      ),
+        if (errorMessage != null) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              errorMessage,
+              style: TextStyle(
+                color: Colors.red[600],
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 

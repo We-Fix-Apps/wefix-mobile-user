@@ -110,24 +110,38 @@ class _WidgewtGoogleMapsState extends State<WidgewtGoogleMaps> {
                         if (_debounce?.isActive ?? false) _debounce!.cancel();
 
                         _debounce = Timer(const Duration(seconds: 0), () async {
-                          final target = position.target;
-                          setState(() {
-                            currentLocation = target;
-                            appProvider.saveCusrrentLocation(target);
-                            appProvider.addLatAndLong(pos: target);
-                          });
-
-                          log(currentLocation.toString());
-
                           try {
-                            List<Placemark> placemarks3 =
-                                await placemarkFromCoordinates(
-                              target.latitude,
-                              target.longitude,
-                            );
-                            appProvider.addAddress(placemarks: placemarks3);
+                            // Safely access position.target with null check
+                            final target = position.target;
+                            
+                            // Validate target coordinates
+                            if (target.latitude.isNaN || target.longitude.isNaN ||
+                                target.latitude == 0.0 && target.longitude == 0.0) {
+                              log('Invalid target position: lat=${target.latitude}, lng=${target.longitude}');
+                              return;
+                            }
+
+                            setState(() {
+                              _currentLocation = target;
+                              appProvider.saveCusrrentLocation(target);
+                              appProvider.addLatAndLong(pos: target);
+                            });
+
+                            log(_currentLocation.toString());
+
+                            try {
+                              List<Placemark> placemarks3 =
+                                  await placemarkFromCoordinates(
+                                target.latitude,
+                                target.longitude,
+                              );
+                              appProvider.addAddress(placemarks: placemarks3);
+                            } catch (e) {
+                              log('Geocoding failed: $e');
+                            }
                           } catch (e) {
-                            log('Geocoding failed: $e');
+                            log('Error accessing camera position target: $e');
+                            // Don't crash, just log the error
                           }
                         });
                       },
@@ -135,10 +149,11 @@ class _WidgewtGoogleMapsState extends State<WidgewtGoogleMaps> {
                 onTap: widget.isFromCheckOut == true
                     ? (p) {}
                     : (pos) async {
-                        List<Placemark> placemarks2 =
-                            await placemarkFromCoordinates(
-                                currentLocation.latitude,
-                                currentLocation.longitude);
+                        try {
+                          List<Placemark> placemarks2 =
+                              await placemarkFromCoordinates(
+                                  _currentLocation.latitude,
+                                  _currentLocation.longitude);
                         Marker m = Marker(
                             markerId: const MarkerId('1'),
                             icon: BitmapDescriptor.defaultMarker,
@@ -153,22 +168,34 @@ class _WidgewtGoogleMapsState extends State<WidgewtGoogleMaps> {
                             // ignore: use_build_context_synchronously
                             Provider.of<AppProvider>(context, listen: false);
 
-                        appProvider.addAddress(placemarks: placemarks2);
-                        appProvider.addLatAndLong(pos: pos);
+                          appProvider.addAddress(placemarks: placemarks2);
+                          appProvider.addLatAndLong(pos: pos);
 
-                        log(appProvider.position!.latitude.toString());
+                          log(appProvider.position?.latitude.toString() ?? 'No position');
+                        } catch (e) {
+                          log('Error in onTap: $e');
+                        }
                       },
                 onMapCreated: (GoogleMapController controller) async {
-                  _controller.complete(controller);
-                  List<Placemark> placemarks = await placemarkFromCoordinates(
-                      currentLocation.latitude, currentLocation.longitude);
-                  setState(() {
-                    appProvider
-                        .addAddress(placemarks: placemarks)
-                        .then((value) {
-                      setState(() {});
-                    });
-                  });
+                  try {
+                    _controller.complete(controller);
+                    try {
+                      List<Placemark> placemarks = await placemarkFromCoordinates(
+                          _currentLocation.latitude, _currentLocation.longitude);
+                      setState(() {
+                        appProvider
+                            .addAddress(placemarks: placemarks)
+                            .then((value) {
+                          setState(() {});
+                        });
+                      });
+                    } catch (e) {
+                      log('Geocoding failed in onMapCreated: $e');
+                      // Continue even if geocoding fails
+                    }
+                  } catch (e) {
+                    log('Error in onMapCreated: $e');
+                  }
                 },
                 initialCameraPosition: initialCameraPosition),
           ),
@@ -195,11 +222,30 @@ class _WidgewtGoogleMapsState extends State<WidgewtGoogleMaps> {
   }
 
   final Completer<GoogleMapController> _controller = Completer();
-  static CameraPosition initialCameraPosition = CameraPosition(
-    target: LatLng(lat ?? 31.915079, loang ?? 35.883758),
-    zoom: 14.4746,
-  );
-  LatLng currentLocation = initialCameraPosition.target;
+  
+  // Initialize with safe default values
+  CameraPosition get initialCameraPosition {
+    final defaultLat = 31.915079;
+    final defaultLng = 35.883758;
+    final targetLat = (lat != null && !lat!.isNaN && lat != 0.0) ? lat! : defaultLat;
+    final targetLng = (loang != null && !loang!.isNaN && loang != 0.0) ? loang! : defaultLng;
+    
+    return CameraPosition(
+      target: LatLng(targetLat, targetLng),
+      zoom: 14.4746,
+    );
+  }
+  
+  LatLng get currentLocation {
+    try {
+      return initialCameraPosition.target;
+    } catch (e) {
+      log('Error getting current location from initialCameraPosition: $e');
+      return const LatLng(31.915079, 35.883758);
+    }
+  }
+  
+  LatLng _currentLocation = const LatLng(31.915079, 35.883758);
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -226,36 +272,79 @@ class _WidgewtGoogleMapsState extends State<WidgewtGoogleMaps> {
   }
 
   Future<void> _getMyLocation() async {
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    Position myLocation = await Geolocator.getCurrentPosition();
+    try {
+      AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+      
+      if (lat != null && loang != null) {
+        // Validate provided coordinates
+        if (!lat!.isNaN && !loang!.isNaN && 
+            !(lat == 0.0 && loang == 0.0)) {
+          appProvider.saveCusrrentLocation(LatLng(lat!, loang!));
+          _animateCamera(LatLng(lat!, loang!));
+        } else {
+          log('Invalid provided coordinates, using current location');
+          _getCurrentLocationAndAnimate();
+        }
+      } else {
+        _getCurrentLocationAndAnimate();
+      }
+    } catch (e) {
+      log('Error in _getMyLocation: $e');
+      // Fallback to default location
+      _animateCamera(LatLng(31.915079, 35.883758));
+    }
+  }
 
-    if (lat != null && loang != null) {
-      appProvider.saveCusrrentLocation(LatLng(lat!, loang!));
-      _animateCamera(LatLng(lat!, loang!));
-    } else {
+  Future<void> _getCurrentLocationAndAnimate() async {
+    try {
+      Position myLocation = await Geolocator.getCurrentPosition();
       _animateCamera(LatLng(myLocation.latitude, myLocation.longitude));
+    } catch (e) {
+      log('Error getting current location: $e');
+      // Fallback to default location
+      _animateCamera(LatLng(31.915079, 35.883758));
     }
   }
 
   Future<void> _animateCamera(LatLng location) async {
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    final GoogleMapController controller = await _controller.future;
-    CameraPosition cameraPosition = CameraPosition(
-      target: LatLng(location.latitude, location.longitude),
-      zoom: 15.00,
-    );
-    log("animating camera to (lat: ${location.latitude}, long: ${location.longitude}");
-    appProvider
-        .saveCusrrentLocation(LatLng(location.latitude, location.longitude));
-    List<Placemark> placemarksCurrent =
-        await placemarkFromCoordinates(location.latitude, location.longitude);
+    try {
+      AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+      
+      // Validate location coordinates before proceeding
+      if (location.latitude.isNaN || location.longitude.isNaN ||
+          (location.latitude == 0.0 && location.longitude == 0.0)) {
+        log('Invalid location coordinates: lat=${location.latitude}, lng=${location.longitude}');
+        return;
+      }
 
-    appProvider.addAddress(placemarks: placemarksCurrent);
-    controller
-        .animateCamera(CameraUpdate.newCameraPosition(cameraPosition))
-        .then((value) {
-      _setMarker(location);
-    });
+      final GoogleMapController controller = await _controller.future;
+      CameraPosition cameraPosition = CameraPosition(
+        target: LatLng(location.latitude, location.longitude),
+        zoom: 15.00,
+      );
+      log("animating camera to (lat: ${location.latitude}, long: ${location.longitude}");
+      appProvider
+          .saveCusrrentLocation(LatLng(location.latitude, location.longitude));
+      
+      try {
+        List<Placemark> placemarksCurrent =
+            await placemarkFromCoordinates(location.latitude, location.longitude);
+        appProvider.addAddress(placemarks: placemarksCurrent);
+      } catch (e) {
+        log('Geocoding failed in _animateCamera: $e');
+        // Continue even if geocoding fails
+      }
+      
+      controller
+          .animateCamera(CameraUpdate.newCameraPosition(cameraPosition))
+          .then((value) {
+        _setMarker(location);
+      }).catchError((error) {
+        log('Error animating camera: $error');
+      });
+    } catch (e) {
+      log('Error in _animateCamera: $e');
+    }
   }
 
   Future<void> _getLocationFromPlaceId(String placeId) async {
