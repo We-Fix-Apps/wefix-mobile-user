@@ -152,7 +152,7 @@ class AttachmentsWidget extends StatelessWidget {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
+          ),
                 ),
                 SizedBox(width: 16),
                 Text('Downloading file...'),
@@ -217,12 +217,12 @@ class AttachmentsWidget extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
             content: Text('Error downloading/opening file: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+          backgroundColor: Colors.red,
+        ),
+      );
       }
     }
   }

@@ -98,8 +98,9 @@ class EndPoints {
   static String address = 'Customer/Address';
   static String addAddress = 'Customer/CreateAddress';
   static String getShippingInfo = 'Order/GetShippingInfo';
-  static String getProfile = 'user/profile';
+  static String getProfile = 'user/profile'; // backend-mms endpoint
   static String editProfile = 'user/UpdateProfile';
+  static String updateProfile = 'user/profile'; // backend-mms endpoint
   static String changedPassword = 'user/changepassword';
   static String changedPhone = 'user/editphone';
   static String deleteAccount = 'user/deleteAccount';
@@ -127,10 +128,10 @@ class EndPoints {
 
   // * MMS API (Backend MMS)
   static String mmsBaseUrl = 'https://wefix-backend-mms.ngrok.app/api/v1/'; // Update with your backend URL
-  static String mmsLogin = 'users/login';
-  static String mmsLogout = 'users/logout';
-  static String mmsRefreshToken = 'users/refresh-token';
-  static String mmsRegister = 'users/register';
+  static String mmsLogin = 'user/login';
+  static String mmsLogout = 'user/logout';
+  static String mmsRefreshToken = 'user/refresh-token';
+  static String mmsRegister = 'user/register';
   static String mmsTickets = 'tickets';
   static String mmsTicketStatistics = 'tickets/statistics';
   static String mmsTicketDetails = 'tickets/'; // Append ticket ID

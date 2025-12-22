@@ -1646,6 +1646,24 @@ abstract class AppLocalizations {
   /// **'Take a Picture From Camera'**
   String get takeaPictureFromCamera;
 
+  /// No description provided for @errorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get errorTitle;
+
+  /// No description provided for @failedToUpdateProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update profile. Please try again.'**
+  String get failedToUpdateProfile;
+
+  /// No description provided for @errorOccurredWhileUpdatingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while updating your profile.'**
+  String get errorOccurredWhileUpdatingProfile;
+
   /// No description provided for @currentPassword.
   ///
   /// In en, this message translates to:
@@ -1801,6 +1819,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Branch'**
   String get addBranch;
+
+  /// No description provided for @branches.
+  ///
+  /// In en, this message translates to:
+  /// **'Branches'**
+  String get branches;
 
   /// No description provided for @addEmployee.
   ///

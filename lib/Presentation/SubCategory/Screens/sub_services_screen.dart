@@ -554,7 +554,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            AppText(context, isFunction: true)
+                                          AppText(context, isFunction: true)
                                                 .estimatedTimeToArrivalminutes,
                                             style: const TextStyle(
                                               fontSize: 16,

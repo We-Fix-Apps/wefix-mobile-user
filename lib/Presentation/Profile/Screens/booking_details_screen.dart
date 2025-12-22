@@ -193,13 +193,13 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                 children: [
                   // Display Google Map if location data is available
                   if (_hasValidLocationMap()) ...[
-                    _buildLocationMap(context),
-                    const Divider(
-                      color: AppColors.backgroundColor,
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                  _buildLocationMap(context),
+                  const Divider(
+                    color: AppColors.backgroundColor,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
                   ],
                   Text('🛠️ ${AppText(context).maintenanceTicketDetails}',
                       style: TextStyle(
@@ -1577,7 +1577,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                   lat.isInfinite || lng.isInfinite ||
                   (lat == 0.0 && lng == 0.0)) {
                 return false;
-              }
+    }
               // Check for reasonable coordinate ranges (latitude: -90 to 90, longitude: -180 to 180)
               else if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
                 return false;

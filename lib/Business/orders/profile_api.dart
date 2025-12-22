@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:wefix/Business/end_points.dart';
 import 'package:wefix/Data/Api/http_request.dart';
 import 'package:wefix/Data/model/holiday_model.dart';
@@ -374,14 +376,26 @@ class ProfileApis {
   static ProfileModel? profileModel;
   static Future<ProfileModel?> getProfileData({
     required String token,
+    bool? isCompany,
   }) async {
     try {
-      final response = await HttpHelper.getData(
-        query: EndPoints.getProfile,
-        token: token,
-      );
+      // Use backend-mms endpoint only if user is company personnel (roleId == 2)
+      final bool useMMS = isCompany == true;
+      
+      final url = useMMS 
+          ? Uri.parse('${EndPoints.mmsBaseUrl}${EndPoints.getProfile}')
+          : Uri.parse('${EndPoints.baseUrl}${EndPoints.getProfile}');
+      
+      var headers = {
+        'Content-Type': 'application/json',
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer $token',
+      };
+      
+      final response = await http.get(url, headers: headers);
 
-      log('getProfileData() [ STATUS ] -> ${response.statusCode}');
+      log('getProfileData() [ STATUS ] -> ${response.statusCode} (${useMMS ? "MMS" : "OMS"})');
 
       // Check status code before parsing JSON
       if (response.statusCode == 200) {
@@ -433,6 +447,61 @@ class ProfileApis {
       final body = json.decode(response.body);
     } catch (e) {
       log('editProfile() [ ERROR ] -> $e');
+      return null;
+    }
+  }
+
+  // Update profile using backend-mms (with file upload support)
+  static Future<ProfileModel?> updateProfileMMS({
+    required String token,
+    required String firstName,
+    required String lastName,
+    required String email,
+    File? imageFile,
+    String? existingImageUrl,
+  }) async {
+    try {
+      final url = Uri.parse('${EndPoints.mmsBaseUrl}${EndPoints.updateProfile}');
+      
+      var request = http.MultipartRequest('PUT', url);
+      
+      // Add headers
+      request.headers['Authorization'] = 'Bearer $token';
+      
+      // Add text fields
+      request.fields['email'] = email;
+      request.fields['firstname'] = firstName;
+      request.fields['lastname'] = lastName;
+      
+      // Add image file if provided
+      if (imageFile != null && await imageFile.exists()) {
+        request.files.add(
+          await http.MultipartFile.fromPath('profileImage', imageFile.path),
+        );
+      } else if (existingImageUrl != null && existingImageUrl.isNotEmpty) {
+        // If no new image but existing image URL, send it as a field
+        request.fields['profileImage'] = existingImageUrl;
+      }
+      
+      // Send request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      log('updateProfileMMS() [ STATUS ] -> ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true && body['profile'] != null) {
+          profileModel = ProfileModel.fromJson(body);
+          return profileModel;
+        }
+      } else {
+        log('updateProfileMMS() [ ERROR ] -> Status ${response.statusCode}, body: ${response.body}');
+      }
+      
+      return null;
+    } catch (e) {
+      log('updateProfileMMS() [ ERROR ] -> $e');
       return null;
     }
   }

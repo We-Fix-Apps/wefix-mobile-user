@@ -797,6 +797,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get takeaPictureFromCamera => 'التقط صورة من الكاميرا';
 
   @override
+  String get errorTitle => 'خطأ';
+
+  @override
+  String get failedToUpdateProfile =>
+      'فشل تحديث الملف الشخصي. يرجى المحاولة مرة أخرى.';
+
+  @override
+  String get errorOccurredWhileUpdatingProfile =>
+      'حدث خطأ أثناء تحديث ملفك الشخصي.';
+
+  @override
   String get currentPassword => 'كلمة المرور الحالية';
 
   @override
@@ -878,6 +889,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addBranch => 'إضافة فرع';
+
+  @override
+  String get branches => 'الفروع';
 
   @override
   String get addEmployee => 'إضافة موظف';

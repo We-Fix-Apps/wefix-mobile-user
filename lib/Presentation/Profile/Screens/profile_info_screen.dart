@@ -10,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
-import 'package:wefix/Business/uplade_image.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/image_picker_class.dart';
@@ -19,11 +18,13 @@ import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/profile_model.dart';
 
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
-import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Loading/drop_down_loading.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:wefix/Business/end_points.dart';
+import 'package:wefix/l10n/app_localizations.dart';
 
 class MyProfileScreen extends StatefulWidget {
   const MyProfileScreen({super.key});
@@ -58,22 +59,100 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
 
   @override
   void initState() {
-    getUser().then((value) {
-      firstName.text = profileModel?.profile?.firstname ?? "";
-      lastName.text = profileModel?.profile?.lastname ?? "";
-      email.text = profileModel?.profile?.email ?? "";
-      imageProfile = profileModel?.profile?.profileImage ?? "";
-    });
-
-    // phoneController.text = appProvider.userModel?.userInfo?. ?? "";
-    // password.text = appProvider.userModel?.userInfo?.password ?? '';
-    // email.text = appProvider.user?.userInfo?.email ?? "";
-
     super.initState();
+    // Load initial data from AppProvider as fallback
+    _populateFieldsFromAppProvider();
+    // Then load and populate from API
+    getUser();
+  }
+
+  // Populate fields from AppProvider (fallback values)
+  void _populateFieldsFromAppProvider() {
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    if (appProvider.userModel != null) {
+      final customer = appProvider.userModel!.customer;
+      // Try to extract first and last name from full name
+      final nameParts = customer.name.split(' ');
+      if (nameParts.length >= 2) {
+        firstName.text = nameParts[0];
+        lastName.text = nameParts.sublist(1).join(' ');
+      } else if (nameParts.isNotEmpty) {
+        firstName.text = nameParts[0];
+      }
+      email.text = customer.email.isNotEmpty ? customer.email : "";
+      // phoneController.text = customer.mobile ?? "";
+    }
+  }
+
+  // Populate fields from ProfileModel (after API load)
+  void _populateFieldsFromProfile() {
+    if (profileModel?.profile != null) {
+      firstName.text = profileModel!.profile!.firstname ?? firstName.text;
+      lastName.text = profileModel!.profile!.lastname ?? lastName.text;
+      email.text = profileModel!.profile!.email ?? email.text;
+      imageProfile = profileModel!.profile!.profileImage ?? imageProfile;
+    }
+  }
+
+  // Helper function to get user initials
+  String _getInitials(String? firstName, String? lastName) {
+    String name = '';
+    if (firstName != null && firstName.isNotEmpty) {
+      name += firstName[0].toUpperCase();
+    }
+    if (lastName != null && lastName.isNotEmpty) {
+      name += lastName[0].toUpperCase();
+    }
+    if (name.isEmpty) {
+      return 'U';
+    }
+    return name;
+  }
+
+  // Helper function to check if image URL is valid
+  bool _isValidImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) return false;
+    if (imageUrl.toLowerCase() == "null") return false;
+    if (imageUrl.trim().isEmpty) return false;
+    return true;
+  }
+
+  // Helper function to build full URL for profile image from backend-mms
+  // Now uses /WeFixFiles/Images/ path to match backend-oms structure (single source of truth)
+  String _buildImageUrl(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return "";
+    
+    // If already a full URL (http/https), return as is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // Build base URL from backend-mms
+    // mmsBaseUrl format: https://wefix-backend-mms.ngrok.app/api/v1/
+    String baseUrl = EndPoints.mmsBaseUrl.replaceAll('/api/v1/', '').replaceAll(RegExp(r'/$'), '');
+    
+    // Normalize path - backend-mms now stores images in /WeFixFiles/Images/ to match backend-oms
+    String cleanPath = imagePath.startsWith('/') ? imagePath : '/$imagePath';
+    
+    // If path already starts with /WeFixFiles, use it as is
+    if (cleanPath.startsWith('/WeFixFiles')) {
+      return '$baseUrl$cleanPath';
+    }
+    
+    // For backward compatibility: if path is /uploads/filename, convert to /WeFixFiles/Images/filename
+    if (cleanPath.startsWith('/uploads/')) {
+      String filename = cleanPath.replaceFirst('/uploads/', '');
+      return '$baseUrl/WeFixFiles/Images/$filename';
+    }
+    
+    // If just a filename, assume it's in /WeFixFiles/Images/
+    return '$baseUrl/WeFixFiles/Images/$cleanPath';
   }
 
   @override
   Widget build(BuildContext context) {
+    final profileImageUrl = profileModel?.profile?.profileImage;
+    
     return Scaffold(
       appBar: _buildAppBar(context),
       body: SingleChildScrollView(
@@ -111,10 +190,85 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             )),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10000),
-                          child: WidgetCachNetworkImage(
-                            image: imageProfile ?? "",
-                            boxFit: BoxFit.cover,
-                          ),
+                          child: imageFile != null
+                              ? Image.file(
+                                  imageFile!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    // Fallback to network image or initials
+                                    if (_isValidImageUrl(profileImageUrl)) {
+                                      return CachedNetworkImage(
+                                        imageUrl: _buildImageUrl(profileImageUrl),
+                                        fit: BoxFit.cover,
+                                        placeholder: (context, url) => CircleAvatar(
+                                          backgroundColor: AppColors(context).primaryColor.withOpacity(0.1),
+                                          child: Text(
+                                            _getInitials(profileModel?.profile?.firstname, profileModel?.profile?.lastname),
+                                            style: TextStyle(
+                                              color: AppColors(context).primaryColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        errorWidget: (context, url, error) => CircleAvatar(
+                                          backgroundColor: AppColors(context).primaryColor.withOpacity(0.1),
+                                          child: Text(
+                                            _getInitials(profileModel?.profile?.firstname, profileModel?.profile?.lastname),
+                                            style: TextStyle(
+                                              color: AppColors(context).primaryColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return CircleAvatar(
+                                      backgroundColor: AppColors(context).primaryColor.withOpacity(0.1),
+                                      child: Text(
+                                        _getInitials(profileModel?.profile?.firstname, profileModel?.profile?.lastname),
+                                        style: TextStyle(
+                                          color: AppColors(context).primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : _isValidImageUrl(profileImageUrl)
+                                  ? CachedNetworkImage(
+                                      imageUrl: _buildImageUrl(profileImageUrl),
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => CircleAvatar(
+                                        backgroundColor: AppColors(context).primaryColor.withOpacity(0.1),
+                                        child: Text(
+                                          _getInitials(profileModel?.profile?.firstname, profileModel?.profile?.lastname),
+                                          style: TextStyle(
+                                            color: AppColors(context).primaryColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => CircleAvatar(
+                                        backgroundColor: AppColors(context).primaryColor.withOpacity(0.1),
+                                        child: Text(
+                                          _getInitials(profileModel?.profile?.firstname, profileModel?.profile?.lastname),
+                                          style: TextStyle(
+                                            color: AppColors(context).primaryColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    )
+                                  : CircleAvatar(
+                                      backgroundColor: AppColors(context).primaryColor.withOpacity(0.1),
+                                      child: Text(
+                                        _getInitials(profileModel?.profile?.firstname, profileModel?.profile?.lastname),
+                                        style: TextStyle(
+                                          color: AppColors(context).primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
                         ),
                       ),
                     ),
@@ -153,7 +307,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                 height: 20,
               ),
               Text(
-                "Personal Informtion",
+                AppLocalizations.of(context)!.personalInformtion,
                 style: TextStyle(
                   fontSize: AppSize(context).mediumText3,
                   fontWeight: FontWeight.bold,
@@ -312,23 +466,38 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     try {
       AppProvider appProvider =
           Provider.of<AppProvider>(context, listen: false);
-      await ProfileApis.getProfileData(
-        token: appProvider.userModel?.token ?? '',
-      ).then((value) {
-        if (mounted) {
-          setState(() {
-            profileModel = value;
-          });
-          setState(() {
-            loading = false;
-          });
-        }
-      });
+      final token = appProvider.accessToken ?? appProvider.userModel?.token ?? '';
+      if (token.isEmpty) {
+        setState(() {
+          loading = false;
+        });
+        return;
+      }
+      
+      // Check if user is company personnel (roles: 18, 20, 21, 22, 26)
+      final roleId = appProvider.userModel?.customer.roleId;
+      final roleIdInt = roleId is int ? roleId : (roleId is String ? int.tryParse(roleId.toString()) : null);
+      final bool isCompany = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22 || roleIdInt == 26);
+      
+      final profile = await ProfileApis.getProfileData(
+        token: token,
+        isCompany: isCompany,
+      );
+      if (mounted) {
+        setState(() {
+          profileModel = profile;
+          // Populate fields after loading profile data
+          _populateFieldsFromProfile();
+          loading = false;
+        });
+      }
     } catch (e) {
-      log('getCart [ ERROR ] $e');
-      setState(() {
-        loading = false;
-      });
+      log('getUser [ ERROR ] $e');
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+      }
     }
   }
 
@@ -338,48 +507,102 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      await ProfileApis.editProfile(
-        email: email.text,
-        firstName: firstName.text,
-        image: imageProfile ?? "",
-        lastName: lastName.text,
-        token: appProvider.userModel?.token ?? '',
-      ).then((value) {
-        showDialog(
-          context: context,
-          builder: (context) => const WidgetDialog(
-            title: 'Successfully',
-            desc: 'Your information has been updated successfully.',
-            isError: false,
-          ),
+      // Check if user is company personnel (roles: 18, 20, 21, 22, 26)
+      final roleId = appProvider.userModel?.customer.roleId;
+      final roleIdInt = roleId is int ? roleId : (roleId is String ? int.tryParse(roleId.toString()) : null);
+      final bool isCompany = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22 || roleIdInt == 26);
+      
+      // Use backend-mms for profile update only if user is company personnel
+      ProfileModel? updatedProfile;
+      if (isCompany) {
+        updatedProfile = await ProfileApis.updateProfileMMS(
+          email: email.text,
+          firstName: firstName.text,
+          lastName: lastName.text,
+          token: appProvider.accessToken ?? appProvider.userModel?.token ?? '',
+          imageFile: imageFile, // Send file directly if selected
+          existingImageUrl: imageFile == null ? imageProfile : null, // Use existing URL if no new file
         );
-        // appProvider.updateUserData(
-        //     name: "${firstName.text} ${lastName.text}", email: email.text);
+      } else {
+        // Use old backend-oms endpoint for regular users
+        await ProfileApis.editProfile(
+          email: email.text,
+          firstName: firstName.text,
+          image: imageFile == null ? (imageProfile ?? "") : "",
+          lastName: lastName.text,
+          token: appProvider.userModel?.token ?? '',
+        );
+        // For old endpoint, we need to reload profile data
+        updatedProfile = await ProfileApis.getProfileData(
+          token: appProvider.userModel?.token ?? '',
+          isCompany: false,
+        );
+      }
+      
+      if (updatedProfile != null) {
+        // Update local state with new profile data immediately
         setState(() {
-          loadingEdit = false;
+          profileModel = updatedProfile;
+          imageProfile = updatedProfile?.profile?.profileImage ?? imageProfile;
+          imageFile = null; // Clear file after successful upload
+          // Update form fields
+          firstName.text = updatedProfile?.profile?.firstname ?? firstName.text;
+          lastName.text = updatedProfile?.profile?.lastname ?? lastName.text;
+          email.text = updatedProfile?.profile?.email ?? email.text;
         });
-        log(value.toString());
+        
+        // Refresh profile data from server to ensure consistency
+        await getUser();
+        
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => WidgetDialog(
+              title: AppLocalizations.of(context)!.successfully,
+              desc: AppLocalizations.of(context)!.yourinformationhasbeenupdatedsuccessfully,
+              isError: false,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => WidgetDialog(
+              title: AppLocalizations.of(context)!.errorTitle,
+              desc: AppLocalizations.of(context)!.failedToUpdateProfile,
+              isError: true,
+            ),
+          );
+        }
+      }
+      
+      setState(() {
+        loadingEdit = false;
       });
     } catch (e) {
       log('editProfile() error = > $e');
       setState(() {
         loadingEdit = false;
       });
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => WidgetDialog(
+            title: AppLocalizations.of(context)!.errorTitle,
+            desc: AppLocalizations.of(context)!.errorOccurredWhileUpdatingProfile,
+            isError: true,
+          ),
+        );
+      }
     }
   }
 
   Future uploadFile({bool? isCavar = false}) async {
-    AppProvider appProvider = Provider.of(context, listen: false);
-
-    await UpladeImages.upladeImage(
-      token: '${appProvider.userModel?.token}',
-      file: imageFile!,
-    ).then((value) {
-      if (value != null) {
-        setState(() {
-          imageProfile = value;
-        });
-      }
+    // Image will be uploaded directly when saving profile
+    // No need to upload separately anymore
+    setState(() {
+      // Just update the preview, actual upload happens in editProfile()
     });
   }
 
@@ -418,9 +641,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         if (value != null) {
                           setState(() {
                             imageFile = value;
-                          });
-                          await uploadFile(isCavar: isCover);
-                          setState(() {
                             someUpdate = true;
                           });
                           pop(context);
@@ -439,10 +659,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             ),
                           ),
                           SizedBox(width: AppSize(context).width * 0.02),
-                          RichText(
-                            textAlign: TextAlign.start,
-                            text: TextSpan(
-                              text: 'Select a Picture From Gallery',
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.selectaPictureFromGallery,
+                              textAlign: TextAlign.start,
                               style: TextStyle(
                                 color: AppColors.blackColor1,
                                 fontSize: AppSize(context).mediumText4,
@@ -466,9 +686,6 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                         if (value != null) {
                           setState(() {
                             imageFile = value;
-                          });
-                          await uploadFile(isCavar: isCover);
-                          setState(() {
                             someUpdate = true;
                           });
                           pop(context);
@@ -487,10 +704,10 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
                             ),
                           ),
                           SizedBox(width: AppSize(context).width * 0.02),
-                          RichText(
-                            textAlign: TextAlign.start,
-                            text: TextSpan(
-                              text: 'Take a Picture From Camera',
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.takeaPictureFromCamera,
+                              textAlign: TextAlign.start,
                               style: TextStyle(
                                 color: AppColors.blackColor1,
                                 fontSize: AppSize(context).mediumText4,

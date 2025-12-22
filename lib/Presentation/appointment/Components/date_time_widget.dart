@@ -497,7 +497,7 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
-                                          AppText(context, isFunction: true)
+                                        AppText(context, isFunction: true)
                                               .estimatedTimeToArrivalminutes,
                                           style: const TextStyle(
                                             fontSize: 16,

@@ -22,6 +22,7 @@ import 'package:wefix/Presentation/Profile/Screens/profile_info_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/EditUser/edit_mobile_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/EditUser/change_password_screen.dart';
 import 'package:wefix/Presentation/wallet/screens/wallet_screen.dart';
+import 'package:wefix/l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -67,10 +68,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               //   },
               // ),
               const SizedBox(height: 10),
+              appProvider.userModel?.token == null
+                  ? const SizedBox()
+                  : WidgetCard(
+                      title: AppText(context).profile,
+                      onTap: () {
+                        Navigator.push(
+                            context, rightToLeft(const MyProfileScreen()));
+                      },
+                    ),
+              appProvider.userModel?.token == null
+                  ? const SizedBox()
+                  : const SizedBox(height: 10),
               appProvider.userModel?.customer.roleId == 1
                   ? SizedBox()
                   : WidgetCard(
-                      title: "Branches",
+                      title: AppLocalizations.of(context)!.branches,
                       onTap: () {
                         Navigator.push(
                             context, rightToLeft(BranchesListScreen()));

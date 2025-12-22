@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Bookings/bookings_apis.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
@@ -10,12 +11,12 @@ import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Data/model/ticket_model.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
-import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
 import 'package:wefix/Presentation/B2B/ticket/create_update_ticket_screen_v2.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/model/profile_model.dart';
+import 'package:wefix/Business/end_points.dart';
 
 import '../../l10n/app_localizations.dart';
 
@@ -109,6 +110,7 @@ class _B2BHomeState extends State<B2BHome> {
                 width: double.infinity,
                 child: CustomBotton(
                   title: AppLocalizations.of(context)!.addTicket,
+                      textSize: 16, // Ensure text size is appropriate
                   onTap: () {
                     Navigator.push(
                       context,
@@ -160,7 +162,7 @@ class _B2BHomeState extends State<B2BHome> {
             statusAr: ticket['ticketStatus']?['nameArabic'] ?? 'قيد الانتظار',
             ticketTypeId: ticket['ticketType']?['id'] ?? 0,
             rating: null,
-            icon: null,
+            icon: ticket['mainService']?['image'] ?? ticket['mainService']?['icon'] ?? null, // Main service image
             cancelButton: null,
             isRated: null,
             type: ticket['ticketType']?['name'],
@@ -293,17 +295,91 @@ class _HeaderSectionState extends State<_HeaderSection> {
   @override
   Widget build(BuildContext context) {
     AppProvider appProvider = Provider.of<AppProvider>(context);
+    // Try to get profile image from profileModel
     final profileImage = profileModel?.profile?.profileImage;
     final userName = appProvider.userModel?.customer.name ?? "";
 
+    // Helper function to check if image URL is valid (primary check)
+    bool isValidImageUrl(String? imageUrl) {
+      if (imageUrl == null || imageUrl.isEmpty) return false;
+      if (imageUrl.toLowerCase() == "null") return false;
+      if (imageUrl.trim().isEmpty) return false;
+      return true;
+    }
+
+    // Helper function to build full URL for profile image from backend-mms
+    // Mobile-user always connects to backend-mms
+    // Backend-mms serves files from /uploads route (files stored in public/WeFixFiles/)
+    String buildImageUrl(String? imagePath) {
+      if (imagePath == null || imagePath.isEmpty) return "";
+      
+      // If already a full URL (http/https), return as is
+      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+      }
+      
+      // Build base URL from backend-mms
+      // mmsBaseUrl format: https://wefix-backend-mms.ngrok.app/api/v1/
+      String baseUrl = EndPoints.mmsBaseUrl.replaceAll('/api/v1/', '').replaceAll(RegExp(r'/$'), '');
+      
+      // Normalize path - backend-mms now stores images in /WeFixFiles/Images/ to match backend-oms
+      String cleanPath = imagePath.startsWith('/') ? imagePath : '/$imagePath';
+      
+      // If path already starts with /WeFixFiles, use it as is
+      if (cleanPath.startsWith('/WeFixFiles')) {
+        return '$baseUrl$cleanPath';
+      }
+      
+      // For backward compatibility: if path is /uploads/filename, convert to /WeFixFiles/Images/filename
+      if (cleanPath.startsWith('/uploads/')) {
+        String filename = cleanPath.replaceFirst('/uploads/', '');
+        return '$baseUrl/WeFixFiles/Images/$filename';
+      }
+      
+      // If just a filename, assume it's in /WeFixFiles/Images/
+      return '$baseUrl/WeFixFiles/Images/$cleanPath';
+    }
+
     return Row(
       children: [
-        profileImage != null && profileImage.isNotEmpty
+        // Primary: Profile Image, Secondary: Initials (fallback)
+        isValidImageUrl(profileImage)
             ? ClipOval(
-                child: WidgetCachNetworkImage(
-                  image: profileImage,
+                child: CachedNetworkImage(
+                  imageUrl: buildImageUrl(profileImage),
                   width: 48,
                   height: 48,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => CircleAvatar(
+                    backgroundColor: Colors.orange.shade100,
+                    radius: 24,
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _getInitials(userName),
+                            style: TextStyle(
+                              color: Colors.orange.shade700,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                  ),
+                  errorWidget: (context, url, error) => CircleAvatar(
+                    backgroundColor: Colors.orange.shade100,
+                    radius: 24,
+                    child: Text(
+                      _getInitials(userName),
+                      style: TextStyle(
+                        color: Colors.orange.shade700,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
                 ),
               )
             : CircleAvatar(
@@ -534,9 +610,29 @@ class _SmallTicketCardState extends State<_SmallTicketCard> {
 }
 
 // ---------------- Last Tickets ----------------
-class _LastTicketsSection extends StatelessWidget {
+class _LastTicketsSection extends StatefulWidget {
   final TicketModel? ticketModel;
   const _LastTicketsSection({this.ticketModel});
+
+  @override
+  State<_LastTicketsSection> createState() => _LastTicketsSectionState();
+}
+
+class _LastTicketsSectionState extends State<_LastTicketsSection> {
+  late PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   String _getInitials(String? name) {
     if (name == null || name.isEmpty) return "T";
@@ -546,6 +642,47 @@ class _LastTicketsSection extends StatelessWidget {
     }
     return name[0].toUpperCase();
   }
+
+  // Helper function to check if image URL is valid (primary check)
+  bool _isValidImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) return false;
+    if (imageUrl.toLowerCase() == "null") return false;
+    if (imageUrl.trim().isEmpty) return false;
+    return true;
+  }
+
+  // Helper function to build full URL for technician image from backend-mms
+  // Mobile-user always connects to backend-mms
+  // Backend-mms serves files from /uploads route (files stored in public/WeFixFiles/)
+    String _buildImageUrl(String? imagePath) {
+      if (imagePath == null || imagePath.isEmpty) return "";
+      
+      // If already a full URL (http/https), return as is
+      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+      }
+      
+      // Build base URL from backend-mms
+      // mmsBaseUrl format: https://wefix-backend-mms.ngrok.app/api/v1/
+      String baseUrl = EndPoints.mmsBaseUrl.replaceAll('/api/v1/', '').replaceAll(RegExp(r'/$'), '');
+      
+      // Normalize path - backend-mms now stores images in /WeFixFiles/Images/ to match backend-oms
+      String cleanPath = imagePath.startsWith('/') ? imagePath : '/$imagePath';
+      
+      // If path already starts with /WeFixFiles, use it as is
+      if (cleanPath.startsWith('/WeFixFiles')) {
+        return '$baseUrl$cleanPath';
+      }
+      
+      // For backward compatibility: if path is /uploads/filename, convert to /WeFixFiles/Images/filename
+      if (cleanPath.startsWith('/uploads/')) {
+        String filename = cleanPath.replaceFirst('/uploads/', '');
+        return '$baseUrl/WeFixFiles/Images/$filename';
+      }
+      
+      // If just a filename, assume it's in /WeFixFiles/Images/
+      return '$baseUrl/WeFixFiles/Images/$cleanPath';
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -571,10 +708,18 @@ class _LastTicketsSection extends StatelessWidget {
         const SizedBox(height: 6),
         Expanded(
           child: PageView.builder(
-            itemCount: (ticketModel?.tickets.length ?? 0) > 0 ? ((ticketModel!.tickets.length / 4).ceil()) : 0,
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            itemCount: (widget.ticketModel?.tickets.length ?? 0) > 0 
+                ? ((widget.ticketModel!.tickets.length / 4).ceil()) 
+                : 0,
             itemBuilder: (context, pageIndex) {
               int startIndex = pageIndex * 4;
-              int endIndex = (startIndex + 4).clamp(0, ticketModel?.tickets.length ?? 0);
+              int endIndex = (startIndex + 4).clamp(0, widget.ticketModel?.tickets.length ?? 0);
               
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -592,7 +737,7 @@ class _LastTicketsSection extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => TicketDetailsScreen(
-                            id: ticketModel?.tickets[ticketIndex].id.toString() ?? "",
+                            id: widget.ticketModel?.tickets[ticketIndex].id.toString() ?? "",
                           ),
                         ),
                       );
@@ -613,19 +758,19 @@ class _LastTicketsSection extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                               decoration: BoxDecoration(
-                                color: ticketModel?.tickets[ticketIndex].status == "Pending"
+                                color: widget.ticketModel?.tickets[ticketIndex].status == "Pending"
                                     ? AppColors(context).primaryColor.withOpacity(.2)
-                                    : ticketModel?.tickets[ticketIndex].status == "Cancelled"
+                                    : widget.ticketModel?.tickets[ticketIndex].status == "Cancelled"
                                         ? Colors.red.withOpacity(.2)
                                         : Colors.green.withOpacity(.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                ticketModel?.tickets[ticketIndex].status ?? "",
+                                widget.ticketModel?.tickets[ticketIndex].status ?? "",
                                 style: TextStyle(
-                                    color: ticketModel?.tickets[ticketIndex].status == "Pending"
+                                    color: widget.ticketModel?.tickets[ticketIndex].status == "Pending"
                                         ? AppColors(context).primaryColor
-                                        : ticketModel?.tickets[ticketIndex].status == "Cancelled"
+                                        : widget.ticketModel?.tickets[ticketIndex].status == "Cancelled"
                                             ? Colors.red
                                             : Colors.green,
                                     fontWeight: FontWeight.w500,
@@ -633,22 +778,43 @@ class _LastTicketsSection extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            // Technician image or initials
-                            ticketModel?.tickets[ticketIndex].serviceprovideImage != null && 
-                            ticketModel?.tickets[ticketIndex].serviceprovideImage!.isNotEmpty == true
+                            // Technician image (primary) or initials (fallback)
+                            _isValidImage(widget.ticketModel?.tickets[ticketIndex].serviceprovideImage)
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(22),
-                                    child: WidgetCachNetworkImage(
-                                      image: ticketModel?.tickets[ticketIndex].serviceprovideImage ?? "",
+                                    child: CachedNetworkImage(
+                                      imageUrl: _buildImageUrl(widget.ticketModel?.tickets[ticketIndex].serviceprovideImage),
                                       width: 36,
                                       height: 36,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => CircleAvatar(
+                                        radius: 18,
+                                        backgroundColor: Colors.orange.shade100,
+                                        child: const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => CircleAvatar(
+                                        radius: 18,
+                                        backgroundColor: Colors.orange.shade100,
+                                        child: Text(
+                                          _getInitials(widget.ticketModel?.tickets[ticketIndex].serviceprovide ?? ""),
+                                          style: TextStyle(
+                                            color: Colors.orange.shade700,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   )
                                 : CircleAvatar(
                                     radius: 18,
                                     backgroundColor: Colors.orange.shade100,
                                     child: Text(
-                                      _getInitials(ticketModel?.tickets[ticketIndex].serviceprovide ?? ""),
+                                      _getInitials(widget.ticketModel?.tickets[ticketIndex].serviceprovide ?? ""),
                                       style: TextStyle(
                                         color: Colors.orange.shade700,
                                         fontWeight: FontWeight.bold,
@@ -664,26 +830,26 @@ class _LastTicketsSection extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    "#${ticketModel?.tickets[ticketIndex].id}",
+                                    "#${widget.ticketModel?.tickets[ticketIndex].id}",
                                     style: TextStyle(fontSize: 13, color: AppColors(context).primaryColor),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                      ticketModel?.tickets[ticketIndex].description == null
+                                      widget.ticketModel?.tickets[ticketIndex].description == null
                                           ? AppLocalizations.of(context)!.preventivevisits
-                                          : ticketModel?.tickets[ticketIndex].description ?? "",
+                                          : widget.ticketModel?.tickets[ticketIndex].description ?? "",
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                                   const SizedBox(height: 4),
                                   Text(
                                       DateFormat('MMM d, yyyy').format(
-                                          ticketModel?.tickets[ticketIndex].selectedDate ?? DateTime.now()),
+                                          widget.ticketModel?.tickets[ticketIndex].selectedDate ?? DateTime.now()),
                                       style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                  if (ticketModel?.tickets[ticketIndex].serviceprovide != null) ...[
+                                  if (widget.ticketModel?.tickets[ticketIndex].serviceprovide != null) ...[
                                     const SizedBox(height: 3),
                                     Text(
-                                      ticketModel?.tickets[ticketIndex].serviceprovide ?? "",
+                                      widget.ticketModel?.tickets[ticketIndex].serviceprovide ?? "",
                                       style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500),
                                     ),
                                   ],
@@ -700,6 +866,38 @@ class _LastTicketsSection extends StatelessWidget {
               );
             },
           ),
+        ),
+        // Pagination dots indicator
+        Builder(
+          builder: (context) {
+            final totalPages = (widget.ticketModel?.tickets.length ?? 0) > 0 
+                ? ((widget.ticketModel!.tickets.length / 4).ceil()) 
+                : 0;
+            if (totalPages <= 1) return const SizedBox.shrink();
+            
+            return Column(
+              children: [
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    totalPages,
+                    (index) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: _currentPage == index ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: _currentPage == index
+                            ? AppColors(context).primaryColor
+                            : AppColors(context).primaryColor.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );

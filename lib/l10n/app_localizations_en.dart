@@ -800,6 +800,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get takeaPictureFromCamera => 'Take a Picture From Camera';
 
   @override
+  String get errorTitle => 'Error';
+
+  @override
+  String get failedToUpdateProfile =>
+      'Failed to update profile. Please try again.';
+
+  @override
+  String get errorOccurredWhileUpdatingProfile =>
+      'An error occurred while updating your profile.';
+
+  @override
   String get currentPassword => 'Current Password';
 
   @override
@@ -881,6 +892,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addBranch => 'Add Branch';
+
+  @override
+  String get branches => 'Branches';
 
   @override
   String get addEmployee => 'Add Employee';
