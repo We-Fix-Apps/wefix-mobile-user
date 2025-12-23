@@ -768,25 +768,38 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     // Remove /api/v1/ to get base URL
     String baseUrl = EndPoints.mmsBaseUrl.replaceAll('/api/v1/', '').replaceAll(RegExp(r'/$'), '');
     
-    // If path already starts with /uploads, use it directly
-    if (filePath.startsWith('/uploads')) {
+    // If path already starts with /WeFixFiles, use it directly (correct path for ticket attachments)
+    if (filePath.startsWith('/WeFixFiles')) {
       return '$baseUrl$filePath';
     }
     
-    // If path starts with uploads (without leading slash), add it
-    if (filePath.startsWith('uploads')) {
+    // If path starts with WeFixFiles (without leading slash), add it
+    if (filePath.startsWith('WeFixFiles')) {
       return '$baseUrl/$filePath';
     }
     
-    // If path contains 'app/uploads', extract just the filename and use /uploads
-    if (filePath.contains('app/uploads') || filePath.contains('/uploads/')) {
-      final filename = filePath.split('/').last;
-      return '$baseUrl/uploads/$filename';
+    // Legacy support: If path already starts with /uploads, convert to WeFixFiles
+    if (filePath.startsWith('/uploads')) {
+      // Extract filename and assume it's in WeFixFiles/Contracts/ (legacy location)
+      final filename = filePath.replaceFirst('/uploads/', '');
+      return '$baseUrl/WeFixFiles/Contracts/$filename';
     }
     
-    // Otherwise, assume it's a filename and add /uploads prefix
+    // Legacy support: If path starts with uploads (without leading slash)
+    if (filePath.startsWith('uploads')) {
+      final filename = filePath.replaceFirst('uploads/', '');
+      return '$baseUrl/WeFixFiles/Contracts/$filename';
+    }
+    
+    // Legacy support: If path contains 'app/uploads', extract just the filename
+    if (filePath.contains('app/uploads') || filePath.contains('/uploads/')) {
+      final filename = filePath.split('/').last;
+      return '$baseUrl/WeFixFiles/Contracts/$filename';
+    }
+    
+    // Otherwise, assume it's a filename and use WeFixFiles/Contracts/ (legacy location)
     final filename = filePath.split('/').last;
-    return '$baseUrl/uploads/$filename';
+    return '$baseUrl/WeFixFiles/Contracts/$filename';
   }
 
   Future<void> _shareAllAttachments(List<dynamic> attachments) async {
