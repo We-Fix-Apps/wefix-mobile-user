@@ -641,7 +641,7 @@ abstract class AppLocalizations {
   /// No description provided for @emailAddress.
   ///
   /// In en, this message translates to:
-  /// **'Email address'**
+  /// **'Email Address'**
   String get emailAddress;
 
   /// No description provided for @password.
@@ -2065,6 +2065,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'minutes'**
   String get minutes;
+
+  /// No description provided for @branchDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch Details'**
+  String get branchDetails;
+
+  /// No description provided for @noBranchesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No branches found'**
+  String get noBranchesFound;
+
+  /// No description provided for @branchInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch Information'**
+  String get branchInformation;
+
+  /// No description provided for @branchNameEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch Name (English)'**
+  String get branchNameEnglish;
+
+  /// No description provided for @branchNameArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch Name (Arabic)'**
+  String get branchNameArabic;
+
+  /// No description provided for @location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get location;
+
+  /// No description provided for @loadingAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading address...'**
+  String get loadingAddress;
+
+  /// No description provided for @locationOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Location on Map'**
+  String get locationOnMap;
+
+  /// No description provided for @openInMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Maps'**
+  String get openInMaps;
+
+  /// No description provided for @teamLeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Team Leader'**
+  String get teamLeader;
+
+  /// No description provided for @teamLeaderName.
+  ///
+  /// In en, this message translates to:
+  /// **'Team Leader Name'**
+  String get teamLeaderName;
+
+  /// No description provided for @teamLeaderNameArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Team Leader Name (Arabic)'**
+  String get teamLeaderNameArabic;
+
+  /// No description provided for @code.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get code;
+
+  /// No description provided for @companyInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Information'**
+  String get companyInformation;
+
+  /// No description provided for @companyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Name'**
+  String get companyName;
+
+  /// No description provided for @companyNameArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Name (Arabic)'**
+  String get companyNameArabic;
+
+  /// No description provided for @companyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get companyTitle;
+
+  /// No description provided for @headOfficeAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Head Office Address'**
+  String get headOfficeAddress;
+
+  /// No description provided for @internalId.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal ID'**
+  String get internalId;
+
+  /// No description provided for @companyId.
+  ///
+  /// In en, this message translates to:
+  /// **'Company ID'**
+  String get companyId;
+
+  /// No description provided for @representativeInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Representative Information'**
+  String get representativeInformation;
+
+  /// No description provided for @representativeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Representative Name'**
+  String get representativeName;
+
+  /// No description provided for @representativeMobileNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Representative Mobile Number'**
+  String get representativeMobileNumber;
+
+  /// No description provided for @coordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates'**
+  String get coordinates;
+
+  /// No description provided for @branchName.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch Name'**
+  String get branchName;
+
+  /// No description provided for @branchNameAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch Name (Arabic)'**
+  String get branchNameAr;
+
+  /// No description provided for @branchAddedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch added successfully'**
+  String get branchAddedSuccessfully;
+
+  /// No description provided for @failedToAddBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add branch. Please try again'**
+  String get failedToAddBranch;
+
+  /// No description provided for @locationCoordinatesNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location coordinates not available. Showing default location.'**
+  String get locationCoordinatesNotAvailable;
+
+  /// No description provided for @na.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get na;
 }
 
 class _AppLocalizationsDelegate

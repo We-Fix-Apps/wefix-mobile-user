@@ -146,6 +146,7 @@ class Ticket {
         "ticketCodeId": ticketCodeId,
         "teamNo": teamNo,
         "isRated": isRated,
+        "cancelButton": cancelButton,
         "status": status,
         "statusAr": statusAr,
         "location": location,

@@ -280,7 +280,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Join the most comprehensive marketplace for automotive part & accessories';
 
   @override
-  String get emailAddress => 'Email address';
+  String get emailAddress => 'Email Address';
 
   @override
   String get password => 'Password';
@@ -1015,4 +1015,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get minutes => 'minutes';
+
+  @override
+  String get branchDetails => 'Branch Details';
+
+  @override
+  String get noBranchesFound => 'No branches found';
+
+  @override
+  String get branchInformation => 'Branch Information';
+
+  @override
+  String get branchNameEnglish => 'Branch Name (English)';
+
+  @override
+  String get branchNameArabic => 'Branch Name (Arabic)';
+
+  @override
+  String get location => 'Location';
+
+  @override
+  String get loadingAddress => 'Loading address...';
+
+  @override
+  String get locationOnMap => 'Location on Map';
+
+  @override
+  String get openInMaps => 'Open in Maps';
+
+  @override
+  String get teamLeader => 'Team Leader';
+
+  @override
+  String get teamLeaderName => 'Team Leader Name';
+
+  @override
+  String get teamLeaderNameArabic => 'Team Leader Name (Arabic)';
+
+  @override
+  String get code => 'Code';
+
+  @override
+  String get companyInformation => 'Company Information';
+
+  @override
+  String get companyName => 'Company Name';
+
+  @override
+  String get companyNameArabic => 'Company Name (Arabic)';
+
+  @override
+  String get companyTitle => 'Title';
+
+  @override
+  String get headOfficeAddress => 'Head Office Address';
+
+  @override
+  String get internalId => 'Internal ID';
+
+  @override
+  String get companyId => 'Company ID';
+
+  @override
+  String get representativeInformation => 'Representative Information';
+
+  @override
+  String get representativeName => 'Representative Name';
+
+  @override
+  String get representativeMobileNumber => 'Representative Mobile Number';
+
+  @override
+  String get coordinates => 'Coordinates';
+
+  @override
+  String get branchName => 'Branch Name';
+
+  @override
+  String get branchNameAr => 'Branch Name (Arabic)';
+
+  @override
+  String get branchAddedSuccessfully => 'Branch added successfully';
+
+  @override
+  String get failedToAddBranch => 'Failed to add branch. Please try again';
+
+  @override
+  String get locationCoordinatesNotAvailable =>
+      'Location coordinates not available. Showing default location.';
+
+  @override
+  String get na => 'N/A';
 }

@@ -35,7 +35,7 @@ android {
         // Ensure it's at least 23 for firebase_auth
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 20
+        versionCode = 21
         versionName = flutter.versionName
     }
 

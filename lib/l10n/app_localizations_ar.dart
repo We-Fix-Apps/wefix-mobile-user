@@ -1012,4 +1012,95 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get minutes => 'دقائق';
+
+  @override
+  String get branchDetails => 'تفاصيل الفرع';
+
+  @override
+  String get noBranchesFound => 'لا توجد فروع';
+
+  @override
+  String get branchInformation => 'معلومات الفرع';
+
+  @override
+  String get branchNameEnglish => 'اسم الفرع (الإنجليزية)';
+
+  @override
+  String get branchNameArabic => 'اسم الفرع (العربية)';
+
+  @override
+  String get location => 'الموقع';
+
+  @override
+  String get loadingAddress => 'جاري تحميل العنوان...';
+
+  @override
+  String get locationOnMap => 'الموقع على الخريطة';
+
+  @override
+  String get openInMaps => 'فتح في الخرائط';
+
+  @override
+  String get teamLeader => 'قائد الفريق';
+
+  @override
+  String get teamLeaderName => 'اسم قائد الفريق';
+
+  @override
+  String get teamLeaderNameArabic => 'اسم قائد الفريق (العربية)';
+
+  @override
+  String get code => 'رمز';
+
+  @override
+  String get companyInformation => 'معلومات الشركة';
+
+  @override
+  String get companyName => 'اسم الشركة';
+
+  @override
+  String get companyNameArabic => 'اسم الشركة (العربية)';
+
+  @override
+  String get companyTitle => 'العنوان';
+
+  @override
+  String get headOfficeAddress => 'عنوان المكتب الرئيسي';
+
+  @override
+  String get internalId => 'الرقم الداخلي';
+
+  @override
+  String get companyId => 'رقم الشركة';
+
+  @override
+  String get representativeInformation => 'معلومات الممثل';
+
+  @override
+  String get representativeName => 'اسم الممثل';
+
+  @override
+  String get representativeMobileNumber => 'رقم هاتف الممثل';
+
+  @override
+  String get coordinates => 'الإحداثيات';
+
+  @override
+  String get branchName => 'اسم الفرع';
+
+  @override
+  String get branchNameAr => 'اسم الفرع (العربية)';
+
+  @override
+  String get branchAddedSuccessfully => 'تم إضافة الفرع بنجاح';
+
+  @override
+  String get failedToAddBranch => 'فشل إضافة الفرع. يرجى المحاولة مرة أخرى';
+
+  @override
+  String get locationCoordinatesNotAvailable =>
+      'إحداثيات الموقع غير متوفرة. عرض الموقع الافتراضي.';
+
+  @override
+  String get na => 'غير متوفر';
 }
