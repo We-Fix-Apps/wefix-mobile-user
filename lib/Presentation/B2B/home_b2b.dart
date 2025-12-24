@@ -29,16 +29,40 @@ class B2BHome extends StatefulWidget {
   State<B2BHome> createState() => _B2BHomeState();
 }
 
-class _B2BHomeState extends State<B2BHome> {
+class _B2BHomeState extends State<B2BHome> with SingleTickerProviderStateMixin {
   bool? loading = false;
   TicketModel? ticketModel;
   Map<String, dynamic>? ticketStatistics;
+  late AnimationController _loadingAnimationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
+    super.initState();
+    
+    // Initialize loading animation controller
+    _loadingAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    
+    // Create fade animation
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _loadingAnimationController,
+      curve: Curves.easeIn,
+    ));
+    
     getCompanyTickets();
     getTicketStatistics();
-    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _loadingAnimationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,36 +74,38 @@ class _B2BHomeState extends State<B2BHome> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            bottom:  bottomNavBarHeight + safeAreaBottom, // Extra padding for bottom nav
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _HeaderSection(),
-              const SizedBox(height: 6),
-              _TicketSummarySection(
-                subsicripeModel: widget.subsicripeModel,
-                ticketStatistics: ticketStatistics,
-              ),
-              const SizedBox(height: 8),
-              loading == true
-                  ? const SizedBox(
-                      height: 4,
-                      child: LinearProgressIndicator(
-                        backgroundColor: AppColors.secoundryColor,
-                        color: Colors.orange,
-                      ),
-                    )
-                  : Expanded(
+        child: loading == true
+            ? FadeTransition(
+                opacity: _fadeAnimation,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors(context).primaryColor,
+                  ),
+                ),
+              )
+            : Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  bottom:  bottomNavBarHeight + safeAreaBottom, // Extra padding for bottom nav
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    const _HeaderSection(),
+                    const SizedBox(height: 4),
+                    _TicketSummarySection(
+                      subsicripeModel: widget.subsicripeModel,
+                      ticketStatistics: ticketStatistics,
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
                       child: _LastTicketsSection(
                         ticketModel: ticketModel,
                       ),
                     ),
-              const SizedBox(height: 16),
+                    const SizedBox(height: 12),
               // Hide "Add Ticket" button for Technicians and restricted roles
               // Only Admin (18), Team Leader (20), and Super User (26) can create tickets
               Builder(
@@ -128,9 +154,9 @@ class _B2BHomeState extends State<B2BHome> {
                   );
                 },
               ),
-            ],
-          ),
-        ),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -140,6 +166,9 @@ class _B2BHomeState extends State<B2BHome> {
     setState(() {
       loading = true;
     });
+    // Reset and start loading animation
+    _loadingAnimationController.reset();
+    _loadingAnimationController.forward();
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
       // Use accessToken for MMS APIs, not userModel.token
@@ -174,6 +203,7 @@ class _B2BHomeState extends State<B2BHome> {
             rating: null,
             icon: ticket['mainService']?['image'] ?? ticket['mainService']?['icon'] ?? null, // Main service image
             mainServiceTitle: ticket['mainService']?['name'] ?? ticket['mainService']?['title'] ?? null,
+            ticketCodeId: ticket['ticketCodeId']?.toString() ?? null,
             cancelButton: null,
             isRated: null,
             type: ticket['ticketType']?['name'],
@@ -206,18 +236,24 @@ class _B2BHomeState extends State<B2BHome> {
           ticketModel = TicketModel(tickets: tickets);
           loading = false;
         });
+        // Reverse loading animation
+        _loadingAnimationController.reverse();
       } else {
         if (!mounted) return;
         setState(() {
           ticketModel = TicketModel(tickets: []);
           loading = false;
         });
+        // Reverse loading animation
+        _loadingAnimationController.reverse();
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         loading = false;
       });
+      // Reverse loading animation
+      _loadingAnimationController.reverse();
     }
   }
 
@@ -471,11 +507,7 @@ class _TicketSummarySectionState extends State<_TicketSummarySection> {
 
     return Column(
       children: [
-        _CorrectiveTicketCard(
-          used: correctiveCompleted,
-          total: correctiveTotal,
-        ),
-        const SizedBox(height: 8),
+                const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: _SmallTicketCard(
@@ -484,6 +516,11 @@ class _TicketSummarySectionState extends State<_TicketSummarySection> {
             used: emergencyCompleted,
             total: emergencyTotal,
           ),
+        ),
+        const SizedBox(height: 12),
+        _CorrectiveTicketCard(
+          used: correctiveCompleted,
+          total: correctiveTotal,
         ),
       ],
     );
@@ -504,7 +541,7 @@ class _CorrectiveTicketCardState extends State<_CorrectiveTicketCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 90,
+      height: 75,
       decoration: BoxDecoration(
         image: const DecorationImage(
           image: AssetImage('assets/icon/image copy.png'),
@@ -512,13 +549,13 @@ class _CorrectiveTicketCardState extends State<_CorrectiveTicketCard> {
         ),
         borderRadius: BorderRadius.circular(16),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             AppLocalizations.of(context)!.correctiveTickets,
-            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
           ),
           const Spacer(),
           Row(
@@ -545,7 +582,7 @@ class _CorrectiveTicketCardState extends State<_CorrectiveTicketCard> {
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 16,
                 ),
               )
             ],
@@ -573,7 +610,7 @@ class _SmallTicketCardState extends State<_SmallTicketCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 90,
+      height: 75,
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage(widget.imagePath),
@@ -581,13 +618,13 @@ class _SmallTicketCardState extends State<_SmallTicketCard> {
         ),
         borderRadius: BorderRadius.circular(32),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             widget.title,
-            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
           ),
           const Spacer(),
           Row(
@@ -614,7 +651,7 @@ class _SmallTicketCardState extends State<_SmallTicketCard> {
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  fontSize: 16,
                 ),
               )
             ],
@@ -704,7 +741,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
       children: [
         Row(
           children: [
@@ -749,7 +786,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         Expanded(
           child: PageView.builder(
             controller: _pageController,
@@ -770,7 +807,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                 child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.only(bottom: 4),
                   itemCount: endIndex - startIndex,
                 itemBuilder: (context, index) {
                   int ticketIndex = startIndex + index;
@@ -787,7 +824,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                       );
                     },
                     child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
+                      margin: const EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -800,66 +837,75 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                         ],
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Avatar on the left
-                            Column(
-                              children: [
-                                _isValidImage(widget.ticketModel?.tickets[ticketIndex].serviceprovideImage)
-                                    ? ClipOval(
-                                        child: CachedNetworkImage(
-                                          imageUrl: _buildImageUrl(widget.ticketModel?.tickets[ticketIndex].serviceprovideImage),
-                                          width: 48,
-                                          height: 48,
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) => CircleAvatar(
-                                            backgroundColor: Colors.orange.shade100,
-                                            radius: 24,
-                                            child: const SizedBox(
-                                              width: 24,
-                                              height: 24,
-                                              child: CircularProgressIndicator(strokeWidth: 2),
+                            // Avatar on the left with fixed width
+                            SizedBox(
+                              width: 100,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  _isValidImage(widget.ticketModel?.tickets[ticketIndex].serviceprovideImage)
+                                      ? ClipOval(
+                                          child: CachedNetworkImage(
+                                            imageUrl: _buildImageUrl(widget.ticketModel?.tickets[ticketIndex].serviceprovideImage),
+                                            width: 44,
+                                            height: 44,
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) => CircleAvatar(
+                                              backgroundColor: Colors.orange.shade100,
+                                              radius: 22,
+                                              child: const SizedBox(
+                                                width: 22,
+                                                height: 22,
+                                                child: CircularProgressIndicator(strokeWidth: 2),
+                                              ),
                                             ),
-                                          ),
-                                          errorWidget: (context, url, error) => CircleAvatar(
-                                            backgroundColor: Colors.orange.shade100,
-                                            radius: 24,
-                                            child: Text(
-                                              _getInitials(widget.ticketModel?.tickets[ticketIndex].serviceprovide ?? ""),
-                                              style: TextStyle(
-                                                color: Colors.orange.shade700,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
+                                            errorWidget: (context, url, error) => CircleAvatar(
+                                              backgroundColor: Colors.orange.shade100,
+                                              radius: 22,
+                                              child: Text(
+                                                _getInitials(widget.ticketModel?.tickets[ticketIndex].serviceprovide ?? ""),
+                                                style: TextStyle(
+                                                  color: Colors.orange.shade700,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      )
-                                    : CircleAvatar(
-                                        backgroundColor: Colors.orange.shade100,
-                                        radius: 24,
-                                        child: Text(
-                                          _getInitials(widget.ticketModel?.tickets[ticketIndex].serviceprovide ?? ""),
-                                          style: TextStyle(
-                                            color: Colors.orange.shade700,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                        )
+                                      : CircleAvatar(
+                                          backgroundColor: Colors.orange.shade100,
+                                          radius: 22,
+                                          child: Text(
+                                            _getInitials(widget.ticketModel?.tickets[ticketIndex].serviceprovide ?? ""),
+                                            style: TextStyle(
+                                              color: Colors.orange.shade700,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                const SizedBox(height: 6),
-                                // Ticket ID below avatar
-                                Text(
-                                  "#${widget.ticketModel?.tickets[ticketIndex].id}",
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors(context).primaryColor,
+                                  const SizedBox(height: 5),
+                                  // Ticket Code below avatar with text wrapping
+                                  Text(
+                                    widget.ticketModel?.tickets[ticketIndex].ticketCodeId != null
+                                        ? widget.ticketModel!.tickets[ticketIndex].ticketCodeId!
+                                        : "#${widget.ticketModel?.tickets[ticketIndex].id}",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors(context).primaryColor,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                             const SizedBox(width: 12),
                             // Ticket details (Title, Date, Assignee)
@@ -877,12 +923,12 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                             : AppLocalizations.of(context)!.preventivevisits,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 15,
-                                    ),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
                                   ),
-                                  const SizedBox(height: 6),
+                                ),
+                                const SizedBox(height: 4),
                                   // Date
                                   Builder(
                                     builder: (context) {
@@ -940,7 +986,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                       return Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const SizedBox(height: 4),
+                                          const SizedBox(height: 3),
                                           Text(
                                             timeText,
                                             style: const TextStyle(
@@ -953,7 +999,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                     },
                                   ),
                                   if (widget.ticketModel?.tickets[ticketIndex].serviceprovide != null) ...[
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 3),
                                     // Assignee/Technician name
                                     Text(
                                       widget.ticketModel!.tickets[ticketIndex].serviceprovide!,
@@ -975,8 +1021,8 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                               children: [
                                 // Main Service Icon (always show, with default if icon is missing)
                                 Container(
-                                  width: 40,
-                                  height: 40,
+                                  width: 36,
+                                  height: 36,
                                   decoration: BoxDecoration(
                                     color: Colors.grey.shade100,
                                     borderRadius: BorderRadius.circular(8),
@@ -990,28 +1036,28 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                             placeholder: (context, url) => Icon(
                                               Icons.build,
                                               color: Colors.grey.shade400,
-                                              size: 24,
+                                              size: 20,
                                             ),
                                             errorWidget: (context, url, error) => Icon(
                                               Icons.build,
                                               color: Colors.grey.shade400,
-                                              size: 24,
+                                              size: 20,
                                             ),
                                           ),
                                         )
                                       : Icon(
                                           Icons.build,
                                           color: Colors.grey.shade400,
-                                          size: 24,
+                                          size: 20,
                                         ),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 // Main Service Title
                                 if (widget.ticketModel?.tickets[ticketIndex].mainServiceTitle != null) ...[
                                   Text(
                                     widget.ticketModel!.tickets[ticketIndex].mainServiceTitle!,
                                     style: const TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black87,
                                     ),
@@ -1019,11 +1065,11 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 5),
                                 ],
                                 // Status badge
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                                   decoration: BoxDecoration(
                                     color: widget.ticketModel?.tickets[ticketIndex].status == "Pending"
                                         ? Colors.orange.withOpacity(.15)
@@ -1046,7 +1092,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                                   ? Colors.green.shade700
                                                   : Colors.pink.shade700,
                                       fontWeight: FontWeight.w500,
-                                      fontSize: 12,
+                                      fontSize: 11,
                                     ),
                                   ),
                                 ),
@@ -1073,7 +1119,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
             
             return Column(
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(

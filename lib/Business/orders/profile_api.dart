@@ -2,9 +2,15 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wefix/Business/end_points.dart';
 import 'package:wefix/Data/Api/http_request.dart';
 import 'package:wefix/Data/model/holiday_model.dart';
+import 'package:wefix/main.dart' show navigatorKey;
+import 'package:wefix/Business/AppProvider/app_provider.dart';
+import 'package:wefix/Presentation/auth/login_screen.dart';
+import 'package:wefix/Data/Functions/navigation.dart';
 
 import 'package:wefix/Data/model/profile_model.dart';
 import 'package:wefix/Data/model/realstate_model.dart';
@@ -12,6 +18,23 @@ import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Data/model/time_appointment_model.dart';
 
 class ProfileApis {
+  // Force logout when server is down (502 Bad Gateway)
+  static void _forceLogoutOnServerDown() {
+    try {
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        final appProvider = Provider.of<AppProvider>(context, listen: false);
+        appProvider.clearUser();
+        Navigator.of(context).pushAndRemoveUntil(
+          rightToLeft(const LoginScreen()),
+          (route) => true,
+        );
+        log('Force logout: Server is down (502 Bad Gateway)');
+      }
+    } catch (e) {
+      log('Error during force logout: $e');
+    }
+  }
   static Future getAddress({required String token}) async {
     try {
       final response = await HttpHelper.getData(
@@ -395,8 +418,6 @@ class ProfileApis {
       
       final response = await http.get(url, headers: headers);
 
-      log('getProfileData() [ STATUS ] -> ${response.statusCode} (${useMMS ? "MMS" : "OMS"})');
-
       // Check status code before parsing JSON
       if (response.statusCode == 200) {
         // Check if response body is not empty
@@ -416,6 +437,12 @@ class ProfileApis {
       } else {
         // For non-200 status codes, don't try to parse JSON
         log('getProfileData() [ ERROR ] -> Status ${response.statusCode}, body: ${response.body.isNotEmpty ? response.body.substring(0, response.body.length > 100 ? 100 : response.body.length) : "empty"}');
+        
+        // Force logout if server is down (502 Bad Gateway)
+        if (response.statusCode == 502) {
+          _forceLogoutOnServerDown();
+        }
+        
         return null;
       }
     } catch (e) {

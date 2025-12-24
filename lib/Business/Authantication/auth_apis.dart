@@ -206,8 +206,6 @@ class Authantication {
         },
       );
 
-      log('mmsLogin() [ STATUS ] -> ${response.body}');
-
       final body = json.decode(response.body);
 
       if (response.statusCode == 200 && body['success'] == true) {
