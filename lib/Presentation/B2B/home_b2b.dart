@@ -610,6 +610,30 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
     return name[0].toUpperCase();
   }
 
+  // Helper function to format time from "HH:mm:ss" to "HH:mm"
+  String _formatTime(String? time) {
+    if (time == null || time.isEmpty) return '';
+    // If time is in format "HH:mm:ss", remove seconds
+    if (time.length >= 8 && time.contains(':')) {
+      final parts = time.split(':');
+      if (parts.length >= 2) {
+        return '${parts[0]}:${parts[1]}';
+      }
+    }
+    return time;
+  }
+
+  // Helper function to format datetime range string (e.g., "12:08:00 - 14:08:00" -> "12:08 - 14:08")
+  String _formatDateTimeRange(String dateTimeRange) {
+    if (dateTimeRange.contains(' - ')) {
+      final parts = dateTimeRange.split(' - ');
+      if (parts.length == 2) {
+        return '${_formatTime(parts[0].trim())} - ${_formatTime(parts[1].trim())}';
+      }
+    }
+    return dateTimeRange;
+  }
+
   // Helper function to check if image URL is valid (primary check)
   bool _isValidImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) return false;
@@ -855,7 +879,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                       widget.ticketModel?.tickets[ticketIndex].timeTo != null) ...[
                                     const SizedBox(height: 2),
                                     Text(
-                                      "${widget.ticketModel?.tickets[ticketIndex].timeFrom ?? ''} - ${widget.ticketModel?.tickets[ticketIndex].timeTo ?? ''}",
+                                      "${_formatTime(widget.ticketModel?.tickets[ticketIndex].timeFrom ?? '')} - ${_formatTime(widget.ticketModel?.tickets[ticketIndex].timeTo ?? '')}",
                                       style: const TextStyle(
                                         fontSize: 11,
                                         color: Colors.grey,
@@ -865,7 +889,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                     if (widget.ticketModel?.tickets[ticketIndex].selectedDateTime != null) ...[
                                       const SizedBox(height: 2),
                                       Text(
-                                        widget.ticketModel!.tickets[ticketIndex].selectedDateTime!,
+                                        _formatDateTimeRange(widget.ticketModel!.tickets[ticketIndex].selectedDateTime!),
                                         style: const TextStyle(
                                           fontSize: 11,
                                           color: Colors.grey,
