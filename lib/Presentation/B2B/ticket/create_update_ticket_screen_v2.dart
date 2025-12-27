@@ -1437,11 +1437,32 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                           localizations.basicInfo,
                           textAlign: TextAlign.center,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 11),
+                          style: const TextStyle(fontSize: 11,
+                            fontWeight: FontWeight.bold),
                         ),
                       ),
-                      Tab(text: localizations.serviceDetails),
-                      Tab(text: localizations.ticketSummary),
+                      Tab(
+                        child: Text(
+                          localizations.serviceDetails,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Tab(
+                        child: Text(
+                          localizations.ticketSummary,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

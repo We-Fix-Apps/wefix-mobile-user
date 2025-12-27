@@ -1109,4 +1109,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get na => 'N/A';
+
+  @override
+  String get technicianNotAllowed =>
+      'Technicians are not allowed to login to this system.';
+
+  @override
+  String get subTechnicianNotAllowed =>
+      'Sub-Technicians are not allowed to login to this system.';
 }

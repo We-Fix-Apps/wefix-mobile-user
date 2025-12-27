@@ -2251,6 +2251,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'N/A'**
   String get na;
+
+  /// No description provided for @technicianNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Technicians are not allowed to login to this system.'**
+  String get technicianNotAllowed;
+
+  /// No description provided for @subTechnicianNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-Technicians are not allowed to login to this system.'**
+  String get subTechnicianNotAllowed;
 }
 
 class _AppLocalizationsDelegate

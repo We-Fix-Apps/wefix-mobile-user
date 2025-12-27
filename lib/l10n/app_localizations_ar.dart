@@ -1106,4 +1106,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get na => 'غير متوفر';
+
+  @override
+  String get technicianNotAllowed =>
+      'الفنيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام.';
+
+  @override
+  String get subTechnicianNotAllowed =>
+      'الفنيون الفرعيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام.';
 }

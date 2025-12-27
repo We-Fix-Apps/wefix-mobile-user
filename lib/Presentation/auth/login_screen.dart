@@ -627,6 +627,31 @@ class _LoginScreenState extends State<LoginScreen> {
         // Use userRoleId from MMS response (from COMPANY_ROLE lookup table)
         // This can be: 18 (Admin), 20 (Team Leader), 21 (Technician), 22 (Sub-Technician)
         final userRoleId = mmsUser.user!.userRoleId;
+        
+        // Prevent technicians and sub-technicians from logging in
+        if (userRoleId == 21 || userRoleId == 22) {
+          setState(() {
+            loading = false;
+          });
+          if (mounted) {
+            final localizations = AppLocalizations.of(context)!;
+            String errorMessage;
+            if (userRoleId == 21) {
+              errorMessage = localizations.technicianNotAllowed;
+            } else {
+              errorMessage = localizations.subTechnicianNotAllowed;
+            }
+            showDialog(
+              context: context,
+              builder: (context) => WidgetDialog(
+                title: AppText(context, isFunction: true).warning,
+                desc: errorMessage,
+                isError: true,
+              ),
+            );
+          }
+          return;
+        }
         final userModel = UserModel(
           status: true,
           token: mmsUser.token?.accessToken ?? '',

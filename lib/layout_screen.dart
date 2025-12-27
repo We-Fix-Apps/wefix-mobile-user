@@ -58,11 +58,31 @@ class _HomeLayoutState extends State<HomeLayout> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if user is a B2B account (Admin 18, Team Leader 20, or Super User 26)
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    
+    final isB2bAccount = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 26);
+    
+    // Use b2b_icon.svg for B2B accounts, otherwise use a different icon
+    final String centerIconPath = isB2bAccount 
+        ? "assets/icon/b2b_icon.svg" 
+        : "assets/icon/smile.svg";
+    
     List<TabItem> items = [
       TabItem(
           activeIcon: SvgPicture.asset(
             "assets/icon/home.svg",
-            color: AppColors(context).primaryColor,
+            color: AppColors.greyColor2,
             height: 20,
           ),
           icon: SvgPicture.asset(
@@ -74,7 +94,7 @@ class _HomeLayoutState extends State<HomeLayout> {
       TabItem(
           activeIcon: SvgPicture.asset(
             "assets/icon/booking.svg",
-            color: AppColors(context).primaryColor,
+            color: AppColors.greyColor2,
             height: 20,
           ),
           icon: SvgPicture.asset(
@@ -85,12 +105,12 @@ class _HomeLayoutState extends State<HomeLayout> {
           title: AppText(context).bookings),
       TabItem(
           activeIcon: SvgPicture.asset(
-            "assets/icon/smile.svg",
+            centerIconPath,
             color: AppColors.whiteColor1,
             height: 20,
           ),
           icon: SvgPicture.asset(
-            "assets/icon/smile.svg",
+            centerIconPath,
             color: AppColors.whiteColor1,
             height: 20,
           ),
@@ -144,7 +164,7 @@ class _HomeLayoutState extends State<HomeLayout> {
           curve: Curves.linearToEaseOut,
           cornerRadius: 20,
           controller: tabController,
-          initialActiveIndex: widget.index ?? 0,
+          initialActiveIndex: widget.index ?? 2,
           items: items,
           onTap: (int i) => changeBottomIndex(i),
         ),

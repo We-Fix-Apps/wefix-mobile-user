@@ -370,5 +370,9 @@
     "branchAddedSuccessfully": "تم إضافة الفرع بنجاح",
     "failedToAddBranch": "فشل إضافة الفرع. يرجى المحاولة مرة أخرى",
     "locationCoordinatesNotAvailable": "إحداثيات الموقع غير متوفرة. عرض الموقع الافتراضي.",
-    "na": "غير متوفر"
+    "na": "غير متوفر",
+    "technicianNotAllowed": "الفنيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام.",
+    "subTechnicianNotAllowed": "الفنيون الفرعيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام.",
+    "technicianNotAllowed": "الفنيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام.",
+    "subTechnicianNotAllowed": "الفنيون الفرعيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام."
 }
