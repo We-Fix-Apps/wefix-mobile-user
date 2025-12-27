@@ -1770,14 +1770,62 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           ),
           const SizedBox(height: 16),
 
-          // 4. Date and Time on the same line
+          // 5. Date and Time on the same line
           Container(
             key: _dateKey,
             child: _buildDateAndTimeRow(localizations),
           ),
           const SizedBox(height: 16),
 
-          // 5. Contract Reference Dropdown
+          // 5. Team Leader Dropdown (hidden for Team Leaders, visible for Admins)
+          if (isTeamLeaderVisible) ...[
+            Container(
+              key: _teamLeaderKey,
+              child: _buildDropdownCard(
+                title: '${localizations.teamLeaderId} *',
+                selectedItem: selectedTeamLeader,
+                items: teamLeaders,
+                onTap: () => _showDropdownBottomSheet(
+                  title: localizations.teamLeaderId,
+                  items: teamLeaders,
+                  selectedItem: selectedTeamLeader,
+                  onSelected: (item) {
+                    setState(() {
+                      selectedTeamLeader = item;
+                      fieldErrors.remove('teamLeader');
+                    });
+                  },
+                ),
+                errorMessage: fieldErrors['teamLeader'],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // 6. Technician Dropdown
+          Container(
+            key: _technicianKey,
+            child: _buildDropdownCard(
+              title: '${localizations.technicianId} *',
+              selectedItem: selectedTechnician,
+              items: technicians,
+              onTap: () => _showDropdownBottomSheet(
+                title: localizations.technicianId,
+                items: technicians,
+                selectedItem: selectedTechnician,
+                onSelected: (item) {
+                  setState(() {
+                    selectedTechnician = item;
+                    fieldErrors.remove('technician');
+                  });
+                },
+              ),
+              errorMessage: fieldErrors['technician'],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // 7. Contract Reference Dropdown
           Container(
             key: _contractKey,
             child: _buildDropdownCard(
@@ -1800,7 +1848,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           ),
           const SizedBox(height: 16),
 
-          // 6. Branch Dropdown
+          // 8. Branch Dropdown
           Container(
             key: _branchKey,
             child: _buildDropdownCard(
@@ -1828,7 +1876,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           ),
           const SizedBox(height: 16),
 
-          // 7. Zone Dropdown
+          // 9. Zone Dropdown
           Container(
             key: _zoneKey,
             child: _buildDropdownCard(
@@ -1864,6 +1912,70 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Service Description (moved to top)
+          Container(
+            key: _serviceDescriptionKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Stack(
+                  children: [
+                    WidgetTextField(
+                      "${localizations.serviceDescription} *",
+                      controller: serviceDescription,
+                      maxLines: 4,
+                      maxLength: 500,
+                      fillColor: AppColors.greyColorback,
+                      haveBorder: false,
+                      radius: 5,
+                      onChanged: (value) {
+                        setState(() {
+                          // Clear error when user starts typing
+                          if (fieldErrors.containsKey('serviceDescription')) {
+                            fieldErrors.remove('serviceDescription');
+                          }
+                        });
+                      },
+                    ),
+                    Positioned(
+                      bottom: 8,
+                      right: isArabic ? null : 12,
+                      left: isArabic ? 12 : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${serviceDescription.text.length} / 500',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (fieldErrors['serviceDescription'] != null) ...[
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Text(
+                      fieldErrors['serviceDescription']!,
+                      style: TextStyle(
+                        color: Colors.red[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // 1. Main Service Dropdown
           Container(
             key: _mainServiceKey,
@@ -1913,55 +2025,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           ),
           const SizedBox(height: 16),
 
-          // 3. Team Leader Dropdown (hidden for Team Leaders, visible for Admins)
-          if (isTeamLeaderVisible) ...[
-            Container(
-              key: _teamLeaderKey,
-              child: _buildDropdownCard(
-                title: '${localizations.teamLeaderId} *',
-                selectedItem: selectedTeamLeader,
-                items: teamLeaders,
-                onTap: () => _showDropdownBottomSheet(
-                  title: localizations.teamLeaderId,
-                  items: teamLeaders,
-                  selectedItem: selectedTeamLeader,
-                  onSelected: (item) {
-                    setState(() {
-                      selectedTeamLeader = item;
-                      fieldErrors.remove('teamLeader');
-                    });
-                  },
-                ),
-                errorMessage: fieldErrors['teamLeader'],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // 4. Technician Dropdown
-          Container(
-            key: _technicianKey,
-            child: _buildDropdownCard(
-              title: '${localizations.technicianId} *',
-              selectedItem: selectedTechnician,
-              items: technicians,
-              onTap: () => _showDropdownBottomSheet(
-                title: localizations.technicianId,
-                items: technicians,
-                selectedItem: selectedTechnician,
-                onSelected: (item) {
-                  setState(() {
-                    selectedTechnician = item;
-                    fieldErrors.remove('technician');
-                  });
-                },
-              ),
-              errorMessage: fieldErrors['technician'],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 5. Attachments
+          // Attachments
           _buildAttachmentsSection(localizations),
         ],
       ),
@@ -1989,37 +2053,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Contract Reference
-          if (selectedContract != null && selectedContract!.title.isNotEmpty) ...[
-            _buildSummaryRow(
-              label: localizations.contractId,
-              value: selectedContract!.title,
-              icon: Icons.description,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Branch
-          if (selectedBranch != null && selectedBranch!.title.isNotEmpty) ...[
-            _buildSummaryRow(
-              label: localizations.branchId,
-              value: selectedBranch!.title,
-              icon: Icons.business,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Zone
-          if (selectedZone != null && selectedZone!.title.isNotEmpty) ...[
-            _buildSummaryRow(
-              label: localizations.zoneId,
-              value: selectedZone!.title,
-              icon: Icons.map,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Ticket Title (only show if filled)
+          // 1. Ticket Title
           if (ticketTitle.text.isNotEmpty) ...[
             _buildSummaryRow(
               label: localizations.ticketTitle,
@@ -2029,7 +2063,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             const SizedBox(height: 16),
           ],
 
-          // Problem Description (only show if filled)
+          // 2. Ticket Description
           if (ticketDescription.text.isNotEmpty) ...[
             _buildSummaryRow(
               label: localizations.problemDescription,
@@ -2038,48 +2072,16 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             ),
             const SizedBox(height: 16),
           ],
-
-          // Date
-          if (selectedTicketDate != null) ...[
+          // 3. Service Description
+          if (_serviceDescriptionText.isNotEmpty) ...[
             _buildSummaryRow(
-              label: localizations.date,
-              value: DateFormat('yyyy-MM-dd').format(selectedTicketDate!),
-              icon: Icons.calendar_today,
+              label: localizations.serviceDescription,
+              value: _serviceDescriptionText,
+              icon: Icons.description,
             ),
             const SizedBox(height: 16),
           ],
-
-          // Time Slot (only if filled)
-          if (selectedTimeFrom != null && selectedTimeTo != null && getTimeSlotDisplay() != '-') ...[
-            _buildSummaryRow(
-              label: '${localizations.timeFrom} - ${localizations.timeTo}',
-              value: getTimeSlotDisplay(),
-              icon: Icons.access_time,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Team Leader
-          if (selectedTeamLeader != null && selectedTeamLeader!.title.isNotEmpty) ...[
-            _buildSummaryRow(
-              label: localizations.teamLeaderId,
-              value: selectedTeamLeader!.title,
-              icon: Icons.person_outline,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Technician
-          if (selectedTechnician != null && selectedTechnician!.title.isNotEmpty) ...[
-            _buildSummaryRow(
-              label: localizations.technicianId,
-              value: selectedTechnician!.title,
-              icon: Icons.engineering,
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Ticket Type
+          // 4. Ticket Type
           if (selectedTicketType != null && selectedTicketType!.title.isNotEmpty) ...[
             _buildSummaryRow(
               label: localizations.ticketType,
@@ -2089,17 +2091,13 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             const SizedBox(height: 16),
           ],
 
-          // Ticket Status (only for editing)
-          if (widget.ticketData != null && selectedTicketStatus != null && selectedTicketStatus!.title.isNotEmpty) ...[
-            _buildSummaryRow(
-              label: localizations.ticketStatus,
-              value: selectedTicketStatus!.title,
-              icon: Icons.info_outline,
-            ),
+          // 5. Date and Time (same line)
+          if (selectedTicketDate != null || (selectedTimeFrom != null && selectedTimeTo != null)) ...[
+            _buildSummaryDateTimeRow(localizations, getTimeSlotDisplay()),
             const SizedBox(height: 16),
           ],
 
-          // Main Service
+          // 6. Main Service
           if (selectedMainService != null && selectedMainService!.title.isNotEmpty) ...[
             _buildSummaryRow(
               label: localizations.mainService,
@@ -2109,7 +2107,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             const SizedBox(height: 16),
           ],
 
-          // Sub Service
+          // 7. Sub Service
           if (selectedSubService != null && selectedSubService!.title.isNotEmpty) ...[
             _buildSummaryRow(
               label: localizations.subService,
@@ -2119,34 +2117,134 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             const SizedBox(height: 16),
           ],
 
-          // Service Description
-          if (_serviceDescriptionText.isNotEmpty) ...[
+
+          // 8. Team Leader
+          if (selectedTeamLeader != null && selectedTeamLeader!.title.isNotEmpty) ...[
             _buildSummaryRow(
-              label: localizations.serviceDescription,
-              value: _serviceDescriptionText,
+              label: localizations.teamLeaderId,
+              value: selectedTeamLeader!.title,
+              icon: Icons.person_outline,
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // 9. Technician
+          if (selectedTechnician != null && selectedTechnician!.title.isNotEmpty) ...[
+            _buildSummaryRow(
+              label: localizations.technicianId,
+              value: selectedTechnician!.title,
+              icon: Icons.engineering,
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // 10. Contract Reference
+          if (selectedContract != null && selectedContract!.title.isNotEmpty) ...[
+            _buildSummaryRow(
+              label: localizations.contractId,
+              value: selectedContract!.title,
               icon: Icons.description,
             ),
             const SizedBox(height: 16),
           ],
 
-          // Location Map (coordinates)
-          if (selectedLocation != null) ...[
+          // 11. Branch
+          if (selectedBranch != null && selectedBranch!.title.isNotEmpty) ...[
             _buildSummaryRow(
-              label: localizations.locationMap,
-              value: '${selectedLocation!.latitude.toStringAsFixed(6)}, ${selectedLocation!.longitude.toStringAsFixed(6)}',
-              icon: Icons.map,
+              label: localizations.branchId,
+              value: selectedBranch!.title,
+              icon: Icons.business,
             ),
             const SizedBox(height: 16),
           ],
 
-          // Attachments count
-          if (uploadedFiles.isNotEmpty) ...[
+          // 12. Zone
+          if (selectedZone != null && selectedZone!.title.isNotEmpty) ...[
             _buildSummaryRow(
-              label: localizations.attachment,
-              value: '${uploadedFiles.length} file(s)',
-              icon: Icons.attach_file,
+              label: localizations.zoneId,
+              value: selectedZone!.title,
+              icon: Icons.map,
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryDateTimeRow(AppLocalizations localizations, String timeDisplay) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.greyColorback,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.calendar_today,
+            color: AppColors(context).primaryColor,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            localizations.date,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            selectedTicketDate != null
+                                ? DateFormat('yyyy-MM-dd').format(selectedTicketDate!)
+                                : '-',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${localizations.timeFrom} - ${localizations.timeTo}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            timeDisplay != '-' ? timeDisplay : '-',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -2672,7 +2770,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                             child: Text(
                               getTimeDisplayText(),
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w500,
                                 color: selectedTimeFrom != null && selectedTimeTo != null ? Colors.black87 : Colors.grey,
                               ),
