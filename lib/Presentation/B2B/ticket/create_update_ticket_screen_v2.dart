@@ -1414,31 +1414,42 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         title: Text(widget.isTechnician ? 'Change Ticket Status' : (widget.ticketData != null ? localizations.editTicket : localizations.createTicket)),
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
         bottom: widget.isTechnician
             ? null // Hide TabBar for Technicians
             : PreferredSize(
-                preferredSize: const Size.fromHeight(48),
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
-                    color: AppColors(context).primaryColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  labelColor: AppColors(context).primaryColor,
-                  unselectedLabelColor: Colors.grey,
-                  tabs: [
-                    Tab(
-                      child: Text(
-                        localizations.basicInfo,
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12),
-                      ),
+                preferredSize: const Size.fromHeight(64),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: AppColors(context).primaryColor.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    Tab(text: localizations.serviceDetails),
-                    Tab(text: localizations.ticketSummary),
-                  ],
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    labelColor: AppColors(context).primaryColor,
+                    unselectedLabelColor: Colors.grey,
+                    tabs: [
+                      Tab(
+                        child: Text(
+                          localizations.basicInfo,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      ),
+                      Tab(text: localizations.serviceDetails),
+                      Tab(text: localizations.ticketSummary),
+                    ],
+                  ),
                 ),
               ),
       ),
