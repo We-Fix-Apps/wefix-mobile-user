@@ -827,11 +827,6 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         fieldErrors['subService'] = '${localizations.subService} ${localizations.required}';
         isValid = false;
       }
-      // Service Description is required
-      if (serviceDescription.text.trim().isEmpty) {
-        fieldErrors['serviceDescription'] = '${localizations.serviceDescription} ${localizations.required}';
-        isValid = false;
-      }
     }
     // Tab 3 (Summary) doesn't need validation - it's read-only
 
@@ -1198,7 +1193,6 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         if (selectedTechnician == null) missingFields.add(localizations.technicianId);
         if (selectedMainService == null) missingFields.add(localizations.mainService);
         if (selectedSubService == null) missingFields.add(localizations.subService);
-        if (serviceDescription.text.trim().isEmpty) missingFields.add(localizations.serviceDescription);
 
         if (missingFields.isNotEmpty) {
           final errorMsg = 'Missing required fields: ${missingFields.join(', ')}';
@@ -1932,7 +1926,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                 Stack(
                   children: [
                     WidgetTextField(
-                      "${localizations.serviceDescription} *",
+                      localizations.serviceDescription,
                       controller: serviceDescription,
                       maxLines: 4,
                       maxLength: 500,
