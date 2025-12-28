@@ -13,6 +13,7 @@ import 'package:wefix/Data/model/ticket_model.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/B2B/tickets_screen.dart';
 import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
+import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/model/profile_model.dart';
 import 'package:wefix/Business/end_points.dart';
@@ -388,6 +389,8 @@ class _HeaderSectionState extends State<_HeaderSection> {
         ),
         const Spacer(),
         Icon(Icons.notifications_none_rounded, color: Colors.grey[600]),
+        const SizedBox(width: 8),
+        const LanguageButton(),
       ],
     );
   }
