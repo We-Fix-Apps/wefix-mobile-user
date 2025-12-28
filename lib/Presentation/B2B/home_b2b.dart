@@ -732,27 +732,29 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
         ),
         const SizedBox(height: 6),
         Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            itemCount: (widget.ticketModel?.tickets.length ?? 0) > 0 
-                ? ((widget.ticketModel!.tickets.length / 3).ceil()) 
-                : 0,
-            itemBuilder: (context, pageIndex) {
-              int startIndex = pageIndex * 3;
-              int endIndex = (startIndex + 3).clamp(0, widget.ticketModel?.tickets.length ?? 0);
-              
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.only(bottom: 8),
-                  itemCount: endIndex - startIndex,
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemCount: (widget.ticketModel?.tickets.length ?? 0) > 0 
+                    ? ((widget.ticketModel!.tickets.length / 3).ceil()) 
+                    : 0,
+                itemBuilder: (context, pageIndex) {
+                  int startIndex = pageIndex * 3;
+                  int endIndex = (startIndex + 3).clamp(0, widget.ticketModel?.tickets.length ?? 0);
+                  
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ListView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: endIndex - startIndex,
                 itemBuilder: (context, index) {
                   int ticketIndex = startIndex + index;
                   
@@ -1038,42 +1040,43 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                   );
                 },
                 ),
-              );
-            },
-          ),
-        ),
-        // Pagination dots indicator
-        Transform.translate(
-          offset: const Offset(0, -12),
-          child: Builder(
-            builder: (context) {
-              final totalPages = (widget.ticketModel?.tickets.length ?? 0) > 0 
-                  ? ((widget.ticketModel!.tickets.length / 3).ceil()) 
-                  : 0;
-              if (totalPages <= 1) return const SizedBox.shrink();
-              
-              return Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      totalPages,
-                      (index) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == index ? 24 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: _currentPage == index
-                              ? AppColors(context).primaryColor
-                              : AppColors(context).primaryColor.withOpacity(0.3),
+                  );
+                },
+              ),
+              // Pagination dots indicator - ملاصق لنهاية Last Tickets دائماً بغض النظر عن الارتفاع
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Builder(
+                  builder: (context) {
+                    final totalPages = (widget.ticketModel?.tickets.length ?? 0) > 0 
+                        ? ((widget.ticketModel!.tickets.length / 3).ceil()) 
+                        : 0;
+                    if (totalPages <= 1) return const SizedBox.shrink();
+                    
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          totalPages,
+                          (index) => Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: _currentPage == index ? 24 : 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              color: _currentPage == index
+                                  ? AppColors(context).primaryColor
+                                  : AppColors(context).primaryColor.withOpacity(0.3),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              );
-            },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ],
