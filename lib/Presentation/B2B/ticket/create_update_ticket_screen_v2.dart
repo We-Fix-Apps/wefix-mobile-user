@@ -780,10 +780,10 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       }
       // Ticket title is required
       if (ticketTitle.text.trim().isEmpty) {
-        fieldErrors['ticketTitle'] = 'Ticket Title Required';
+        fieldErrors['ticketTitle'] = localizations.ticketTitleRequired;
         isValid = false;
       } else if (ticketTitle.text.trim().length > 100) {
-        fieldErrors['ticketTitle'] = 'Ticket Title must not exceed 100 characters';
+        fieldErrors['ticketTitle'] = localizations.ticketTitleMustNotExceed;
         isValid = false;
       }
       // Location map is optional - no validation needed
@@ -803,7 +803,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       } else if (isEmergency && selectedTimeFrom != null && selectedTimeTo != null) {
         // For emergency tickets only: validate time range must be within 120 minutes from current time
         if (!_validateTimeRange(selectedTimeFrom, selectedTimeTo)) {
-          fieldErrors['time'] = 'Time must be from current time to 120 minutes later';
+          fieldErrors['time'] = localizations.timeMustBeFromCurrentTo120Minutes;
           isValid = false;
         }
       }
@@ -1176,7 +1176,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         } else if (ticketTitle.text.trim().length > 100) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Ticket Title must not exceed 100 characters'),
+              content: Text(localizations.ticketTitleMustNotExceed),
               backgroundColor: Colors.red,
             ),
           );
@@ -2713,105 +2713,140 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  InkWell(
-                    onTap: () {
-                      if (selectedTicketDate == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Please select a date first'),
-                            backgroundColor: Colors.orange,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                        return;
-                      }
-                      
-                      if (availableSlots.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('No available time slots for selected date. Please select a different date.'),
-                            backgroundColor: Colors.orange,
-                            duration: const Duration(seconds: 3),
-                          ),
-                        );
-                        return;
-                      }
-
-                      // Convert available time slots to DropdownCardItem list
-                      final items = availableSlots.map((slot) {
-                        final displayText = slot['display']!;
-                        final from = slot['from']!;
-                        final to = slot['to']!;
-
-                        return DropdownCardItem(
-                          id: availableSlots.indexOf(slot),
-                          title: displayText,
-                          icon: Icons.access_time,
-                          data: {'from': from, 'to': to},
-                        );
-                      }).toList();
-
-                      DropdownCardItem? currentSelected;
-                      if (selectedTimeFrom != null && selectedTimeTo != null) {
-                        try {
-                          currentSelected = items.firstWhere(
-                            (item) => item.data!['from'] == selectedTimeFrom && item.data!['to'] == selectedTimeTo,
-                          );
-                        } catch (e) {
-                          currentSelected = items.isNotEmpty ? items.first : null;
-                        }
-                      }
-
-                      DraggableCardBottomSheet.show(
-                        context: context,
-                        title: '${localizations.timeFrom} - ${localizations.timeTo}',
-                        items: items,
-                        selectedItem: currentSelected,
-                        onItemSelected: (item) {
-                          final from = item.data!['from'] as String;
-                          final to = item.data!['to'] as String;
-                          setState(() {
-                            selectedTimeFrom = from;
-                            selectedTimeTo = to;
-                          });
-                        },
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.greyColorback,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            color: AppColors(context).primaryColor,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              getTimeDisplayText(),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: selectedTimeFrom != null && selectedTimeTo != null ? Colors.black87 : Colors.grey,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                  // For Emergency tickets, show fixed 90-120 minutes display
+                  if (isEmergency)
+                    Opacity(
+                      opacity: 0.6,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.greyColorback,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              color: AppColors(context).primaryColor,
+                              size: 20,
                             ),
-                          ),
-                          Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.grey[600],
-                            size: 20,
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                localizations.emergencyResponseTime,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black87,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    InkWell(
+                      onTap: () {
+                        if (selectedTicketDate == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(localizations.pleaseSelectDateFirst),
+                              backgroundColor: Colors.orange,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                          return;
+                        }
+                        
+                        if (availableSlots.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(localizations.noAvailableTimeSlots),
+                              backgroundColor: Colors.orange,
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                          return;
+                        }
+
+                        // Convert available time slots to DropdownCardItem list
+                        final items = availableSlots.map((slot) {
+                          final displayText = slot['display']!;
+                          final from = slot['from']!;
+                          final to = slot['to']!;
+
+                          return DropdownCardItem(
+                            id: availableSlots.indexOf(slot),
+                            title: displayText,
+                            icon: Icons.access_time,
+                            data: {'from': from, 'to': to},
+                          );
+                        }).toList();
+
+                        DropdownCardItem? currentSelected;
+                        if (selectedTimeFrom != null && selectedTimeTo != null) {
+                          try {
+                            currentSelected = items.firstWhere(
+                              (item) => item.data!['from'] == selectedTimeFrom && item.data!['to'] == selectedTimeTo,
+                            );
+                          } catch (e) {
+                            currentSelected = items.isNotEmpty ? items.first : null;
+                          }
+                        }
+
+                        DraggableCardBottomSheet.show(
+                          context: context,
+                          title: '${localizations.timeFrom} - ${localizations.timeTo}',
+                          items: items,
+                          selectedItem: currentSelected,
+                          onItemSelected: (item) {
+                            final from = item.data!['from'] as String;
+                            final to = item.data!['to'] as String;
+                            setState(() {
+                              selectedTimeFrom = from;
+                              selectedTimeTo = to;
+                            });
+                          },
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.greyColorback,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              color: AppColors(context).primaryColor,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                getTimeDisplayText(),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: selectedTimeFrom != null && selectedTimeTo != null ? Colors.black87 : Colors.grey,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.grey[600],
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -2883,7 +2918,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             if (availableSlots.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('No available time slots for selected date. Please select a different date.'),
+                  content: Text(localizations.noAvailableTimeSlots),
                   backgroundColor: Colors.orange,
                   duration: const Duration(seconds: 3),
                 ),

@@ -951,10 +951,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get date => 'التاريخ';
 
   @override
-  String get timeFrom => 'من الوقت';
+  String get timeFrom => 'الوقت من';
 
   @override
-  String get timeTo => 'إلى الوقت';
+  String get timeTo => 'إلى';
 
   @override
   String get selectDate => 'اختر التاريخ';
@@ -1120,4 +1120,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tickets => 'تذاكر';
+
+  @override
+  String get emergencyResponseTime => '90 - 120 دقيقة';
+
+  @override
+  String get ticketTitleRequired => 'عنوان التذكرة مطلوب';
+
+  @override
+  String get ticketTitleMustNotExceed => 'عنوان التذكرة يجب ألا يتجاوز 100 حرف';
+
+  @override
+  String get timeMustBeFromCurrentTo120Minutes =>
+      'الوقت يجب أن يكون من الوقت الحالي إلى 120 دقيقة لاحقاً';
+
+  @override
+  String get pleaseSelectDateFirst => 'الرجاء اختيار التاريخ أولاً';
+
+  @override
+  String get noAvailableTimeSlots =>
+      'لا توجد فترات زمنية متاحة للتاريخ المحدد. الرجاء اختيار تاريخ مختلف.';
 }

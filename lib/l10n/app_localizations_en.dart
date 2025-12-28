@@ -1123,4 +1123,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tickets => 'Tickets';
+
+  @override
+  String get emergencyResponseTime => '90 - 120 minutes';
+
+  @override
+  String get ticketTitleRequired => 'Ticket Title Required';
+
+  @override
+  String get ticketTitleMustNotExceed =>
+      'Ticket Title must not exceed 100 characters';
+
+  @override
+  String get timeMustBeFromCurrentTo120Minutes =>
+      'Time must be from current time to 120 minutes later';
+
+  @override
+  String get pleaseSelectDateFirst => 'Please select a date first';
+
+  @override
+  String get noAvailableTimeSlots =>
+      'No available time slots for selected date. Please select a different date.';
 }

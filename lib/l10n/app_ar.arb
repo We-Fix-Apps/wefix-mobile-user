@@ -313,8 +313,8 @@
     "ticketType": "نوع التذكرة",
     "mainService": "الخدمة الرئيسية",
     "date": "التاريخ",
-    "timeFrom": "من الوقت",
-    "timeTo": "إلى الوقت",
+    "timeFrom": "الوقت من",
+    "timeTo": "إلى",
     "selectDate": "اختر التاريخ",
     "selectTime": "اختر الوقت",
     "contractId": "رقم العقد",
@@ -376,5 +376,11 @@
     "technicianNotAllowed": "الفنيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام.",
     "subTechnicianNotAllowed": "الفنيون الفرعيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام.",
     "bookings": "الحجوزات",
-    "tickets": "تذاكر"
+    "tickets": "تذاكر",
+    "emergencyResponseTime": "90 - 120 دقيقة",
+    "ticketTitleRequired": "عنوان التذكرة مطلوب",
+    "ticketTitleMustNotExceed": "عنوان التذكرة يجب ألا يتجاوز 100 حرف",
+    "timeMustBeFromCurrentTo120Minutes": "الوقت يجب أن يكون من الوقت الحالي إلى 120 دقيقة لاحقاً",
+    "pleaseSelectDateFirst": "الرجاء اختيار التاريخ أولاً",
+    "noAvailableTimeSlots": "لا توجد فترات زمنية متاحة للتاريخ المحدد. الرجاء اختيار تاريخ مختلف."
 }

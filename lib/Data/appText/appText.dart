@@ -19,7 +19,7 @@ class AppText {
   String getTranslation(String key) {
     try {
       final languageList = languageProvider.allLanguage
-          .where((element) => element.key == langCode)
+            .where((element) => element.key == langCode)
           .toList();
       
       if (languageList.isEmpty) return '';

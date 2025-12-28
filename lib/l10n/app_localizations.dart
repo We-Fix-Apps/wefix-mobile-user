@@ -2275,6 +2275,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tickets'**
   String get tickets;
+
+  /// No description provided for @emergencyResponseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'90 - 120 minutes'**
+  String get emergencyResponseTime;
+
+  /// No description provided for @ticketTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket Title Required'**
+  String get ticketTitleRequired;
+
+  /// No description provided for @ticketTitleMustNotExceed.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket Title must not exceed 100 characters'**
+  String get ticketTitleMustNotExceed;
+
+  /// No description provided for @timeMustBeFromCurrentTo120Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Time must be from current time to 120 minutes later'**
+  String get timeMustBeFromCurrentTo120Minutes;
+
+  /// No description provided for @pleaseSelectDateFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a date first'**
+  String get pleaseSelectDateFirst;
+
+  /// No description provided for @noAvailableTimeSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'No available time slots for selected date. Please select a different date.'**
+  String get noAvailableTimeSlots;
 }
 
 class _AppLocalizationsDelegate
