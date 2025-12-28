@@ -16,6 +16,7 @@ import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Business/end_points.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 
 class TicketsScreen extends StatefulWidget {
   @override
@@ -29,7 +30,13 @@ class _TicketsScreenState extends State<TicketsScreen> {
   int currentPage = 1;
   final int limit = 5; // 5 tickets per scroll
   List<Ticket> allTickets = [];
+  List<Ticket> filteredTickets = [];
   final ScrollController _scrollController = ScrollController();
+  
+  // Filter state
+  String? selectedStatus; // null means "All"
+  DateTime? selectedDate; // null means "All dates"
+  String? selectedTechnician; // null means "All technicians"
 
   @override
   void initState() {
@@ -98,6 +105,7 @@ class _TicketsScreenState extends State<TicketsScreen> {
             ticketTypeId: ticket['ticketType']?['id'] ?? 0,
             rating: null,
             icon: ticket['mainService']?['image'] ?? ticket['mainService']?['icon'] ?? null,
+            mainServiceTitle: ticket['mainService']?['name'] ?? ticket['mainService']?['nameArabic'] ?? null,
             cancelButton: null,
             isRated: null,
             type: ticket['ticketType']?['name'],
@@ -134,6 +142,9 @@ class _TicketsScreenState extends State<TicketsScreen> {
           } else {
             allTickets.addAll(newTickets);
           }
+          
+          // Apply filter
+          _applyFilter();
           
           // Check if there are more tickets to load
           hasMore = newTickets.length >= limit;
@@ -188,6 +199,7 @@ class _TicketsScreenState extends State<TicketsScreen> {
             ticketTypeId: ticket['ticketType']?['id'] ?? 0,
             rating: null,
             icon: ticket['mainService']?['image'] ?? ticket['mainService']?['icon'] ?? null,
+            mainServiceTitle: ticket['mainService']?['name'] ?? ticket['mainService']?['nameArabic'] ?? null,
             cancelButton: null,
             isRated: null,
             type: ticket['ticketType']?['name'],
@@ -220,6 +232,8 @@ class _TicketsScreenState extends State<TicketsScreen> {
 
         setState(() {
           allTickets.addAll(newTickets);
+          // Apply filter
+          _applyFilter();
           hasMore = newTickets.length >= limit;
           isLoadingMore = false;
         });
@@ -239,13 +253,400 @@ class _TicketsScreenState extends State<TicketsScreen> {
     }
   }
 
+  void _applyFilter() {
+    filteredTickets = allTickets.where((ticket) {
+      // Filter by status
+      if (selectedStatus != null) {
+        if (ticket.status?.toLowerCase() != selectedStatus?.toLowerCase()) {
+          return false;
+        }
+      }
+      
+      // Filter by date
+      if (selectedDate != null) {
+        final ticketDate = ticket.selectedDate;
+        
+        // Compare only date part (ignore time)
+        final selectedDateOnly = DateTime(
+          selectedDate!.year,
+          selectedDate!.month,
+          selectedDate!.day,
+        );
+        final ticketDateOnly = DateTime(
+          ticketDate.year,
+          ticketDate.month,
+          ticketDate.day,
+        );
+        
+        if (ticketDateOnly != selectedDateOnly) {
+          return false;
+        }
+      }
+      
+      // Filter by technician
+      if (selectedTechnician != null) {
+        final technicianName = ticket.serviceprovide?.toString().trim() ?? '';
+        if (technicianName.isEmpty || technicianName != selectedTechnician) {
+          return false;
+        }
+      }
+      
+      return true;
+    }).toList();
+  }
+  
+  // Get unique list of technicians from all tickets
+  List<String> _getTechniciansList() {
+    final technicians = <String>{};
+    for (var ticket in allTickets) {
+      if (ticket.serviceprovide != null) {
+        final name = ticket.serviceprovide.toString().trim();
+        if (name.isNotEmpty) {
+          technicians.add(name);
+        }
+      }
+    }
+    return technicians.toList()..sort();
+  }
+
+  void _showFilterDialog() {
+    LanguageProvider languageProvider =
+        Provider.of<LanguageProvider>(context, listen: false);
+    final isArabic = languageProvider.lang == "ar";
+    
+    // Store the current selection locally for the dialog
+    String? tempSelectedStatus = selectedStatus;
+    DateTime? tempSelectedDate = selectedDate;
+    String? tempSelectedTechnician = selectedTechnician;
+    final techniciansList = _getTechniciansList();
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 30,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isArabic ? 'تصفية التذاكر' : 'Filter Tickets',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () {
+                            setModalState(() {
+                              tempSelectedStatus = null;
+                              tempSelectedDate = null;
+                              tempSelectedTechnician = null;
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            isArabic ? 'إعادة تعيين' : 'Reset',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedStatus = tempSelectedStatus;
+                              selectedDate = tempSelectedDate;
+                              selectedTechnician = tempSelectedTechnician;
+                              _applyFilter();
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors(context).primaryColor,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            isArabic ? 'تطبيق' : 'Apply',
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                
+                // Technician Filter Section - Moved to top
+                if (techniciansList.isNotEmpty) ...[
+                  Text(
+                    isArabic ? 'الفني' : 'Technician',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // All technicians option
+                  _buildFilterOption(
+                    isArabic ? 'جميع الفنيين' : 'All Technicians',
+                    null,
+                    tempSelectedTechnician == null,
+                    () {
+                      setModalState(() {
+                        tempSelectedTechnician = null;
+                      });
+                    },
+                  ),
+                  // Technician options
+                  ...techniciansList.map((technician) => _buildFilterOption(
+                    technician,
+                    technician,
+                    tempSelectedTechnician == technician,
+                    () {
+                      setModalState(() {
+                        tempSelectedTechnician = technician;
+                      });
+                    },
+                  )),
+                  const SizedBox(height: 20),
+                ],
+                
+                // Status Filter Section
+                Text(
+                  isArabic ? 'الحالة' : 'Status',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // All option
+                _buildFilterOption(
+                  isArabic ? 'الكل' : 'All',
+                  null,
+                  tempSelectedStatus == null,
+                  () {
+                    setModalState(() {
+                      tempSelectedStatus = null;
+                    });
+                  },
+                ),
+                // Pending
+                _buildFilterOption(
+                  isArabic ? 'قيد الانتظار' : 'Pending',
+                  'Pending',
+                  tempSelectedStatus == 'Pending',
+                  () {
+                    setModalState(() {
+                      tempSelectedStatus = 'Pending';
+                    });
+                  },
+                ),
+                // In Progress
+                _buildFilterOption(
+                  isArabic ? 'قيد التنفيذ' : 'In Progress',
+                  'In Progress',
+                  tempSelectedStatus == 'In Progress',
+                  () {
+                    setModalState(() {
+                      tempSelectedStatus = 'In Progress';
+                    });
+                  },
+                ),
+                // Completed
+                _buildFilterOption(
+                  isArabic ? 'مكتمل' : 'Completed',
+                  'Completed',
+                  tempSelectedStatus == 'Completed',
+                  () {
+                    setModalState(() {
+                      tempSelectedStatus = 'Completed';
+                    });
+                  },
+                ),
+                // Canceled
+                _buildFilterOption(
+                  isArabic ? 'ملغى' : 'Canceled',
+                  'Canceled',
+                  tempSelectedStatus == 'Canceled',
+                  () {
+                    setModalState(() {
+                      tempSelectedStatus = 'Canceled';
+                    });
+                  },
+                ),
+                
+                const SizedBox(height: 20),
+                
+                // Date Filter Section
+                Text(
+                  isArabic ? 'التاريخ' : 'Date',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                InkWell(
+                  onTap: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: tempSelectedDate ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2030),
+                    );
+                    if (pickedDate != null) {
+                      setModalState(() {
+                        tempSelectedDate = pickedDate;
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: AppColors(context).primaryColor),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            tempSelectedDate != null
+                                ? DateFormat('yyyy-MM-dd').format(tempSelectedDate!)
+                                : (isArabic ? 'اختر التاريخ' : 'Select Date'),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: tempSelectedDate != null ? Colors.black : Colors.grey,
+                            ),
+                          ),
+                        ),
+                        if (tempSelectedDate != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: () {
+                              setModalState(() {
+                                tempSelectedDate = null;
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterOption(String title, String? status, bool isSelected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors(context).primaryColor.withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? AppColors(context).primaryColor
+                : Colors.grey.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected
+                      ? AppColors(context).primaryColor
+                      : Colors.black,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: AppColors(context).primaryColor,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    LanguageProvider languageProvider =
+        Provider.of<LanguageProvider>(context, listen: false);
+    final isArabic = languageProvider.lang == "ar";
+    
     return Scaffold(
       appBar: AppBar(
         title: Text('${AppText(context).tickets}'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.filter_list),
+                if (selectedStatus != null)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: AppColors(context).primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: _showFilterDialog,
+            tooltip: isArabic ? 'تصفية' : 'Filter',
+          ),
           const LanguageButton(),
         ],
       ),
@@ -258,12 +659,50 @@ class _TicketsScreenState extends State<TicketsScreen> {
               )
             : allTickets.isEmpty
                 ? const EmptyScreen()
+                : filteredTickets.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.filter_alt_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          isArabic
+                              ? 'لا توجد تذاكر تطابق الفلتر'
+                              : 'No tickets match the filter',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedStatus = null;
+                              _applyFilter();
+                            });
+                          },
+                          child: Text(
+                            isArabic ? 'إزالة الفلتر' : 'Clear Filter',
+                            style: TextStyle(
+                              color: AppColors(context).primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(10),
-                    itemCount: allTickets.length + (isLoadingMore ? 1 : 0),
+                    itemCount: filteredTickets.length + (isLoadingMore ? 1 : 0),
                     itemBuilder: (context, index) {
-                      if (index == allTickets.length) {
+                      if (index == filteredTickets.length) {
                         // Loading indicator at the bottom
                         return Center(
                           child: Padding(
@@ -281,14 +720,14 @@ class _TicketsScreenState extends State<TicketsScreen> {
                             context,
                             rightToLeft(
                               TicketDetailsScreen(
-                                id: allTickets[index].id.toString(),
+                                id: filteredTickets[index].id.toString(),
                               ),
                             ),
                           );
                         },
                         child: TicketCard(
-                          ticket: allTickets[index],
-                          status: allTickets[index].status ?? "Pending",
+                          ticket: filteredTickets[index],
+                          status: filteredTickets[index].status ?? "Pending",
                         ),
                       );
                     },
