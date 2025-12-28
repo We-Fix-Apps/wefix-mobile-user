@@ -17,14 +17,29 @@ class AppText {
   String get langCode => languages ?? 'en';
 
   String getTranslation(String key) {
-    return languageProvider.allLanguage
-            .where((element) => element.key == langCode)
-            .toList()
-            .first
-            .languages
-            ?.firstWhere((element) => element.wordKey == key)
-            .value ??
-        '';
+    try {
+      final languageList = languageProvider.allLanguage
+          .where((element) => element.key == langCode)
+          .toList();
+      
+      if (languageList.isEmpty) return '';
+      
+      final languages = languageList.first.languages;
+      if (languages == null || languages.isEmpty) return '';
+      
+      try {
+        final translation = languages.firstWhere(
+          (element) => element.wordKey == key,
+        );
+        return translation.value ?? '';
+      } catch (e) {
+        // Translation key not found, return empty string
+        return '';
+      }
+    } catch (e) {
+      // Return empty string if any error occurs
+      return '';
+    }
   }
 
   String get home => getTranslation('home');
@@ -255,6 +270,14 @@ class AppText {
   String get weFixStations => getTranslation('weFixStations');
   String get supportType => getTranslation('supportType');
   String get bookings => getTranslation('bookings');
+  String get tickets {
+    final translation = getTranslation('tickets');
+    // Fallback if translation not found in backend
+    if (translation.isEmpty) {
+      return langCode == 'ar' ? 'تذاكر' : 'Tickets';
+    }
+    return translation;
+  }
   String get callforemergency => getTranslation('callforemergency');
   String get call => getTranslation('call');
   String get welcomePleaseenteryourdetailsbelow =>

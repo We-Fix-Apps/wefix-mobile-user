@@ -1114,4 +1114,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get subTechnicianNotAllowed =>
       'الفنيون الفرعيون غير مسموح لهم بتسجيل الدخول إلى هذا النظام.';
+
+  @override
+  String get bookings => 'الحجوزات';
+
+  @override
+  String get tickets => 'تذاكر';
 }

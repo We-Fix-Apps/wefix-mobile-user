@@ -15,6 +15,7 @@ import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
 import 'package:wefix/Presentation/Profile/profile_screen.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Presentation/Subscriptions/Screens/Subscriptions_screen.dart';
+import 'package:wefix/Presentation/B2B/tickets_screen.dart';
 
 class HomeLayout extends StatefulWidget {
   final int? index;
@@ -48,9 +49,9 @@ class _HomeLayoutState extends State<HomeLayout> {
     super.initState();
   }
 
-  List<Widget> get screen => [
+  List<Widget> getScreens(bool isB2bAccount) => [
     HomeScreen(key: _homeScreenKey),
-    BookingScreen(),
+    isB2bAccount ? TicketsScreen() : BookingScreen(),
     const SubscriptionScreen(),
     const ProfileScreen(),
     const ContactUsScreen(),
@@ -102,7 +103,7 @@ class _HomeLayoutState extends State<HomeLayout> {
             color: AppColors.greyColor2,
             height: 20,
           ),
-          title: AppText(context).bookings),
+          title: isB2bAccount ? AppText(context).tickets : AppText(context).bookings),
       TabItem(
           activeIcon: SvgPicture.asset(
             centerIconPath,
@@ -153,7 +154,7 @@ class _HomeLayoutState extends State<HomeLayout> {
         return true;
       },
       child: Scaffold(
-        body: screen[currentIndex],
+        body: getScreens(isB2bAccount)[currentIndex],
         bottomNavigationBar: ConvexAppBar(
           backgroundColor: Colors.white,
           activeColor: AppColors(context).primaryColor,

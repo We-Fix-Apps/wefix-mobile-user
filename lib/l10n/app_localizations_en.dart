@@ -1117,4 +1117,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subTechnicianNotAllowed =>
       'Sub-Technicians are not allowed to login to this system.';
+
+  @override
+  String get bookings => 'Bookings';
+
+  @override
+  String get tickets => 'Tickets';
 }

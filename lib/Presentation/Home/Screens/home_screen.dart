@@ -308,13 +308,6 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               actions: [
-                const LanguageButton(),
-                const SizedBox(
-                  width: 5,
-                ),
-                SvgPicture.asset(
-                  "assets/icon/line.svg",
-                ),
                 InkWell(
                   onTap: () {
                     Navigator.push(context, rightToLeft(NotificationsScreen()));
@@ -328,6 +321,10 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                 ),
+                const SizedBox(
+                  width: 5,
+                ),
+                const LanguageButton(),
               ],
             ),
             body: (loading) == true

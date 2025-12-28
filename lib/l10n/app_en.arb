@@ -385,5 +385,7 @@
   "locationCoordinatesNotAvailable" : "Location coordinates not available. Showing default location.",
   "na" : "N/A",
 "technicianNotAllowed" : "Technicians are not allowed to login to this system.",
-"subTechnicianNotAllowed" : "Sub-Technicians are not allowed to login to this system."
+"subTechnicianNotAllowed" : "Sub-Technicians are not allowed to login to this system.",
+"bookings": "Bookings",
+"tickets": "Tickets"
 }

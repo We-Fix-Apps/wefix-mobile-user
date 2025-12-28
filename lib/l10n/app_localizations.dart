@@ -2263,6 +2263,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sub-Technicians are not allowed to login to this system.'**
   String get subTechnicianNotAllowed;
+
+  /// No description provided for @bookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
+  String get bookings;
+
+  /// No description provided for @tickets.
+  ///
+  /// In en, this message translates to:
+  /// **'Tickets'**
+  String get tickets;
 }
 
 class _AppLocalizationsDelegate

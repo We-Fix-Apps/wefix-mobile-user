@@ -11,7 +11,8 @@ import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Data/model/ticket_model.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
-import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
+import 'package:wefix/Presentation/B2B/tickets_screen.dart';
+import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/model/profile_model.dart';
 import 'package:wefix/Business/end_points.dart';
@@ -125,6 +126,7 @@ class _B2BHomeState extends State<B2BHome> {
             ticketTypeId: ticket['ticketType']?['id'] ?? 0,
             rating: null,
             icon: ticket['mainService']?['image'] ?? ticket['mainService']?['icon'] ?? null, // Main service image
+            mainServiceTitle: ticket['mainService']?['name'] ?? ticket['mainService']?['nameArabic'] ?? null, // Main service name
             cancelButton: null,
             isRated: null,
             type: ticket['ticketType']?['name'],
@@ -718,7 +720,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
               onTap: () {
                 Navigator.push(
                   context,
-                  rightToLeft(BookingScreen()),
+                  rightToLeft(TicketsScreen()),
                 );
               },
               child: Text(AppLocalizations.of(context)!.viewAll, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w500)),
@@ -832,7 +834,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                       ? widget.ticketModel!.tickets[ticketIndex].ticketCodeId!
                                       : "#${widget.ticketModel?.tickets[ticketIndex].id}",
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                     color: AppColors(context).primaryColor,
                                   ),
@@ -931,7 +933,12 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                 ],
                               ),
                             ),
-                            // Status badge on the right
+                            // Status badge and Main Service on the right
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Status badge
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                   decoration: BoxDecoration(
@@ -959,6 +966,67 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                       fontSize: 10,
                                     ),
                                   ),
+                                ),
+                                // Main Service with Icon below status
+                                if (widget.ticketModel?.tickets[ticketIndex].icon != null || 
+                                    widget.ticketModel?.tickets[ticketIndex].mainServiceTitle != null) ...[
+                                  const SizedBox(height: 6),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Main Service Title
+                                      if (widget.ticketModel?.tickets[ticketIndex].mainServiceTitle != null)
+                                        Text(
+                                          widget.ticketModel!.tickets[ticketIndex].mainServiceTitle!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.end,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                      // Icon below title - always show if mainServiceTitle exists
+                                      const SizedBox(height: 4),
+                                      Builder(
+                                        builder: (context) {
+                                          final iconUrl = widget.ticketModel?.tickets[ticketIndex].icon;
+                                          if (iconUrl != null && 
+                                              iconUrl.toString().isNotEmpty &&
+                                              iconUrl.toString().toLowerCase() != "null" &&
+                                              iconUrl.toString().trim().isNotEmpty) {
+                                            final fullUrl = _buildImageUrl(iconUrl.toString());
+                                            if (fullUrl.isNotEmpty) {
+                                              return SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child: WidgetCachNetworkImage(
+                                                  image: fullUrl,
+                                                  width: 20,
+                                                  height: 20,
+                                                  boxFit: BoxFit.contain,
+                                                ),
+                                              );
+                                            }
+                                          }
+                                          // Fallback icon if no icon URL available
+                                          return Container(
+                                            width: 20,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[200],
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: Icon(Icons.build, size: 12, color: Colors.grey[600]),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
                             ),
                           ],
                         ),
