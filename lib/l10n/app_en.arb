@@ -312,7 +312,7 @@
 "invalidCredentials" : "Invalid login credentials",
 "loginFailed" : "Login failed",
 "regularUser" : "My Services",
-"companyPersonnel" : "BUSINESS SERVICES",
+"companyPersonnel" : "Business Services",
 "emailRequired" : "Email is required",
 "createTicket" : "Create Ticket",
 "editTicket" : "Edit Ticket",

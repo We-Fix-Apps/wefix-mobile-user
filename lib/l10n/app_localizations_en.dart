@@ -915,7 +915,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get regularUser => 'My Services';
 
   @override
-  String get companyPersonnel => 'BUSINESS SERVICES';
+  String get companyPersonnel => 'Business Services';
 
   @override
   String get emailRequired => 'Email is required';

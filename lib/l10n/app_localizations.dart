@@ -1865,7 +1865,7 @@ abstract class AppLocalizations {
   /// No description provided for @companyPersonnel.
   ///
   /// In en, this message translates to:
-  /// **'BUSINESS SERVICES'**
+  /// **'Business Services'**
   String get companyPersonnel;
 
   /// No description provided for @emailRequired.
