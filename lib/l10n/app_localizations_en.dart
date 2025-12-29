@@ -954,10 +954,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get date => 'Date';
 
   @override
-  String get timeFrom => 'Time From';
+  String get timeFrom => 'From';
 
   @override
-  String get timeTo => 'Time To';
+  String get timeTo => 'To';
+
+  @override
+  String get timeLabel => 'Time: From - To';
 
   @override
   String get selectDate => 'Select Date';
@@ -1137,6 +1140,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get timeMustBeFromCurrentTo120Minutes =>
       'Time must be from current time to 120 minutes later';
+
+  @override
+  String get emergencyTimeMustBe90To120Minutes =>
+      'Emergency ticket time duration must be between 90 and 120 minutes';
 
   @override
   String get pleaseSelectDateFirst => 'Please select a date first';

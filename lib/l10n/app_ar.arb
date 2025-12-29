@@ -313,8 +313,9 @@
     "ticketType": "نوع التذكرة",
     "mainService": "الخدمة الرئيسية",
     "date": "التاريخ",
-    "timeFrom": "الوقت من",
+    "timeFrom": "من",
     "timeTo": "إلى",
+    "timeLabel": "الوقت : من - إلى",
     "selectDate": "اختر التاريخ",
     "selectTime": "اختر الوقت",
     "contractId": "رقم العقد",
@@ -381,6 +382,7 @@
     "ticketTitleRequired": "عنوان التذكرة مطلوب",
     "ticketTitleMustNotExceed": "عنوان التذكرة يجب ألا يتجاوز 100 حرف",
     "timeMustBeFromCurrentTo120Minutes": "الوقت يجب أن يكون من الوقت الحالي إلى 120 دقيقة لاحقاً",
+    "emergencyTimeMustBe90To120Minutes": "مدة الوقت لتذاكر الطوارئ يجب أن تكون بين 90 و 120 دقيقة",
     "pleaseSelectDateFirst": "الرجاء اختيار التاريخ أولاً",
     "noAvailableTimeSlots": "لا توجد فترات زمنية متاحة للتاريخ المحدد. الرجاء اختيار تاريخ مختلف."
 }

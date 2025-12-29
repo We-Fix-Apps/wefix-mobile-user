@@ -157,8 +157,13 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       }
 
       // For emergency tickets: only show slots that start within 120 minutes
+      // and have duration of 90-120 minutes
       if (isEmergency) {
-        return fromTimeInMinutes <= maxMinutes && fromTimeInMinutes < toTimeInMinutes;
+        if (fromTimeInMinutes > maxMinutes || fromTimeInMinutes >= toTimeInMinutes) {
+          return false;
+        }
+        final duration = toTimeInMinutes - fromTimeInMinutes;
+        return duration >= 90 && duration <= 120;
       }
 
       // For corrective/preventive tickets: show all future slots (no 120-minute restriction)
@@ -694,8 +699,9 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   }
 
   // Validate that selected times are within 120 minutes from current time
+  // For Emergency tickets: duration must be 90-120 minutes
   // Both selectedTimeFrom and selectedTimeTo must be from current time to 120 minutes after current time
-  bool _validateTimeRange(String? timeFrom, String? timeTo) {
+  bool _validateTimeRange(String? timeFrom, String? timeTo, {bool isEmergency = false}) {
     if (timeFrom == null || timeTo == null) {
       return false;
     }
@@ -731,6 +737,14 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       // Check: from time must be < to time
       if (fromMinutes >= toMinutes) {
         return false;
+      }
+
+      // For Emergency tickets: duration must be 90-120 minutes
+      if (isEmergency) {
+        final duration = toMinutes - fromMinutes;
+        if (duration < 90 || duration > 120) {
+          return false;
+        }
       }
 
       return true;
@@ -798,12 +812,13 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
 
       // For non-emergency tickets (Corrective, Preventive), time selection is required
       if (!isEmergency && (selectedTimeFrom == null || selectedTimeTo == null)) {
-        fieldErrors['time'] = '${localizations.timeFrom} - ${localizations.timeTo} ${localizations.required}';
+        fieldErrors['time'] = '${localizations.timeLabel} ${localizations.required}';
         isValid = false;
       } else if (isEmergency && selectedTimeFrom != null && selectedTimeTo != null) {
         // For emergency tickets only: validate time range must be within 120 minutes from current time
-        if (!_validateTimeRange(selectedTimeFrom, selectedTimeTo)) {
-          fieldErrors['time'] = localizations.timeMustBeFromCurrentTo120Minutes;
+        // and duration must be 90-120 minutes
+        if (!_validateTimeRange(selectedTimeFrom, selectedTimeTo, isEmergency: true)) {
+          fieldErrors['time'] = localizations.emergencyTimeMustBe90To120Minutes;
           isValid = false;
         }
       }
@@ -1005,7 +1020,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           case 'date':
             return localizations.date;
           case 'time':
-            return '${localizations.timeFrom} - ${localizations.timeTo}';
+            return localizations.timeLabel;
           case 'teamLeader':
             return localizations.teamLeaderId;
           case 'technician':
@@ -1143,14 +1158,16 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         // Format date
         final ticketDateStr = selectedTicketDate != null ? DateFormat('yyyy-MM-dd').format(selectedTicketDate!) : DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-        // For emergency tickets, if time is not selected, generate default time (current time to +120 minutes)
+        // For emergency tickets, if time is not selected, generate default time (current time to +90 minutes)
+        // Duration must be 90-120 minutes for Emergency tickets
         String? timeFromStr = selectedTimeFrom;
         String? timeToStr = selectedTimeTo;
 
         if (isEmergency && (selectedTimeFrom == null || selectedTimeTo == null)) {
           final now = DateTime.now();
           final currentMinutes = now.hour * 60 + now.minute;
-          final endMinutes = currentMinutes + 120; // 120 minutes from now
+          // Generate 90-minute duration by default (minimum required)
+          final endMinutes = currentMinutes + 90; // 90 minutes from now (minimum duration)
 
           final fromHour = (currentMinutes ~/ 60).toString().padLeft(2, '0');
           final fromMinute = (currentMinutes % 60).toString().padLeft(2, '0');
@@ -1160,7 +1177,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           timeFromStr = '$fromHour:$fromMinute:00';
           timeToStr = '$toHour:$toMinute:00';
 
-          log('Emergency ticket: Generated default time slots from $timeFromStr to $timeToStr');
+          log('Emergency ticket: Generated default time slots from $timeFromStr to $timeToStr (90 minutes duration)');
         }
 
         // Final validation: Check all required fields before building ticket data
@@ -1185,7 +1202,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         if (selectedTicketDate == null) missingFields.add(localizations.date);
         // Time fields are now required for all tickets (backend requirement)
         if (timeFromStr == null || timeToStr == null) {
-          missingFields.add('${localizations.timeFrom} - ${localizations.timeTo}');
+          missingFields.add(localizations.timeLabel);
         }
         if (isTeamLeaderVisible && selectedTeamLeader == null) {
           missingFields.add(localizations.teamLeaderId);
@@ -2249,7 +2266,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${localizations.timeFrom} - ${localizations.timeTo}',
+                            localizations.timeLabel,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -2706,7 +2723,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${localizations.timeFrom} - ${localizations.timeTo} *',
+                    '${localizations.timeLabel} *',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -2799,7 +2816,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
 
                         DraggableCardBottomSheet.show(
                           context: context,
-                          title: '${localizations.timeFrom} - ${localizations.timeTo}',
+                          title: localizations.timeLabel,
                           items: items,
                           selectedItem: currentSelected,
                           onItemSelected: (item) {
@@ -2905,7 +2922,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '${localizations.timeFrom} - ${localizations.timeTo} *',
+          '${localizations.timeLabel} *',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
@@ -2953,7 +2970,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
 
             DraggableCardBottomSheet.show(
               context: context,
-              title: '${localizations.timeFrom} - ${localizations.timeTo}',
+              title: localizations.timeLabel,
               items: items,
               selectedItem: currentSelected,
               onItemSelected: (item) {

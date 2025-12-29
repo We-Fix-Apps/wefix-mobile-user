@@ -1943,14 +1943,20 @@ abstract class AppLocalizations {
   /// No description provided for @timeFrom.
   ///
   /// In en, this message translates to:
-  /// **'Time From'**
+  /// **'From'**
   String get timeFrom;
 
   /// No description provided for @timeTo.
   ///
   /// In en, this message translates to:
-  /// **'Time To'**
+  /// **'To'**
   String get timeTo;
+
+  /// No description provided for @timeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time: From - To'**
+  String get timeLabel;
 
   /// No description provided for @selectDate.
   ///
@@ -2299,6 +2305,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time must be from current time to 120 minutes later'**
   String get timeMustBeFromCurrentTo120Minutes;
+
+  /// No description provided for @emergencyTimeMustBe90To120Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency ticket time duration must be between 90 and 120 minutes'**
+  String get emergencyTimeMustBe90To120Minutes;
 
   /// No description provided for @pleaseSelectDateFirst.
   ///

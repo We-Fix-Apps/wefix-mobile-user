@@ -951,10 +951,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get date => 'التاريخ';
 
   @override
-  String get timeFrom => 'الوقت من';
+  String get timeFrom => 'من';
 
   @override
   String get timeTo => 'إلى';
+
+  @override
+  String get timeLabel => 'الوقت : من - إلى';
 
   @override
   String get selectDate => 'اختر التاريخ';
@@ -1133,6 +1136,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get timeMustBeFromCurrentTo120Minutes =>
       'الوقت يجب أن يكون من الوقت الحالي إلى 120 دقيقة لاحقاً';
+
+  @override
+  String get emergencyTimeMustBe90To120Minutes =>
+      'مدة الوقت لتذاكر الطوارئ يجب أن تكون بين 90 و 120 دقيقة';
 
   @override
   String get pleaseSelectDateFirst => 'الرجاء اختيار التاريخ أولاً';
