@@ -427,6 +427,154 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                           style: const TextStyle(color: Colors.grey),
                         ),
                       ),
+                    // Technician Attachments (for completed tickets)
+                    if (fullTicketData!['technicianAttachments'] != null && 
+                        (fullTicketData!['technicianAttachments'] as List).isNotEmpty)
+                      _buildSection(
+                        '📎 ${languageProvider.lang == "ar" ? "مرفقات الفني" : "Technician Attachments"}',
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: (fullTicketData!['technicianAttachments'] as List).map<Widget>((attachment) {
+                            final filePath = attachment is Map 
+                                ? (attachment['filePath'] ?? attachment['file_path'] ?? '').toString()
+                                : attachment.toString();
+                            final fileName = attachment is Map
+                                ? (attachment['fileName'] ?? attachment['file_name'] ?? attachment['filename'] ?? '').toString()
+                                : filePath.split('/').last;
+                            
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: InkWell(
+                                onTap: () => _launchUrl(filePath),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.attach_file, color: AppColors(context).primaryColor),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          fileName.isNotEmpty ? fileName : 'Attachment',
+                                          style: TextStyle(
+                                            fontSize: AppSize(context).smallText2,
+                                            color: Colors.grey[700],
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Icon(Icons.visibility, color: AppColors(context).primaryColor, size: 20),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    // Signature (for completed tickets)
+                    if (fullTicketData!['signature'] != null && 
+                        fullTicketData!['signature'].toString().isNotEmpty)
+                      _buildSection(
+                        '✍️ ${languageProvider.lang == "ar" ? "التوقيع" : "Signature"}',
+                        Container(
+                          height: 150,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: InkWell(
+                              onTap: () => _launchUrl(fullTicketData!['signature'].toString()),
+                              child: Image.network(
+                                fullTicketData!['signature'].toString(),
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.error_outline, color: Colors.grey),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          languageProvider.lang == "ar" ? "خطأ في تحميل الصورة" : "Error loading image",
+                                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Also check reportLink for backward compatibility (signature might be in reportLink)
+                    if ((fullTicketData!['signature'] == null || fullTicketData!['signature'].toString().isEmpty) &&
+                        bookingDetailsModel?.objTickets.reportLink != null && 
+                        bookingDetailsModel?.objTickets.reportLink?.isNotEmpty == true &&
+                        (bookingDetailsModel?.objTickets.status?.toLowerCase() == 'completed' || 
+                         bookingDetailsModel?.objTickets.status?.toLowerCase() == 'ended'))
+                      _buildSection(
+                        '✍️ ${languageProvider.lang == "ar" ? "التوقيع" : "Signature"}',
+                        Container(
+                          height: 150,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: InkWell(
+                              onTap: () => _launchUrl(bookingDetailsModel?.objTickets.reportLink ?? ''),
+                              child: Image.network(
+                                bookingDetailsModel?.objTickets.reportLink ?? '',
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.error_outline, color: Colors.grey),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          languageProvider.lang == "ar" ? "خطأ في تحميل الصورة" : "Error loading image",
+                                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     // Audit Information
                     if (fullTicketData!['createdAt'] != null || fullTicketData!['updatedAt'] != null || fullTicketData!['creator'] != null || fullTicketData!['updater'] != null)
                       _buildSection(
@@ -608,11 +756,18 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                       );
                     },
                   ),
-                  // Professional attachments (images only) - show only for non-preventive tickets
+                  // Note: Technician attachments are now shown in the completed ticket info section above
+                  // This section is kept for backward compatibility with old ticket images
                   if (bookingDetailsModel?.objTickets.type != "previntive" && bookingDetailsModel?.objTickets.type?.toLowerCase() != "preventive")
                     Builder(
                       builder: (context) {
                         // Get professional attachments (images) from fullTicketData (B2B) or bookingDetailsModel
+                        // Only show if technicianAttachments is not available (for backward compatibility)
+                        if (fullTicketData != null && fullTicketData!['technicianAttachments'] != null) {
+                          // Technician attachments are already shown above, skip this section
+                          return const SizedBox();
+                        }
+                        
                         List<dynamic> ticketImages = [];
                         
                         if (fullTicketData != null && fullTicketData!['files'] != null) {
