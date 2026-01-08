@@ -307,7 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       context: context,
                                       builder: (context) => WidgetDialog(
                                         title: AppText(context, isFunction: true).warning,
-                                        desc: 'Phone number must be between 9 and 15 digits',
+                                        desc: AppLocalizations.of(context)!.invalidPhone,
                                         isError: true,
                                       ),
                                     );
@@ -320,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       context: context,
                                       builder: (context) => WidgetDialog(
                                         title: AppText(context, isFunction: true).warning,
-                                        desc: 'Phone number must be between 9 and 15 digits',
+                                        desc: AppLocalizations.of(context)!.invalidPhone,
                                         isError: true,
                                       ),
                                     );
@@ -334,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       context: context,
                                       builder: (context) => WidgetDialog(
                                         title: AppText(context, isFunction: true).warning,
-                                        desc: 'Phone number must be between 9 and 15 digits',
+                                        desc: AppLocalizations.of(context)!.invalidPhone,
                                         isError: true,
                                       ),
                                     );
@@ -347,7 +347,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       context: context,
                                       builder: (context) => WidgetDialog(
                                         title: AppText(context, isFunction: true).warning,
-                                        desc: 'Phone number must be between 9 and 15 digits',
+                                        desc: AppLocalizations.of(context)!.invalidPhone,
                                         isError: true,
                                       ),
                                     );

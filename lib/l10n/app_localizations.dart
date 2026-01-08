@@ -1037,7 +1037,7 @@ abstract class AppLocalizations {
   /// No description provided for @invalidPhone.
   ///
   /// In en, this message translates to:
-  /// **'invalid phone'**
+  /// **'Please enter a valid phone number'**
   String get invalidPhone;
 
   /// No description provided for @empty1.
@@ -2323,6 +2323,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No available time slots for selected date. Please select a different date.'**
   String get noAvailableTimeSlots;
+
+  /// No description provided for @phoneNumberMustBeBetween9And15Digits.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number must be between 9 and 15 digits'**
+  String get phoneNumberMustBeBetween9And15Digits;
 }
 
 class _AppLocalizationsDelegate

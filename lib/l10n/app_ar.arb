@@ -158,7 +158,7 @@
     "checkYourEmail2": "تم الإرسال بنجاح \n تحقق من بريدك الإلكتروني",
     "someThingError": "حدث خطأ",
     "emailorpasswordincorrect": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-    "invalidPhone": "هاتف غير صالح",
+    "invalidPhone": "الرجاء ادخال رقم هاتف صحيح",
     "empty1": "قائمة الاهتمامات فارغة",
     "empty2": "الفواتير فارغة",
     "empty11": "لا توجد لديك أي اهتمامات \n أضف اهتمامات",
@@ -384,5 +384,6 @@
     "timeMustBeFromCurrentTo120Minutes": "الوقت يجب أن يكون من الوقت الحالي إلى 120 دقيقة لاحقاً",
     "emergencyTimeMustBe90To120Minutes": "مدة الوقت لتذاكر الطوارئ يجب أن تكون بين 90 و 120 دقيقة",
     "pleaseSelectDateFirst": "الرجاء اختيار التاريخ أولاً",
-    "noAvailableTimeSlots": "لا توجد فترات زمنية متاحة للتاريخ المحدد. الرجاء اختيار تاريخ مختلف."
+    "noAvailableTimeSlots": "لا توجد فترات زمنية متاحة للتاريخ المحدد. الرجاء اختيار تاريخ مختلف.",
+    "phoneNumberMustBeBetween9And15Digits": "يجب أن يكون رقم الهاتف بين 9 و 15 رقمًا"
 }

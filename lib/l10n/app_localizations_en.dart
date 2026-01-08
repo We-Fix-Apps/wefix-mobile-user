@@ -482,7 +482,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailorpasswordincorrect => 'Email or password incorrect';
 
   @override
-  String get invalidPhone => 'invalid phone';
+  String get invalidPhone => 'Please enter a valid phone number';
 
   @override
   String get empty1 => 'Empty Interest';
@@ -1151,4 +1151,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noAvailableTimeSlots =>
       'No available time slots for selected date. Please select a different date.';
+
+  @override
+  String get phoneNumberMustBeBetween9And15Digits =>
+      'Phone number must be between 9 and 15 digits';
 }

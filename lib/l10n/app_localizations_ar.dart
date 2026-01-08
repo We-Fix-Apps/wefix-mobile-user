@@ -481,7 +481,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'البريد الإلكتروني أو كلمة المرور غير صحيحة';
 
   @override
-  String get invalidPhone => 'هاتف غير صالح';
+  String get invalidPhone => 'الرجاء ادخال رقم هاتف صحيح';
 
   @override
   String get empty1 => 'قائمة الاهتمامات فارغة';
@@ -1147,4 +1147,8 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get noAvailableTimeSlots =>
       'لا توجد فترات زمنية متاحة للتاريخ المحدد. الرجاء اختيار تاريخ مختلف.';
+
+  @override
+  String get phoneNumberMustBeBetween9And15Digits =>
+      'يجب أن يكون رقم الهاتف بين 9 و 15 رقمًا';
 }
