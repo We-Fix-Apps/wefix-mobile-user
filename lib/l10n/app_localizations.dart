@@ -2329,6 +2329,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Phone number must be between 9 and 15 digits'**
   String get phoneNumberMustBeBetween9And15Digits;
+
+  /// No description provided for @updateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Required'**
+  String get updateRequired;
+
+  /// No description provided for @updateRequiredDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of the app is available. Please update to continue using the app.'**
+  String get updateRequiredDescription;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get updateNow;
+
+  /// No description provided for @later.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// No description provided for @couldNotOpenStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open store. Please update manually.'**
+  String get couldNotOpenStore;
 }
 
 class _AppLocalizationsDelegate

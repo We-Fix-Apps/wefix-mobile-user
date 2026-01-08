@@ -16,6 +16,8 @@ import 'package:wefix/Data/Functions/token_utils.dart';
 import 'package:wefix/Data/model/user_model.dart';
 import 'package:wefix/Presentation/auth/login_screen.dart';
 import 'package:wefix/layout_screen.dart';
+import 'package:wefix/Data/services/version_check_service.dart';
+import 'package:wefix/Presentation/VersionCheck/version_check_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   final UserModel? userModel;
@@ -46,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Skip the video after 3 seconds
     Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
-        navigatorToFirstPage();
+        checkVersionAndNavigate();
       }
     });
 
@@ -81,6 +83,23 @@ class _SplashScreenState extends State<SplashScreen> {
             : const Center(child: CircularProgressIndicator()),
       ),
     );
+  }
+
+  checkVersionAndNavigate() async {
+    // Check for app update
+    final needsUpdate = await VersionCheckService.checkForUpdate();
+    if (needsUpdate && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const VersionCheckScreen(),
+        ),
+      );
+      return;
+    }
+    
+    // If no update needed, proceed with normal navigation
+    navigatorToFirstPage();
   }
 
   navigatorToFirstPage() async {

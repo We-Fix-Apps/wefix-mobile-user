@@ -385,5 +385,10 @@
     "emergencyTimeMustBe90To120Minutes": "مدة الوقت لتذاكر الطوارئ يجب أن تكون بين 90 و 120 دقيقة",
     "pleaseSelectDateFirst": "الرجاء اختيار التاريخ أولاً",
     "noAvailableTimeSlots": "لا توجد فترات زمنية متاحة للتاريخ المحدد. الرجاء اختيار تاريخ مختلف.",
-    "phoneNumberMustBeBetween9And15Digits": "يجب أن يكون رقم الهاتف بين 9 و 15 رقمًا"
+    "phoneNumberMustBeBetween9And15Digits": "يجب أن يكون رقم الهاتف بين 9 و 15 رقمًا",
+    "updateRequired": "تحديث مطلوب",
+    "updateRequiredDescription": "إصدار جديد من التطبيق متاح. يرجى التحديث للمتابعة في استخدام التطبيق.",
+    "updateNow": "تحديث الآن",
+    "later": "لاحقاً",
+    "couldNotOpenStore": "تعذر فتح المتجر. يرجى التحديث يدوياً."
 }

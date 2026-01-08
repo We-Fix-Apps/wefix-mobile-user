@@ -1155,4 +1155,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get phoneNumberMustBeBetween9And15Digits =>
       'Phone number must be between 9 and 15 digits';
+
+  @override
+  String get updateRequired => 'Update Required';
+
+  @override
+  String get updateRequiredDescription =>
+      'A new version of the app is available. Please update to continue using the app.';
+
+  @override
+  String get updateNow => 'Update Now';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get couldNotOpenStore =>
+      'Could not open store. Please update manually.';
 }

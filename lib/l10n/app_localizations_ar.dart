@@ -1151,4 +1151,20 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get phoneNumberMustBeBetween9And15Digits =>
       'يجب أن يكون رقم الهاتف بين 9 و 15 رقمًا';
+
+  @override
+  String get updateRequired => 'تحديث مطلوب';
+
+  @override
+  String get updateRequiredDescription =>
+      'إصدار جديد من التطبيق متاح. يرجى التحديث للمتابعة في استخدام التطبيق.';
+
+  @override
+  String get updateNow => 'تحديث الآن';
+
+  @override
+  String get later => 'لاحقاً';
+
+  @override
+  String get couldNotOpenStore => 'تعذر فتح المتجر. يرجى التحديث يدوياً.';
 }

@@ -370,5 +370,10 @@
   "emergencyTimeMustBe90To120Minutes": "Emergency ticket time duration must be between 90 and 120 minutes",
   "pleaseSelectDateFirst": "Please select a date first",
   "noAvailableTimeSlots": "No available time slots for selected date. Please select a different date.",
-  "phoneNumberMustBeBetween9And15Digits": "Phone number must be between 9 and 15 digits"
+  "phoneNumberMustBeBetween9And15Digits": "Phone number must be between 9 and 15 digits",
+  "updateRequired": "Update Required",
+  "updateRequiredDescription": "A new version of the app is available. Please update to continue using the app.",
+  "updateNow": "Update Now",
+  "later": "Later",
+  "couldNotOpenStore": "Could not open store. Please update manually."
 }
