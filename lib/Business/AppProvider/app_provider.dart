@@ -168,8 +168,12 @@ class AppProvider with ChangeNotifier {
       accessToken = user.token;
       CacheHelper.saveData(key: CacheHelper.accessToken, value: accessToken!);
     }
-    CacheHelper.saveData(
-        key: CacheHelper.userData, value: json.encode(userModel));
+    // Only save user data to cache if user is not null
+    // This prevents saving "null" string which would break biometric authentication
+    if (user != null) {
+      CacheHelper.saveData(
+          key: CacheHelper.userData, value: json.encode(userModel));
+    }
     notifyListeners();
   }
 
@@ -302,11 +306,15 @@ class AppProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearUser() {
+  void clearUser({bool preserveUserDataForBiometric = true}) {
     userModel = null;
     clearTokens();
-    CacheHelper.saveData(
-        key: CacheHelper.userData, value: CacheHelper.clearUserData);
+    // Preserve user data in cache for biometric authentication after logout
+    // Only clear it if explicitly requested (e.g., for security/account deletion)
+    if (!preserveUserDataForBiometric) {
+      CacheHelper.saveData(
+          key: CacheHelper.userData, value: CacheHelper.clearUserData);
+    }
     notifyListeners();
   }
 

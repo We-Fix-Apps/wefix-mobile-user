@@ -7,8 +7,8 @@ import 'package:flutter/services.dart';
 
 import 'package:flutter_svg/svg.dart';
 import 'package:permission_handler/permission_handler.dart';
-
 import 'package:provider/provider.dart';
+
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Authantication/auth_apis.dart';
 
@@ -64,6 +64,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoadingFace = false;
   bool issupport = false;
   bool isFaceIdEnabled = false;
+  bool hasValidCachedUserData = false;
+  bool isCachedUserB2B = false;
   bool isgood = false;
   bool isauth = false;
   final String? user = CacheHelper.getData(key: CacheHelper.userData);
@@ -77,6 +79,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void initState() {
+    super.initState();
+    _checkCachedUserData();
     isBiometricAuthAvailable();
     requestNotificationPermission(context);
     checkBiometrics();
@@ -92,8 +96,46 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     });
-    
-    super.initState();
+  }
+  
+  void _checkCachedUserData() {
+    final String? userData = CacheHelper.getData(key: CacheHelper.userData);
+    // Check if userData is a valid JSON string (not null, not 'null', not 'CLEAR_USER_DATA')
+    bool isValid = false;
+    bool isB2B = false;
+    if (userData != null && 
+        userData != 'null' && 
+        userData != CacheHelper.clearUserData &&
+        userData.trim().isNotEmpty) {
+      // Try to parse as JSON to ensure it's valid user data
+      try {
+        final decoded = json.decode(userData);
+        // Valid JSON and not null
+        if (decoded != null && decoded is Map) {
+          isValid = true;
+          // Check if cached user is B2B (roleId: 18, 20, 21, 22)
+          final customer = decoded['customer'];
+          if (customer != null && customer is Map) {
+            final roleId = customer['roleId'];
+            int? roleIdInt;
+            if (roleId is int) {
+              roleIdInt = roleId;
+            } else if (roleId is String) {
+              roleIdInt = int.tryParse(roleId);
+            } else if (roleId != null) {
+              roleIdInt = int.tryParse(roleId.toString());
+            }
+            isB2B = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+          }
+        }
+      } catch (_) {
+        // Invalid JSON, not valid user data
+      }
+    }
+    setState(() {
+      hasValidCachedUserData = isValid;
+      isCachedUserB2B = isB2B;
+    });
   }
   
   @override
@@ -105,8 +147,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh cached user data check when screen becomes visible
+    _checkCachedUserData();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -362,11 +410,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(
                             width: 10,
                           ),
-                          issupport
-                              ? isFaceIdEnabled
-                                  ? appProvider.userModel == null
-                                      ? SizedBox()
-                                      : InkWell(
+                          Builder(
+                            builder: (context) {
+                              // Only show fingerprint if cached user type matches selected service type
+                              // My Services (isCompanyPersonnel=false) -> show if cached user is NOT B2B
+                              // Business Services (isCompanyPersonnel=true) -> show if cached user IS B2B
+                              final bool userTypeMatches = isCompanyPersonnel 
+                                  ? isCachedUserB2B  // Business Services: need B2B user
+                                  : !isCachedUserB2B; // My Services: need regular user
+                              return issupport
+                                  ? isFaceIdEnabled
+                                      ? hasValidCachedUserData && userTypeMatches
+                                          ? InkWell(
                                           onTap: () => authenticate(),
                                           child: Container(
                                             width: AppSize(context).width * .12,
@@ -385,8 +440,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                           ),
                                         )
+                                      : SizedBox()
                                   : const SizedBox()
-                              : const SizedBox(),
+                              : const SizedBox();
+                            },
+                          ),
                         ],
                       ),
 
@@ -446,7 +504,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       issupport = isAvailable;
     });
-    log("is bio support ? $issupport");
     return issupport;
   }
 
@@ -468,23 +525,31 @@ class _LoginScreenState extends State<LoginScreen> {
       final String? userData = CacheHelper.getData(key: CacheHelper.userData);
       if (userData != null &&
           userData != 'null' &&
-          userData != 'USER_DATA_Clear') {
-        final body = json.decode(userData);
-        user = UserModel.fromJson(body);
-        log(user.token);
-        if (mounted) {
-          // setState(() => appProvider.addUserData(user!));
-          setState(() {
-            isLoadingFace = false;
-          });
+          userData != CacheHelper.clearUserData) {
+        try {
+          final body = json.decode(userData);
+          user = UserModel.fromJson(body);
+          
+          if (mounted) {
+            // Restore user in AppProvider
+            final appProvider = Provider.of<AppProvider>(context, listen: false);
+            appProvider.addUser(user: user);
+            // Load tokens from cache (access token, refresh token, etc.)
+            appProvider.loadTokensFromCache();
+          }
+        } catch (e) {
+          user = null;
         }
+        
+        setState(() {
+          isLoadingFace = false;
+        });
       } else {
         setState(() {
           isLoadingFace = false;
         });
       }
-    } on PlatformException catch (e) {
-      log(e.toString());
+    } on PlatformException {
       setState(() {
         isLoadingFace = false;
       });
@@ -495,16 +560,21 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       authrized = authenticated ? "succsess" : "failed";
 
-      log(authrized);
-
-      if (authenticated) {
+      if (authenticated && user != null) {
         Navigator.pushAndRemoveUntil(
             context, downToTop(const HomeLayout()), (route) => false);
+      } else if (authenticated && user == null) {
+        setState(() {
+          isLoadingFace = false;
+        });
       }
     });
-    setState(() {
-      isLoadingFace = false;
-    });
+    
+    if (!authenticated || user == null) {
+      setState(() {
+        isLoadingFace = false;
+      });
+    }
   }
 
   Future<void> checkBiometrics() async {
@@ -512,11 +582,15 @@ class _LoginScreenState extends State<LoginScreen> {
     if (canCheckBiometrics) {
       List<BiometricType> availableBiometrics =
           await _localAuthentication.getAvailableBiometrics();
+      final bool faceIdEnabled = availableBiometrics.contains(BiometricType.weak) ||
+          availableBiometrics.contains(BiometricType.face) ||
+          availableBiometrics.contains(BiometricType.fingerprint);
       setState(() {
-        isFaceIdEnabled = availableBiometrics.contains(BiometricType.weak) ||
-            availableBiometrics.contains(BiometricType.face) ||
-            availableBiometrics.contains(BiometricType.fingerprint);
+        isFaceIdEnabled = faceIdEnabled;
       });
+      log("checkBiometrics: canCheckBiometrics=$canCheckBiometrics, isFaceIdEnabled=$isFaceIdEnabled, availableBiometrics=$availableBiometrics");
+    } else {
+      log("checkBiometrics: canCheckBiometrics=false");
     }
   }
 
