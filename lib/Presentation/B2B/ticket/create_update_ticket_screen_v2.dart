@@ -246,14 +246,23 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       return;
     }
 
+    // Load contracts first, then load services based on selected contract
+    final contractsData = await BookingApi.getCompanyContracts(token: token, context: context);
+    
+    // Get contract ID for filtering services (use first contract if available)
+    int? contractIdForServices;
+    if (contractsData != null && contractsData.isNotEmpty) {
+      contractIdForServices = contractsData.first['id'] as int?;
+    }
+
     // Load all data in parallel (zones will be loaded when branch is selected)
     final results = await Future.wait([
-      BookingApi.getCompanyContracts(token: token, context: context),
+      Future.value(contractsData),
       BookingApi.getCompanyBranches(token: token, context: context),
       // Zones will be loaded when branch is selected, so we don't load them here
       Future.value(null), // Placeholder for zones
-      BookingApi.getMainServices(token: token, context: context),
-      BookingApi.getSubServices(token: token, context: context),
+      BookingApi.getMainServices(token: token, context: context, contractId: contractIdForServices),
+      Future.value(null), // Sub services will be loaded when main service is selected
       BookingApi.getCompanyTeamLeaders(token: token, context: context),
       BookingApi.getCompanyTechnicians(token: token, context: context),
       BookingApi.getTicketTypes(token: token, context: context), // Fetch ticket types
@@ -658,10 +667,17 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       return;
     }
 
+    // Get contract ID for filtering sub services
+    int? contractId;
+    if (selectedContract != null) {
+      contractId = selectedContract!.id;
+    }
+
     final subServicesData = await BookingApi.getSubServices(
       token: token,
       parentServiceId: mainServiceId,
       context: context,
+      contractId: contractId,
     );
 
     if (!mounted) return;
@@ -1949,7 +1965,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                 title: localizations.contractId,
                 items: contracts,
                 selectedItem: selectedContract,
-              onSelected: (item) {
+              onSelected: (item) async {
                 setState(() {
                   selectedContract = item;
                   fieldErrors.remove('contract');
@@ -1975,7 +1991,45 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                     selectedTeamLeader = null;
                     selectedTechnician = null;
                   }
+                  
+                  // Clear main service and sub service selections when contract changes
+                  selectedMainService = null;
+                  selectedSubService = null;
                 });
+                
+                // Reload main services and sub services filtered by contract
+                final appProvider = Provider.of<AppProvider>(context, listen: false);
+                final token = appProvider.accessToken ?? appProvider.userModel?.token ?? '';
+                
+                if (token.isNotEmpty) {
+                  // Reload main services for the selected contract
+                  final mainServicesData = await BookingApi.getMainServices(
+                    token: token,
+                    context: context,
+                    contractId: item.id,
+                  );
+                  
+                  if (mounted && mainServicesData != null) {
+                    setState(() {
+                      mainServices = mainServicesData
+                          .map((serviceItem) => DropdownCardItem(
+                                id: serviceItem['id'] as int,
+                                title: serviceItem['title'] as String? ?? serviceItem['name'] as String? ?? '',
+                                subtitle: serviceItem['subtitle'] as String? ?? serviceItem['nameArabic'] as String?,
+                                icon: Icons.build,
+                                data: serviceItem,
+                              ))
+                          .toList();
+                      
+                      // Auto-select first main service if available
+                      if (mainServices.isNotEmpty) {
+                        selectedMainService = mainServices.first;
+                        // Load sub services for the first main service
+                        _loadSubServices(mainServices.first.id);
+                      }
+                    });
+                  }
+                }
               },
               ),
               errorMessage: fieldErrors['contract'],

@@ -709,10 +709,16 @@ class BookingApi {
   static Future<List<Map<String, dynamic>>?> getMainServices({
     required String token,
     BuildContext? context,
+    int? contractId,
   }) async {
     try {
+      String query = EndPoints.mmsBaseUrl + EndPoints.mmsMainServices;
+      if (contractId != null) {
+        query += '?contractId=$contractId';
+      }
+      
       final response = await HttpHelper.getData2(
-        query: EndPoints.mmsBaseUrl + EndPoints.mmsMainServices,
+        query: query,
         token: token,
         context: context,
       );
@@ -734,11 +740,19 @@ class BookingApi {
     required String token,
     int? parentServiceId,
     BuildContext? context,
+    int? contractId,
   }) async {
     try {
       String query = EndPoints.mmsBaseUrl + EndPoints.mmsSubServices;
+      List<String> queryParams = [];
       if (parentServiceId != null) {
-        query += '?parentServiceId=$parentServiceId';
+        queryParams.add('parentServiceId=$parentServiceId');
+      }
+      if (contractId != null) {
+        queryParams.add('contractId=$contractId');
+      }
+      if (queryParams.isNotEmpty) {
+        query += '?${queryParams.join('&')}';
       }
 
       final response = await HttpHelper.getData2(
