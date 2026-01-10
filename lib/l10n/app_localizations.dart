@@ -1856,6 +1856,18 @@ abstract class AppLocalizations {
   /// **'Login failed'**
   String get loginFailed;
 
+  /// No description provided for @networkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Service is currently unavailable'**
+  String get networkError;
+
+  /// No description provided for @otpRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter the verification code'**
+  String get otpRequired;
+
   /// No description provided for @regularUser.
   ///
   /// In en, this message translates to:

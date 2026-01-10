@@ -912,6 +912,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginFailed => 'Login failed';
 
   @override
+  String get networkError => 'Service is currently unavailable';
+
+  @override
+  String get otpRequired => 'Please enter the verification code';
+
+  @override
   String get regularUser => 'My Services';
 
   @override

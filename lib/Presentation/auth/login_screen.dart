@@ -747,7 +747,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!otpResult['success']) {
         if (mounted) {
-          final errorMessage = otpResult['message'] ?? 'Failed to send OTP';
+          // Get localized error message from backend response or use default
+          final lang = Localizations.localeOf(context).languageCode;
+          String errorMessage = (lang == 'ar' && otpResult['messageAr'] != null)
+              ? otpResult['messageAr']
+              : (otpResult['message'] ?? 'Failed to send OTP');
+          
+          // Check if this is a rate limit error (wait/seconds/rate)
+          if (errorMessage.toLowerCase().contains('wait') || 
+              errorMessage.toLowerCase().contains('rate') ||
+              errorMessage.toLowerCase().contains('60 seconds') ||
+              errorMessage.toLowerCase().contains('seconds before')) {
+            // Extract seconds from message if available
+            final secondsMatch = RegExp(r'(\d+)\s*seconds?').firstMatch(errorMessage);
+            final seconds = secondsMatch?.group(1) ?? '60';
+            
+            // Use localized message with seconds
+            if (lang == 'ar') {
+              errorMessage = 'يرجى الانتظار $seconds ثانية قبل طلب رمز جديد';
+            } else {
+              errorMessage = 'Please wait $seconds seconds before requesting a new OTP';
+            }
+          }
           
           // Check if this is a technician restriction error
           final isTechnicianError = errorMessage.toLowerCase().contains('technician') || 
@@ -789,11 +810,15 @@ class _LoginScreenState extends State<LoginScreen> {
         loading = false;
       });
       if (mounted) {
+        final lang = Localizations.localeOf(context).languageCode;
+        final errorMessage = lang == 'ar' 
+            ? 'الخدمة غير متوفرة حاليا'
+            : 'Service is currently unavailable';
         showDialog(
           context: context,
           builder: (context) => WidgetDialog(
             title: AppText(context, isFunction: true).someThingError,
-            desc: 'Network error. Please try again.',
+            desc: errorMessage,
             isError: true,
           ),
         );

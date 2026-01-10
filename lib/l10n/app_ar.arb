@@ -300,6 +300,8 @@
     "passwordRequired": "كلمة السر مطلوبة",
     "invalidCredentials": "بيانات الدخول غير صحيحة",
     "loginFailed": "فشل تسجيل الدخول",
+    "networkError": "الخدمة غير متوفرة حاليا",
+    "otpRequired": "الرجاء إدخال رمز التحقق",
     "regularUser": "خدماتي",
     "companyPersonnel": "خدمات الاعمال",    "emailRequired": "البريد الإلكتروني مطلوب",
     "createTicket": "إنشاء تذكرة",

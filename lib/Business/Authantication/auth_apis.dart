@@ -215,11 +215,17 @@ class Authantication {
         String errorMessage = body['message'] ?? 
                               body['error'] ?? 
                               'Failed to send OTP';
-        return {'success': false, 'message': errorMessage};
+        String? errorMessageAr = body['messageAr'];
+        return {
+          'success': false, 
+          'message': errorMessage,
+          if (errorMessageAr != null) 'messageAr': errorMessageAr,
+        };
       }
     } catch (e) {
       log('mmsRequestOTP() [ ERROR ] -> $e');
-      return {'success': false, 'message': 'Network error. Please try again.'};
+      // Network error - message will be localized in UI based on user language
+      return {'success': false, 'message': 'Service is currently unavailable', 'messageAr': 'الخدمة غير متوفرة حاليا'};
     }
   }
 
@@ -257,11 +263,23 @@ class Authantication {
         String errorMessage = body['message'] ?? 
                               body['error'] ?? 
                               'Invalid OTP';
-        return {'success': false, 'data': null, 'message': errorMessage};
+        String? errorMessageAr = body['messageAr'];
+        return {
+          'success': false, 
+          'data': null, 
+          'message': errorMessage,
+          if (errorMessageAr != null) 'messageAr': errorMessageAr,
+        };
       }
     } catch (e) {
       log('mmsVerifyOTP() [ ERROR ] -> $e');
-      return {'success': false, 'data': null, 'message': 'Network error. Please try again.'};
+      // Network error - message will be localized in UI based on user language
+      return {
+        'success': false, 
+        'data': null, 
+        'message': 'Service is currently unavailable', 
+        'messageAr': 'الخدمة غير متوفرة حاليا'
+      };
     }
   }
 
@@ -311,7 +329,13 @@ class Authantication {
       }
     } catch (e) {
       log('mmsLogin() [ ERROR ] -> $e');
-      return {'success': false, 'data': null, 'message': 'Network error. Please try again.'};
+      // Network error - message will be localized in UI based on user language
+      return {
+        'success': false, 
+        'data': null, 
+        'message': 'Service is currently unavailable', 
+        'messageAr': 'الخدمة غير متوفرة حاليا'
+      };
     }
   }
 

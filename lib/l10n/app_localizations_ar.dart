@@ -909,6 +909,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loginFailed => 'فشل تسجيل الدخول';
 
   @override
+  String get networkError => 'الخدمة غير متوفرة حاليا';
+
+  @override
+  String get otpRequired => 'الرجاء إدخال رمز التحقق';
+
+  @override
   String get regularUser => 'خدماتي';
 
   @override

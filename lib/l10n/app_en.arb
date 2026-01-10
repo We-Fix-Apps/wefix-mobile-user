@@ -292,6 +292,8 @@
   "passwordRequired": "Password is required",
   "invalidCredentials": "Invalid login credentials",
   "loginFailed": "Login failed",
+  "networkError": "Service is currently unavailable",
+  "otpRequired": "Please enter the verification code",
   "regularUser": "My Services",
   "companyPersonnel": "Business Services",
   "emailRequired": "Email is required",
