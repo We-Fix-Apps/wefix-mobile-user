@@ -86,6 +86,14 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     // Role 23 will not see the edit button (completely restricted)
     final canEditTicket = canEditAllFields || isTechnician;
     
+    String _formatTime(String? time) {
+  if (time == null || time.isEmpty) return '';
+  // Remove seconds if present (e.g., "16:00:00" -> "16:00")
+  if (time.length >= 5) {
+    return time.substring(0, 5);
+  }
+  return time;
+}
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: true,
@@ -361,7 +369,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                           if (fullTicketData!['ticketTimeFrom'] != null && fullTicketData!['ticketTimeTo'] != null)
                             _buildInfoRow(
                               '${languageProvider.lang == "ar" ? "وقت التذكرة" : "Time Slot"}:',
-                              '${fullTicketData!['ticketTimeFrom']} - ${fullTicketData!['ticketTimeTo']}',
+                              '${_formatTime(fullTicketData!['ticketTimeFrom'])} - ${_formatTime(fullTicketData!['ticketTimeTo'])}',
                             ),
                           if (fullTicketData!['source'] != null)
                             _buildInfoRow(

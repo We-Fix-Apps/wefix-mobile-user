@@ -86,7 +86,7 @@ class BookingApi {
         }
       }
     } catch (e) {
-        log('getBookingsHistory exception: $e');
+      log('getBookingsHistory exception: $e');
       ticketModel = TicketModel(tickets: []);
       return ticketModel;
     }
@@ -138,10 +138,8 @@ class BookingApi {
   static Future getBookingDetails({required String token, required String id, bool isCompanyAdmin = false}) async {
     try {
       // Use MMS endpoint for company admin, OMS endpoint for regular users
-      final url = isCompanyAdmin
-          ? EndPoints.mmsBaseUrl + EndPoints.mmsTicketDetails + id
-          : EndPoints.bookingDetails + id;
-      
+      final url = isCompanyAdmin ? EndPoints.mmsBaseUrl + EndPoints.mmsTicketDetails + id : EndPoints.bookingDetails + id;
+
       final response = isCompanyAdmin
           ? await HttpHelper.getData2(
               query: url,
@@ -168,22 +166,22 @@ class BookingApi {
               try {
                 final timeFrom = ticketData['ticketTimeFrom'].toString();
                 final timeTo = ticketData['ticketTimeTo'].toString();
-                
+
                 // Parse time strings (format: "HH:MM:SS" or "HH:MM")
                 final fromParts = timeFrom.split(':');
                 final toParts = timeTo.split(':');
-                
+
                 if (fromParts.length >= 2 && toParts.length >= 2) {
                   final fromHour = int.tryParse(fromParts[0]) ?? 0;
                   final fromMinute = int.tryParse(fromParts[1]) ?? 0;
                   final toHour = int.tryParse(toParts[0]) ?? 0;
                   final toMinute = int.tryParse(toParts[1]) ?? 0;
-                  
+
                   // Calculate difference in minutes
                   final fromTotalMinutes = fromHour * 60 + fromMinute;
                   final toTotalMinutes = toHour * 60 + toMinute;
                   final diffMinutes = toTotalMinutes - fromTotalMinutes;
-                  
+
                   // Convert to hours (if >= 60 minutes, show as hours)
                   if (diffMinutes >= 60) {
                     final hours = diffMinutes ~/ 60;
@@ -207,55 +205,117 @@ class BookingApi {
 
             final bookingDetails = {
               'objTickets': {
+                // Basic ticket info
                 'id': ticketData['id'] ?? 0,
-                'title': ticketData['mainService']?['name'] ?? '',
-                'titleAr': ticketData['mainService']?['nameArabic'] ?? '',
+                'title': ticketData['ticketTitle'] ?? '',
+                'titleAr': ticketData['ticketTitle'] ?? '',
                 'type': ticketData['ticketType']?['name']?.toLowerCase() ?? 'preventive',
                 'typeAr': ticketData['ticketType']?['nameArabic']?.toLowerCase() ?? '',
-                'date': ticketDate,
+                'date': ticketData['ticketDate'] ?? '',
                 'status': ticketData['ticketStatus']?['name'] ?? 'Pending',
-                'totalPrice': null,
-                'userId': null,
+
+                // Price and user info
+                'totalPrice': null, // Not in API response
+                'userId': null, // Not in API response
+
+                // Customer info
                 'customerName': ticketData['customerName'] ?? '',
-                'customerImage': '',
+                'customerImage': '', // Not in API response
                 'customerAddress': ticketData['ticketTitle'] ?? '',
-                'isWithFemale': ticketData['havingFemaleEngineer'] ?? false,
-                'latitudel': '',
-                'longitude': '',
-                'mobile': '',
+
+                // Location info (from locationMap)
+                'latitudel': '', // Extract from locationMap URL if needed
+                'longitude': '', // Extract from locationMap URL if needed
+                'mobile': '', // Not in API response
+
+                // Ticket details
                 'description': ticketData['ticketDescription'] ?? '',
+                'isWithFemale': ticketData['havingFemaleEngineer'] ?? false,
                 'isWithMaterial': ticketData['withMaterial'] ?? false,
-                'esitmatedTime': estimatedTime,
-                'qrCodePath': '',
-                'qrCode': '',
-                'reportLink': '',
-                'isRated': false,
+
+                // Time info
+                'esitmatedTime': '${ticketData['ticketTimeFrom'] ?? ''} - ${ticketData['ticketTimeTo'] ?? ''}',
+
+                // QR and report
+                'qrCodePath': '', // Not in API response
+                'qrCode': '', // Not in API response
+                'reportLink': '', // Not in API response
+                'isRated': false, // Not in API response
+
+                // Tools (already empty in API)
                 'ticketTools': (ticketData['tools'] as List?)?.map((tool) {
                       if (tool is Map) {
-                        return tool;
+                        return {
+                          'id': tool['id'] ?? 0,
+                          'title': tool['title'] ?? '',
+                          'titleAr': tool['titleAr'] ?? '',
+                        };
                       } else {
-                        // If tool is just an ID, convert to map format
                         return {'id': tool, 'title': 'Tool $tool', 'titleAr': 'أداة $tool'};
                       }
                     }).toList() ??
                     [],
+
+                // Materials (not in API response)
                 'ticketMaterials': [],
+
+                // Ticket categories (not in API response)
                 'maintenanceTickets': [],
                 'servcieTickets': [],
                 'advantageTickets': [],
-                // Add files from API response
+
+                // Files and attachments
                 'ticketAttatchments': (ticketData['files'] as List?)?.map((file) {
                       return {
                         'filePath': file['filePath'] ?? '',
                         'fileName': file['fileName'] ?? '',
+                        'category': file['category'] ?? '',
                       };
-                    }).toList() ?? [],
-                'ticketImages': (ticketData['files'] as List?)?.where((file) {
-                      final category = file['category']?.toString().toLowerCase() ?? '';
-                      return category == 'image';
-                    }).map((file) => file['filePath'] ?? '').toList() ?? [],
+                    }).toList() ??
+                    [],
+
+                // Extract only image files
+                'ticketImages': (ticketData['files'] as List?)
+                        ?.where((file) {
+                          final category = file['category']?.toString().toLowerCase() ?? '';
+                          return category == 'image';
+                        })
+                        .map((file) => file['filePath'] ?? '')
+                        .toList() ??
+                    [],
+
+                // Additional fields from API
+                'ticketCodeId': ticketData['ticketCodeId'] ?? '',
+                'companyId': ticketData['companyId'] ?? 0,
+                'contractId': ticketData['contractId'] ?? 0,
+                'branchId': ticketData['branchId'] ?? 0,
+                'branchName': ticketData['branch']?['title'] ?? '',
+                'branchNameArabic': ticketData['branch']?['nameArabic'] ?? '',
+                'zoneId': ticketData['zoneId'] ?? 0,
+                'locationMap': ticketData['locationMap'] ?? '',
+                'teamLeader': ticketData['teamLeader'] != null
+                    ? {
+                        'id': ticketData['teamLeader']['id'] ?? 0,
+                        'name': ticketData['teamLeader']['name'] ?? '',
+                        'userNumber': ticketData['teamLeader']['userNumber'] ?? '',
+                        'profileImage': ticketData['teamLeader']['profileImage'] ?? '',
+                      }
+                    : null,
+                'technician': ticketData['technician'] != null
+                    ? {
+                        'id': ticketData['technician']['id'] ?? 0,
+                        'name': ticketData['technician']['name'] ?? '',
+                        'userNumber': ticketData['technician']['userNumber'] ?? '',
+                        'profileImage': ticketData['technician']['profileImage'] ?? '',
+                      }
+                    : null,
+                'source': ticketData['source'] ?? '',
+                'createdAt': ticketData['createdAt'] ?? '',
+                'updatedAt': ticketData['updatedAt'] ?? '',
               }
             };
+            
+            
             bookingDetailsModel = BookingDetailsModel.fromJson(bookingDetails);
             return bookingDetailsModel;
           } else {
@@ -419,7 +479,7 @@ class BookingApi {
         // Extract error message from different possible locations
         String errorMessage = 'Failed to create ticket';
         List<String> missingFields = [];
-        
+
         // Try to extract detailed error information
         if (body['error'] != null) {
           if (body['error'] is Map) {
@@ -452,7 +512,7 @@ class BookingApi {
         } else if (body['message'] != null) {
           errorMessage = body['message'].toString();
         }
-        
+
         // Check for validation errors in body directly
         if (body['validationErrors'] != null && body['validationErrors'] is Map) {
           final validationErrors = body['validationErrors'] as Map;
@@ -462,18 +522,18 @@ class BookingApi {
             }
           });
         }
-        
+
         // Check for errors array in body
         if (body['errors'] != null && body['errors'] is List) {
           final errors = body['errors'] as List;
           missingFields.addAll(errors.map((e) => e.toString()).toList());
         }
-        
+
         // Build detailed error message
         if (missingFields.isNotEmpty) {
           errorMessage = 'Missing required fields: ${missingFields.join(', ')}';
         }
-        
+
         // Show error message to user
         if (context != null && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -484,7 +544,7 @@ class BookingApi {
             ),
           );
         }
-        
+
         throw Exception(errorMessage);
       }
     } catch (e) {
@@ -557,10 +617,10 @@ class BookingApi {
         return null;
       } else if (response.statusCode == 400) {
         // Validation error
-        
+
         // Extract error message from different possible locations
         String errorMessage = 'Invalid ticket data. Please check all fields.';
-        
+
         if (body['error'] != null) {
           if (body['error'] is Map && body['error']['message'] != null) {
             errorMessage = body['error']['message'] as String;
@@ -570,7 +630,7 @@ class BookingApi {
         } else if (body['message'] != null) {
           errorMessage = body['message'] as String;
         }
-        
+
         if (context != null && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -586,10 +646,9 @@ class BookingApi {
       if (response.statusCode == 200 && body['success'] == true) {
         return body['data'];
       } else {
-        
         // Extract error message from different possible locations
         String errorMessage = 'Failed to update ticket';
-        
+
         if (body['error'] != null) {
           if (body['error'] is Map && body['error']['message'] != null) {
             errorMessage = body['error']['message'] as String;
@@ -599,7 +658,7 @@ class BookingApi {
         } else if (body['message'] != null) {
           errorMessage = body['message'] as String;
         }
-        
+
         if (context != null && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -686,7 +745,7 @@ class BookingApi {
       if (branchId != null) {
         query += '?branchId=$branchId';
       }
-      
+
       final response = await HttpHelper.getData2(
         query: query,
         token: token,
@@ -716,7 +775,7 @@ class BookingApi {
       if (contractId != null) {
         query += '?contractId=$contractId';
       }
-      
+
       final response = await HttpHelper.getData2(
         query: query,
         token: token,
