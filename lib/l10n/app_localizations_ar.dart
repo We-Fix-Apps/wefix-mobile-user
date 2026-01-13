@@ -719,6 +719,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'اسم المستخدم أو كلمة المرور التي أدخلتها غير صحيحة. يرجى المحاولة مرة أخرى.';
 
   @override
+  String get accountDoesNotExist => 'الحساب غير موجود بهذا الرقم';
+
+  @override
+  String get accountInactive =>
+      'حسابك غير نشط. يرجى التواصل مع المسؤول لتفعيل حسابك.';
+
+  @override
   String get terms => 'يجب عليك قبول الشروط والأحكام وسياسة الخصوصية';
 
   @override
@@ -910,6 +917,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get networkError => 'الخدمة غير متوفرة حاليا';
+
+  @override
+  String get serviceUnavailable => 'الخدمة غير متاحة';
 
   @override
   String get otpRequired => 'الرجاء إدخال رمز التحقق';

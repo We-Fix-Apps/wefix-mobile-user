@@ -1496,6 +1496,18 @@ abstract class AppLocalizations {
   /// **'The username or password you entered is incorrect. Please try again.'**
   String get theUsername;
 
+  /// No description provided for @accountDoesNotExist.
+  ///
+  /// In en, this message translates to:
+  /// **'Account does not exist with this phone number'**
+  String get accountDoesNotExist;
+
+  /// No description provided for @accountInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is inactive. Please contact your administrator to activate your account.'**
+  String get accountInactive;
+
   /// No description provided for @terms.
   ///
   /// In en, this message translates to:
@@ -1861,6 +1873,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Service is currently unavailable'**
   String get networkError;
+
+  /// No description provided for @serviceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Unavailable'**
+  String get serviceUnavailable;
 
   /// No description provided for @otpRequired.
   ///

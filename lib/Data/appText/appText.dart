@@ -665,4 +665,7 @@ class AppText {
   String get totalAfterDiscount => getTranslation('totalafterdiscount');
   String get orderSentSuccessfully => getTranslation('orderSentSuuc');
   String get weArePless => getTranslation('weArePless');
+  String get serviceUnavailable => getTranslation('serviceUnavailable');
+  String get accountDoesNotExist => getTranslation('accountDoesNotExist');
+  String get accountInactive => getTranslation('accountInactive');
 }

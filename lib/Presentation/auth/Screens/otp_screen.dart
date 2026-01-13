@@ -374,8 +374,35 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
                   ? loginResult['messageAr']
                   : (loginResult['message'] ?? AppLocalizations.of(context)!.invalidCredentials);
               
+              // Check if this is an account does not exist error
+              final errorLower = errorMessage.toLowerCase();
+              if (errorLower.contains('does not exist') || 
+                  errorLower.contains('account does not exist') ||
+                  errorLower.contains('not exist with this phone') ||
+                  errorLower.contains('الحساب غير موجود')) {
+                final localized = AppText(context, isFunction: true).accountDoesNotExist;
+                if (localized.isNotEmpty) {
+                  errorMessage = localized;
+                } else {
+                  // Fallback if translation not found in API
+                  errorMessage = lang == 'ar' ? 'الحساب غير موجود بهذا الرقم' : 'Account does not exist with this phone number';
+                }
+              }
+              // Check if this is an account inactive error
+              else if (errorLower.contains('inactive') || 
+                       errorLower.contains('account is inactive') ||
+                       errorLower.contains('حسابك غير نشط') ||
+                       errorLower.contains('غير نشط')) {
+                final localized = AppText(context, isFunction: true).accountInactive;
+                if (localized.isNotEmpty) {
+                  errorMessage = localized;
+                } else {
+                  // Fallback if translation not found in API
+                  errorMessage = lang == 'ar' ? 'حسابك غير نشط. يرجى التواصل مع المسؤول لتفعيل حسابك.' : 'Your account is inactive. Please contact your administrator to activate your account.';
+                }
+              }
               // Check if this is a rate limit error (wait/seconds/rate)
-              if (errorMessage.toLowerCase().contains('wait') || 
+              else if (errorMessage.toLowerCase().contains('wait') || 
                   errorMessage.toLowerCase().contains('rate') ||
                   errorMessage.toLowerCase().contains('60 seconds') ||
                   errorMessage.toLowerCase().contains('seconds before')) {

@@ -720,6 +720,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'The username or password you entered is incorrect. Please try again.';
 
   @override
+  String get accountDoesNotExist =>
+      'Account does not exist with this phone number';
+
+  @override
+  String get accountInactive =>
+      'Your account is inactive. Please contact your administrator to activate your account.';
+
+  @override
   String get terms =>
       'You have to accept on terms and condithions and privacy policy';
 
@@ -913,6 +921,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get networkError => 'Service is currently unavailable';
+
+  @override
+  String get serviceUnavailable => 'Service Unavailable';
 
   @override
   String get otpRequired => 'Please enter the verification code';
