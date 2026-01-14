@@ -598,7 +598,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                             if (fullTicketData!['creator'] != null)
                               _buildInfoRow(
                                 '${languageProvider.lang == "ar" ? "أنشأ بواسطة" : "Created By"}:',
-                                '${fullTicketData!['creator']['name'] ?? ''} (${fullTicketData!['creator']['userNumber'] ?? ''})',
+                                '${fullTicketData!['creator']['name'] ?? ''}',
                               ),
                             if (fullTicketData!['updatedAt'] != null)
                               _buildInfoRow(
@@ -608,7 +608,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                             if (fullTicketData!['updater'] != null)
                               _buildInfoRow(
                                 '${languageProvider.lang == "ar" ? "حدث بواسطة" : "Updated By"}:',
-                                '${fullTicketData!['updater']['name'] ?? ''} (${fullTicketData!['updater']['userNumber'] ?? ''})',
+                                '${fullTicketData!['updater']['name'] ?? ''}',
                               ),
                           ],
                         ),
