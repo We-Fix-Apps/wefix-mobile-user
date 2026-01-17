@@ -13,6 +13,7 @@ import 'package:video_player/video_player.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Bookings/bookings_apis.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
+import 'package:wefix/Business/end_points.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Presentation/B2B/ticket/components/draggable_card_bottom_sheet.dart';
 import 'package:wefix/Presentation/B2B/ticket/components/dropdown_card_item.dart';
@@ -376,13 +377,57 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       final teamLeadersData = results[5];
       if (teamLeadersData is List<Map<String, dynamic>> && teamLeadersData.isNotEmpty) {
         teamLeaders = teamLeadersData
-            .map((item) => DropdownCardItem(
-                  id: item['id'] as int,
-                  title: item['title'] as String? ?? item['fullName'] as String? ?? '',
-                  subtitle: item['subtitle'] as String? ?? item['userNumber'] as String? ?? item['email'] as String?,
-                  icon: Icons.person_outline,
-                  data: item,
-                ))
+            .map((item) {
+              final profileImage = item['profileImage'] as String?;
+              final imageUrl = profileImage != null && profileImage.isNotEmpty
+                  ? _buildImageUrl(profileImage)
+                  : null;
+              
+              final fullName = item['fullName'] as String? ?? '';
+              final fullNameEnglish = item['fullNameEnglish'] as String? ?? '';
+              
+              // Title: English name (orange color)
+              final title = fullNameEnglish.isNotEmpty ? fullNameEnglish : fullName;
+              
+              // Subtitle: Arabic name only (gray color)
+              final subtitle = fullName.isNotEmpty && fullName != fullNameEnglish ? fullName : null;
+              
+              return DropdownCardItem(
+                id: item['id'] as int,
+                title: title,
+                subtitle: subtitle,
+                icon: imageUrl == null ? Icons.person_outline : null,
+                iconWidget: imageUrl != null
+                    ? ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.person_outline, color: Colors.grey[400], size: 35),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.person_outline, color: Colors.grey[400], size: 35),
+                          ),
+                        ),
+                      )
+                    : null,
+                data: item,
+              );
+            })
             .toList();
       }
 
@@ -390,13 +435,57 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       final techniciansData = results[6];
       if (techniciansData is List<Map<String, dynamic>> && techniciansData.isNotEmpty) {
         technicians = techniciansData
-            .map((item) => DropdownCardItem(
-                  id: item['id'] as int,
-                  title: item['title'] as String? ?? item['fullName'] as String? ?? '',
-                  subtitle: item['subtitle'] as String? ?? item['userNumber'] as String? ?? item['email'] as String?,
-                  icon: Icons.engineering,
-                  data: item,
-                ))
+            .map((item) {
+              final profileImage = item['profileImage'] as String?;
+              final imageUrl = profileImage != null && profileImage.isNotEmpty
+                  ? _buildImageUrl(profileImage)
+                  : null;
+              
+              final fullName = item['fullName'] as String? ?? '';
+              final fullNameEnglish = item['fullNameEnglish'] as String? ?? '';
+              
+              // Title: English name (orange color)
+              final title = fullNameEnglish.isNotEmpty ? fullNameEnglish : fullName;
+              
+              // Subtitle: Arabic name only (gray color)
+              final subtitle = fullName.isNotEmpty && fullName != fullNameEnglish ? fullName : null;
+              
+              return DropdownCardItem(
+                id: item['id'] as int,
+                title: title,
+                subtitle: subtitle,
+                icon: imageUrl == null ? Icons.engineering : null,
+                iconWidget: imageUrl != null
+                    ? ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          width: 70,
+                          height: 70,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.engineering, color: Colors.grey[400], size: 35),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.engineering, color: Colors.grey[400], size: 35),
+                          ),
+                        ),
+                      )
+                    : null,
+                data: item,
+              );
+            })
             .toList();
       }
 
@@ -999,6 +1088,36 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       selectedItem: selectedItem,
       onItemSelected: onSelected,
     );
+  }
+
+  String _buildImageUrl(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return "";
+    
+    // If already a full URL (http/https), return as is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // Build base URL from backend-mms
+    // mmsBaseUrl format: https://wefix-backend-mms.ngrok.app/api/v1/
+    String baseUrl = EndPoints.mmsBaseUrl.replaceAll('/api/v1/', '').replaceAll(RegExp(r'/$'), '');
+    
+    // Normalize path - backend-mms stores images in /WeFixFiles/Users/ or /WeFixFiles/Images/
+    String cleanPath = imagePath.startsWith('/') ? imagePath : '/$imagePath';
+    
+    // If path already starts with /WeFixFiles, use it as is
+    if (cleanPath.startsWith('/WeFixFiles')) {
+      return '$baseUrl$cleanPath';
+    }
+    
+    // For backward compatibility: if path is /uploads/filename, convert to /WeFixFiles/Images/filename
+    if (cleanPath.startsWith('/uploads/')) {
+      String filename = cleanPath.replaceFirst('/uploads/', '');
+      return '$baseUrl/WeFixFiles/Images/$filename';
+    }
+    
+    // If just a filename, assume it's in /WeFixFiles/Images/
+    return '$baseUrl/WeFixFiles/Images/$cleanPath';
   }
 
   // Helper function to convert time string (HH:mm:ss) to minutes from midnight

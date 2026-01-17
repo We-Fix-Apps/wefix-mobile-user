@@ -89,12 +89,21 @@ class HttpHelper {
     _logResponse(response.statusCode, response.body, response.headers);
     
     // Check for 401/403 responses and handle auth errors
-    String? responseMessage;
-    try {
-      final body = json.decode(response.body);
-      responseMessage = body['message'];
-    } catch (_) {}
-    await AuthHelper.checkResponseStatus(response.statusCode, query, null, isMMS: false, responseMessage: responseMessage);
+    // Skip auth error handling for guest users (no token)
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      if (token != null && token.toString().isNotEmpty) {
+        // Only handle auth errors if we have a token
+        String? responseMessage;
+        try {
+          final body = json.decode(response.body);
+          responseMessage = body['message'];
+        } catch (_) {}
+        await AuthHelper.checkResponseStatus(response.statusCode, query, null, isMMS: false, responseMessage: responseMessage);
+      } else {
+        // For guest users with 401, just log it - don't force logout
+        log('Guest user received ${response.statusCode} for $query - this is expected for some endpoints', name: 'HTTP');
+      }
+    }
     
     return response;
   }

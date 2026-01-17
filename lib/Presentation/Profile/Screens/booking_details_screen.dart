@@ -212,17 +212,51 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                       children: [
                         _buildRow(
                             AppText(context).title, AppText(context).status,
-                            rightValue: bookingDetailsModel?.objTickets.status,
+                            rightValue: null, // Will be replaced with Chip
+                            rightWidget: bookingDetailsModel != null 
+                                ? _buildStatusChip(
+                                    bookingDetailsModel!.objTickets.status,
+                                    bookingDetailsModel!.objTickets.statusAr,
+                                    languageProvider.lang ?? "en",
+                                  )
+                                : null,
                             leftValue: bookingDetailsModel?.objTickets.type ==
                                     "preventive"
                                 ? AppText(context).preventivemaintenancevisit
                                 : bookingDetailsModel?.objTickets.title),
                         _buildRow(
                             AppText(context).type, AppText(context).createdDate,
-                            leftValue: bookingDetailsModel?.objTickets.type,
+                            leftValue: _getTicketTypeFromBookingModel(bookingDetailsModel, languageProvider.lang ?? "en"),
                             rightValue: bookingDetailsModel?.objTickets.date
                                 .toString()
                                 .substring(0, 10)),
+                        // Ticket Code and Ticket Time (from fullTicketData if available)
+                        if (fullTicketData != null && 
+                            fullTicketData!['ticketCodeId'] != null && 
+                            fullTicketData!['ticketTimeFrom'] != null && 
+                            fullTicketData!['ticketTimeTo'] != null)
+                          _buildRow(
+                            languageProvider.lang == "ar" ? "رمز التذكرة" : "Ticket Code",
+                            languageProvider.lang == "ar" ? "وقت التذكرة" : "Ticket Time",
+                            leftValue: _stripTicketCode(fullTicketData!['ticketCodeId']?.toString()),
+                            rightValue: '${_formatTime(fullTicketData!['ticketTimeFrom'])} - ${_formatTime(fullTicketData!['ticketTimeTo'])}',
+                          )
+                        else if (fullTicketData != null && fullTicketData!['ticketCodeId'] != null)
+                          _buildRow(
+                            languageProvider.lang == "ar" ? "رمز التذكرة" : "Ticket Code",
+                            "",
+                            leftValue: _stripTicketCode(fullTicketData!['ticketCodeId']?.toString()),
+                            rightValue: null,
+                          )
+                        else if (fullTicketData != null && 
+                                 fullTicketData!['ticketTimeFrom'] != null && 
+                                 fullTicketData!['ticketTimeTo'] != null)
+                          _buildRow(
+                            "",
+                            languageProvider.lang == "ar" ? "وقت التذكرة" : "Ticket Time",
+                            leftValue: null,
+                            rightValue: '${_formatTime(fullTicketData!['ticketTimeFrom'])} - ${_formatTime(fullTicketData!['ticketTimeTo'])}',
+                          ),
                         bookingDetailsModel?.objTickets.type == "preventive"
                             ? const SizedBox()
                             : bookingDetailsModel?.objTickets.totalPrice == null
@@ -310,21 +344,91 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                       ),
                     ],
                     // Contract, Branch, Zone Information
-                    if (fullTicketData!['contract'] != null || fullTicketData!['branch'] != null || fullTicketData!['zone'] != null)
+                    if (fullTicketData!['contract'] != null || fullTicketData!['branch'] != null || fullTicketData!['zone'] != null || fullTicketData!['company'] != null)
                       _buildSection(
                         '🏢 ${languageProvider.lang == "ar" ? "معلومات الشركة" : "Company Information"}',
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Company Name with Logo
+                            if (fullTicketData!['company'] != null)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        '${languageProvider.lang == "ar" ? "اسم الشركة" : "Company Name"}:',
+                                        style: TextStyle(
+                                          color: AppColors.greyColor5,
+                                          fontSize: AppSize(context).smallText2,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 4,
+                                      child: Row(
+                                        children: [
+                                          // Company Logo
+                                          if (fullTicketData!['company']['logo'] != null && 
+                                              fullTicketData!['company']['logo'].toString().isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(right: 8),
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(8),
+                                                child: CachedNetworkImage(
+                                                  imageUrl: _buildImageUrl(fullTicketData!['company']['logo']),
+                                                  width: 40,
+                                                  height: 40,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) => Container(
+                                                    width: 40,
+                                                    height: 40,
+                                                    color: Colors.grey[200],
+                                                    child: const Center(
+                                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                                    ),
+                                                  ),
+                                                  errorWidget: (context, url, error) => Container(
+                                                    width: 40,
+                                                    height: 40,
+                                                    color: Colors.grey[200],
+                                                    child: Icon(Icons.business, color: Colors.grey[400]),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          // Company Name
+                                          Expanded(
+                                            child: Text(
+                                              _getCompanyName(fullTicketData!['company'], languageProvider.lang ?? "en"),
+                                              style: TextStyle(
+                                                color: AppColors.blackColor1,
+                                                fontSize: AppSize(context).smallText2,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             if (fullTicketData!['contract'] != null)
                               _buildInfoRow(
                                 '${languageProvider.lang == "ar" ? "العقد" : "Contract"}:',
                                 fullTicketData!['contract']['title'] ?? '',
                               ),
                             if (fullTicketData!['branch'] != null)
-                              _buildInfoRow(
+                              _buildBranchRow(
                                 '${languageProvider.lang == "ar" ? "الفرع" : "Branch"}:',
-                                fullTicketData!['branch']['title'] ?? '',
+                                _getBranchName(fullTicketData!['branch'], languageProvider.lang ?? "en"),
+                                fullTicketData!['branch']['location'],
                               ),
                             if (fullTicketData!['zone'] != null)
                               _buildInfoRow(
@@ -342,53 +446,158 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (fullTicketData!['teamLeader'] != null)
-                              _buildInfoRow(
-                                '${languageProvider.lang == "ar" ? "قائد الفريق" : "Team Leader"}:',
-                                fullTicketData!['teamLeader']['name'] ?? '',
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        '${languageProvider.lang == "ar" ? "قائد الفريق" : "Team Leader"}:',
+                                        style: TextStyle(
+                                          color: AppColors.greyColor5,
+                                          fontSize: AppSize(context).smallText2,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Row(
+                                        children: [
+                                          // Team Leader Image
+                                          if (fullTicketData!['teamLeader']['profileImage'] != null && 
+                                              fullTicketData!['teamLeader']['profileImage'].toString().isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(right: 16),
+                                              child: ClipOval(
+                                                child: CachedNetworkImage(
+                                                  imageUrl: _buildImageUrl(fullTicketData!['teamLeader']['profileImage']),
+                                                  width: 40,
+                                                  height: 40,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) => Container(
+                                                    width: 40,
+                                                    height: 40,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[200],
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: const Center(
+                                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                                    ),
+                                                  ),
+                                                  errorWidget: (context, url, error) => Container(
+                                                    width: 40,
+                                                    height: 40,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[200],
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Icon(Icons.person, color: Colors.grey[400], size: 24),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10,),
+                                          // Team Leader Name
+                                          Expanded(
+                                            child: Text(
+                                              _getUserName(fullTicketData!['teamLeader'], languageProvider.lang ?? "en"),
+                                              style: TextStyle(
+                                                color: AppColors.blackColor1,
+                                                fontSize: AppSize(context).smallText2,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             if (fullTicketData!['technician'] != null)
-                              _buildInfoRow(
-                                '${languageProvider.lang == "ar" ? "الفني" : "Technician"}:',
-                                fullTicketData!['technician']['name'] ?? '',
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        '${languageProvider.lang == "ar" ? "الفني" : "Technician"}:',
+                                        style: TextStyle(
+                                          color: AppColors.greyColor5,
+                                          fontSize: AppSize(context).smallText2,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Row(
+                                        children: [
+                                          // Technician Image
+                                          if (fullTicketData!['technician']['profileImage'] != null && 
+                                              fullTicketData!['technician']['profileImage'].toString().isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(right: 16),
+                                              child: ClipOval(
+                                                child: CachedNetworkImage(
+                                                  imageUrl: _buildImageUrl(fullTicketData!['technician']['profileImage']),
+                                                  width: 40,
+                                                  height: 40,
+                                                  fit: BoxFit.cover,
+                                                  placeholder: (context, url) => Container(
+                                                    width: 40,
+                                                    height: 40,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[200],
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: const Center(
+                                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                                    ),
+                                                  ),
+                                                  errorWidget: (context, url, error) => Container(
+                                                    width: 40,
+                                                    height: 40,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[200],
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: Icon(Icons.person, color: Colors.grey[400], size: 24),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10,),
+                                          // Technician Name
+                                          Expanded(
+                                            child: Text(
+                                              _getUserName(fullTicketData!['technician'], languageProvider.lang ?? "en"),
+                                              style: TextStyle(
+                                                color: AppColors.blackColor1,
+                                                fontSize: AppSize(context).smallText2,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                           ],
                         ),
                       ),
-                    // Ticket Code & Basic Info
-                    _buildSection(
-                      '🎫 ${languageProvider.lang == "ar" ? "معلومات التذكرة" : "Ticket Information"}',
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                          if (fullTicketData!['ticketCodeId'] != null)
-                            _buildInfoRow(
-                              '${languageProvider.lang == "ar" ? "رمز التذكرة" : "Ticket Code"}:',
-                              fullTicketData!['ticketCodeId'],
-                            ),
-                          if (fullTicketData!['ticketDate'] != null)
-                            _buildInfoRow(
-                              '${languageProvider.lang == "ar" ? "تاريخ التذكرة" : "Ticket Date"}:',
-                              _formatDate(fullTicketData!['ticketDate']),
-                            ),
-                          if (fullTicketData!['ticketTimeFrom'] != null && fullTicketData!['ticketTimeTo'] != null)
-                            _buildInfoRow(
-                              '${languageProvider.lang == "ar" ? "وقت التذكرة" : "Time Slot"}:',
-                              '${_formatTime(fullTicketData!['ticketTimeFrom'])} - ${_formatTime(fullTicketData!['ticketTimeTo'])}',
-                            ),
-                          // Hide source field for mobile-tmms and mobile-mms users
-                          // Show source only for regular mobile-user (non-MMS) users
-                          if (fullTicketData!['source'] != null && appProvider.accessToken == null)
-                            _buildInfoRow(
-                              '${languageProvider.lang == "ar" ? "المصدر" : "Source"}:',
-                              fullTicketData!['source'] == 'Web' 
-                                ? (languageProvider.lang == "ar" ? "نظام الويب" : "Web Admin")
-                                : (languageProvider.lang == "ar" ? "التطبيق المحمول" : "Mobile App"),
-                      ),
-                    ],
-                  ),
-                    ),
                     // Attachments (for completed tickets)
-                    if (fullTicketData!['technicianAttachments'] != null && 
+                    // Only show if teamLeader or technician exists
+                    if ((fullTicketData!['teamLeader'] != null || fullTicketData!['technician'] != null) &&
+                        fullTicketData!['technicianAttachments'] != null && 
                         (fullTicketData!['technicianAttachments'] as List).isNotEmpty) ...[
                       Builder(
                         builder: (context) {
@@ -635,25 +844,43 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                           ],
                         )),
                   ],
-                  bookingDetailsModel?.objTickets.ticketTools.isEmpty == true
-                      ? const SizedBox()
-                      : _buildSection(
+                  // Tools section - check both fullTicketData and bookingDetailsModel
+                  (fullTicketData != null && fullTicketData!['tools'] != null && (fullTicketData!['tools'] as List).isNotEmpty)
+                      ? _buildSection(
                           '🔨 ${AppText(context).requiredTools}',
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
                             children:
-                                (bookingDetailsModel?.objTickets.ticketTools ?? [])
+                                ((fullTicketData!['tools'] as List))
                                         .map((tool) => Chip(
-                                              label: Text(tool["title"] ?? ""),
+                                              label: Text(_getToolName(tool, languageProvider.lang ?? "en")),
                                               backgroundColor:
                                                   AppColors(context)
                                                       .primaryColor
                                                       .withOpacity(.3),
                                             ))
-                                        .toList() ??
-                                    [],
-                          )),
+                                        .toList(),
+                          ))
+                      : (bookingDetailsModel?.objTickets.ticketTools.isEmpty == true
+                          ? const SizedBox()
+                          : _buildSection(
+                              '🔨 ${AppText(context).requiredTools}',
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children:
+                                    (bookingDetailsModel?.objTickets.ticketTools ?? [])
+                                            .map((tool) => Chip(
+                                                  label: Text(_getToolName(tool, languageProvider.lang ?? "en")),
+                                                  backgroundColor:
+                                                      AppColors(context)
+                                                          .primaryColor
+                                                          .withOpacity(.3),
+                                                ))
+                                            .toList() ??
+                                        [],
+                              ))),
                   bookingDetailsModel?.objTickets.ticketMaterials.isEmpty ==
                           true
                       ? const SizedBox()
@@ -1246,53 +1473,59 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
   }
 
   Widget _buildRow(String left, String right,
-      {String? leftValue, String? rightValue}) {
+      {String? leftValue, String? rightValue, Widget? rightWidget}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              SizedBox(
-                child: Text("${left} : ",
-                    style: TextStyle(
-                        color: AppColors.greyColor5,
-                        fontSize: AppSize(context).smallText2)),
-              ),
-              if (leftValue != null) ...[
-                const SizedBox(width: 4),
-                SizedBox(
-                  width: AppSize(context).width * 0.4,
-                  child: Text(leftValue,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+          Expanded(
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text("${left} : ",
                       style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                          color: AppColors.greyColor5,
                           fontSize: AppSize(context).smallText2)),
                 ),
+                if (leftValue != null) ...[
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(leftValue,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: AppSize(context).smallText2)),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-          rightValue == null
-              ? const SizedBox()
-              : Row(
-                  children: [
-                    SizedBox(
-                      child: Text("${right}  ${":"} ",
-                          style: TextStyle(
-                              color: AppColors.greyColor5,
-                              fontSize: AppSize(context).smallText2)),
-                    ),
-                    if (rightValue != null) ...[
-                      const SizedBox(width: 4),
-                      Text(rightValue,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: AppSize(context).smallText2)),
-                    ],
-                  ],
-                ),
+          rightWidget != null
+              ? rightWidget
+              : (rightValue == null || right.isEmpty
+                  ? const SizedBox()
+                  : Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Flexible(
+                            child: Text("${right}  ${":"} ",
+                                style: TextStyle(
+                                    color: AppColors.greyColor5,
+                                    fontSize: AppSize(context).smallText2)),
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(rightValue,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: AppSize(context).smallText2)),
+                          ),
+                        ],
+                      ),
+                    )),
         ],
       ),
     );
@@ -1723,6 +1956,124 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     );
   }
 
+  Widget _buildBranchRow(String label, String value, String? locationUrl) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: AppColors.greyColor5,
+                fontSize: AppSize(context).smallText2,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      color: AppColors.blackColor1,
+                      fontSize: AppSize(context).smallText2,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (locationUrl != null && locationUrl.isNotEmpty)
+                  InkWell(
+                    onTap: () => _openBranchMap(locationUrl),
+                    child: Icon(
+                      Icons.map,
+                      color: AppColors(context).primaryColor,
+                      size: 20,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openBranchMap(String locationUrl) async {
+    try {
+      if (locationUrl.isEmpty) {
+        if (mounted) {
+          final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(languageProvider.lang == "ar" ? 'رابط الخريطة غير متوفر' : 'Map URL not available'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      final uri = Uri.parse(locationUrl);
+      
+      // Try to open in Google Maps app first (for Android/iOS)
+      // Extract coordinates from URL if it's a Google Maps URL
+      if (locationUrl.contains('google.com/maps')) {
+        // Try to extract coordinates from the URL
+        final match = RegExp(r'q=([\d.]+),([\d.]+)').firstMatch(locationUrl);
+        if (match != null) {
+          final lat = match.group(1);
+          final lng = match.group(2);
+          
+          // Try Google Maps app scheme first (Android/iOS)
+          final googleMapsUri = Uri.parse('google.navigation:q=$lat,$lng');
+          if (await canLaunchUrl(googleMapsUri)) {
+            await launchUrl(googleMapsUri, mode: LaunchMode.externalNonBrowserApplication);
+            return;
+          }
+          
+          // Fallback to geo: scheme
+          final geoUri = Uri.parse('geo:$lat,$lng');
+          if (await canLaunchUrl(geoUri)) {
+            await launchUrl(geoUri, mode: LaunchMode.externalNonBrowserApplication);
+            return;
+          }
+        }
+      }
+      
+      // Fallback to opening the URL in browser/app
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      } else {
+        if (mounted) {
+          final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(languageProvider.lang == "ar" ? 'لا يمكن فتح الخريطة' : 'Could not open map'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${languageProvider.lang == "ar" ? "خطأ في فتح الخريطة" : "Error opening map"}: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   String _formatDate(dynamic date) {
     try {
       if (date is String) {
@@ -1735,6 +2086,254 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     } catch (e) {
       return date.toString();
     }
+  }
+
+  String _stripTicketCode(String? ticketCode) {
+    if (ticketCode == null || ticketCode.isEmpty) return '';
+    final index = ticketCode.indexOf('-');
+    if (index == -1) return ticketCode;
+    return ticketCode.substring(index + 1);
+  }
+
+  String _getToolName(dynamic tool, String currentLang) {
+    if (tool == null) return '';
+    
+    final toolMap = tool is Map ? tool : {};
+    final title = toolMap['title']?.toString() ?? ''; // English name from backend
+    final titleAr = toolMap['titleAr']?.toString() ?? ''; // Arabic name from backend
+    
+    // Return the appropriate name based on current language
+    if (currentLang == "ar") {
+      // For Arabic, prefer titleAr, fallback to title
+      return titleAr.isNotEmpty ? titleAr : title;
+    } else {
+      // For English, prefer title, fallback to titleAr
+      return title.isNotEmpty ? title : titleAr;
+    }
+  }
+
+  String _getBranchName(dynamic branch, String currentLang) {
+    if (branch == null) return '';
+    
+    final branchMap = branch is Map ? branch : {};
+    final title = branchMap['title']?.toString() ?? ''; // Default branch title
+    final nameArabic = branchMap['nameArabic']?.toString() ?? ''; // Arabic name from backend
+    final nameEnglish = branchMap['nameEnglish']?.toString() ?? ''; // English name from backend
+    
+    // Return the appropriate name based on current language
+    if (currentLang == "ar") {
+      // For Arabic, prefer nameArabic, fallback to title
+      return nameArabic.isNotEmpty ? nameArabic : title;
+    } else {
+      // For English, prefer nameEnglish, fallback to title
+      return nameEnglish.isNotEmpty ? nameEnglish : title;
+    }
+  }
+
+  String _getTicketTypeName(dynamic ticketType, String currentLang) {
+    if (ticketType == null) return '';
+    
+    final ticketTypeMap = ticketType is Map ? ticketType : {};
+    final name = ticketTypeMap['name']?.toString() ?? ''; // English name from backend
+    final nameArabic = ticketTypeMap['nameArabic']?.toString() ?? ''; // Arabic name from backend
+    
+    // Return the appropriate name based on current language
+    if (currentLang == "ar") {
+      // For Arabic, prefer nameArabic, fallback to name
+      return nameArabic.isNotEmpty ? nameArabic : name;
+    } else {
+      // For English, prefer name, fallback to nameArabic
+      return name.isNotEmpty ? name : nameArabic;
+    }
+  }
+
+  String _getTicketTypeFromBookingModel(BookingDetailsModel? bookingModel, String currentLang) {
+    if (bookingModel?.objTickets == null) return '';
+    
+    final type = bookingModel!.objTickets.type;
+    final typeAr = bookingModel.objTickets.typeAr;
+    
+    // Return the appropriate name based on current language
+    if (currentLang == "ar") {
+      // For Arabic, prefer typeAr, fallback to type
+      return typeAr.isNotEmpty ? typeAr : type;
+    } else {
+      // For English, use type
+      return type;
+    }
+  }
+
+  String _buildImageUrl(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return '';
+    
+    // If already a full URL, return as is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // Get base URL from EndPoints (remove /api/v1/ to get base URL)
+    final baseUrl = EndPoints.mmsBaseUrl.replaceAll('/api/v1/', '');
+    
+    // Normalize path - backend-mms stores images in /WeFixFiles/
+    String cleanPath = imagePath.startsWith('/') ? imagePath : '/$imagePath';
+    
+    // If path already starts with /WeFixFiles, use it as is
+    if (cleanPath.startsWith('/WeFixFiles')) {
+      return '$baseUrl$cleanPath';
+    }
+    
+    // For backward compatibility: if path is /uploads/filename, convert to /WeFixFiles/Images/filename
+    if (cleanPath.startsWith('/uploads/')) {
+      String filename = cleanPath.replaceFirst('/uploads/', '');
+      return '$baseUrl/WeFixFiles/Images/$filename';
+    }
+    
+    // If just a filename, assume it's in /WeFixFiles/Images/
+    return '$baseUrl/WeFixFiles/Images/$cleanPath';
+  }
+
+  String _getCompanyName(dynamic company, String currentLang) {
+    if (company == null) return '';
+    
+    final companyMap = company is Map ? company : {};
+    final title = companyMap['title']?.toString() ?? '';
+    final nameArabic = companyMap['nameArabic']?.toString() ?? '';
+    final nameEnglish = companyMap['nameEnglish']?.toString() ?? '';
+    
+    // Return the appropriate name based on current language
+    if (currentLang == "ar") {
+      // For Arabic, prefer nameArabic, fallback to title
+      return nameArabic.isNotEmpty ? nameArabic : title;
+    } else {
+      // For English, prefer nameEnglish, fallback to title
+      return nameEnglish.isNotEmpty ? nameEnglish : title;
+    }
+  }
+
+  String _getUserName(dynamic user, String currentLang) {
+    if (user == null) return '';
+    
+    final userMap = user is Map ? user : {};
+    final name = userMap['name']?.toString() ?? ''; // Arabic name (fullName)
+    final nameEnglish = userMap['nameEnglish']?.toString() ?? ''; // English name (fullNameEnglish)
+    
+    // Return the appropriate name based on current language
+    if (currentLang == "ar") {
+      // For Arabic, prefer name, fallback to nameEnglish
+      return name.isNotEmpty ? name : nameEnglish;
+    } else {
+      // For English, prefer nameEnglish, fallback to name
+      return nameEnglish.isNotEmpty ? nameEnglish : name;
+    }
+  }
+
+  Widget _buildStatusChip(String status, String statusAr, String currentLang) {
+    // Get localized status name
+    final statusName = currentLang == "ar" 
+        ? (statusAr.isNotEmpty ? statusAr : status)
+        : status;
+    
+    // Get status color based on status name (case-insensitive)
+    final statusLower = status.toLowerCase();
+    Color statusColor;
+    Color backgroundColor;
+    
+    if (statusLower == "completed" || statusLower == "مكتمل" || statusLower == "ended") {
+      statusColor = AppColors.greenColor;
+      backgroundColor = AppColors.greenColor.withOpacity(.2);
+    } else if (statusLower == "cancelled" || statusLower == "canceled" || statusLower == "ملغي") {
+      statusColor = AppColors.redColor;
+      backgroundColor = AppColors.redColor.withOpacity(.2);
+    } else if (statusLower == "pending" || statusLower == "قيد الانتظار") {
+      statusColor = AppColors(context).primaryColor;
+      backgroundColor = AppColors(context).primaryColor.withOpacity(.2);
+    } else if (statusLower == "in progress" || statusLower == "قيد التنفيذ") {
+      statusColor = AppColors.blueColor;
+      backgroundColor = AppColors.blueColor.withOpacity(.2);
+    } else {
+      // Default color for unknown statuses
+      statusColor = Colors.grey;
+      backgroundColor = Colors.grey.withOpacity(.2);
+    }
+    
+    return Row(
+      children: [
+        SizedBox(
+          child: Text("${AppText(context).status}  ${":"} ",
+              style: TextStyle(
+                  color: AppColors.greyColor5,
+                  fontSize: AppSize(context).smallText2)),
+        ),
+        const SizedBox(width: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            statusName,
+            style: TextStyle(
+              color: statusColor,
+              fontWeight: FontWeight.bold,
+              fontSize: AppSize(context).smallText2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusChipFromFullTicketData(dynamic ticketStatus, String currentLang) {
+    if (ticketStatus == null) return const SizedBox();
+    
+    final ticketStatusMap = ticketStatus is Map ? ticketStatus : {};
+    final name = ticketStatusMap['name']?.toString() ?? '';
+    final nameArabic = ticketStatusMap['nameArabic']?.toString() ?? '';
+    
+    // Get localized status name
+    final statusName = currentLang == "ar" 
+        ? (nameArabic.isNotEmpty ? nameArabic : name)
+        : name;
+    
+    // Get status color based on status name (case-insensitive)
+    final statusLower = name.toLowerCase();
+    Color statusColor;
+    Color backgroundColor;
+    
+    if (statusLower == "completed" || statusLower == "مكتمل" || statusLower == "ended") {
+      statusColor = AppColors.greenColor;
+      backgroundColor = AppColors.greenColor.withOpacity(.2);
+    } else if (statusLower == "cancelled" || statusLower == "canceled" || statusLower == "ملغي") {
+      statusColor = AppColors.redColor;
+      backgroundColor = AppColors.redColor.withOpacity(.2);
+    } else if (statusLower == "pending" || statusLower == "قيد الانتظار") {
+      statusColor = AppColors(context).primaryColor;
+      backgroundColor = AppColors(context).primaryColor.withOpacity(.2);
+    } else if (statusLower == "in progress" || statusLower == "قيد التنفيذ") {
+      statusColor = AppColors.blueColor;
+      backgroundColor = AppColors.blueColor.withOpacity(.2);
+    } else {
+      // Default color for unknown statuses
+      statusColor = Colors.grey;
+      backgroundColor = Colors.grey.withOpacity(.2);
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        statusName,
+        style: TextStyle(
+          color: statusColor,
+          fontWeight: FontWeight.bold,
+          fontSize: AppSize(context).smallText2,
+        ),
+      ),
+    );
   }
 
   String _formatUserName(dynamic user) {

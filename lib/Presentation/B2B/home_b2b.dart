@@ -56,44 +56,61 @@ class _B2BHomeState extends State<B2BHome> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final screenHeight = MediaQuery.of(context).size.height;
-            final isSmallScreen = screenHeight < 700;
-            
-            return Padding(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-                bottom: bottomNavBarHeight + safeAreaBottom, // Extra padding for bottom nav
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _HeaderSection(),
-                  SizedBox(height: isSmallScreen ? 8 : 16),
-              _TicketSummarySection(
-                subsicripeModel: widget.subsicripeModel,
-                ticketStatistics: ticketStatistics,
-              ),
-                  SizedBox(height: isSmallScreen ? 4 : 8),
-              loading == true
-                  ? const SizedBox(
-                      height: 4,
-                      child: LinearProgressIndicator(
-                        backgroundColor: AppColors.secoundryColor,
-                        color: Colors.orange,
-                      ),
-                    )
-                  : Expanded(
-                      child: _LastTicketsSection(
-                        ticketModel: ticketModel,
-                      ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await Future.wait([
+              getCompanyTickets(),
+              getTicketStatistics(),
+            ]);
+          },
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final screenHeight = MediaQuery.of(context).size.height;
+              final isSmallScreen = screenHeight < 700;
+              
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: bottomNavBarHeight + safeAreaBottom, // Extra padding for bottom nav
                     ),
-                ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _HeaderSection(),
+                        SizedBox(height: isSmallScreen ? 8 : 16),
+                        _TicketSummarySection(
+                          subsicripeModel: widget.subsicripeModel,
+                          ticketStatistics: ticketStatistics,
+                        ),
+                        SizedBox(height: isSmallScreen ? 4 : 8),
+                        loading == true
+                            ? const SizedBox(
+                                height: 4,
+                                child: LinearProgressIndicator(
+                                  backgroundColor: AppColors.secoundryColor,
+                                  color: Colors.orange,
+                                ),
+                              )
+                            : SizedBox(
+                                height: constraints.maxHeight * 0.5, // Use available height for tickets section
+                                child: _LastTicketsSection(
+                                  ticketModel: ticketModel,
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
                 ),
-                  );
-                },
+              );
+            },
+          ),
         ),
       ),
     );

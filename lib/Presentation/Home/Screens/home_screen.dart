@@ -99,7 +99,20 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    isSubsicribed();
+    
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final isGuest = appProvider.userModel == null || 
+                   appProvider.userModel?.token == null || 
+                   appProvider.userModel!.token.isEmpty;
+    
+    // Skip subscription check for guest users
+    if (!isGuest) {
+      isSubsicribed();
+    } else {
+      setState(() {
+        loading5 = false;
+      });
+    }
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 400),
@@ -116,7 +129,6 @@ class _HomeScreenState extends State<HomeScreen>
     ));
 
     // Check if user is B2B user (MMS users) - skip getAllHomeApis for them
-    final appProvider = Provider.of<AppProvider>(context, listen: false);
     final currentUserRoleId = appProvider.userModel?.customer.roleId;
     int? roleIdInt;
     if (currentUserRoleId is int) {
@@ -129,10 +141,14 @@ class _HomeScreenState extends State<HomeScreen>
     final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
     
     // Only call getAllHomeApis for non-B2B users (backend-oms users)
+    // Guest users can also access home data (public content)
     if (!isB2BUser) {
     getAllHomeApis().then((value) {
       _controller.forward();
-      getActiveTicket();
+      // Skip getActiveTicket for guest users
+      if (!isGuest) {
+        getActiveTicket();
+      }
 
       try {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -900,6 +916,18 @@ class _HomeScreenState extends State<HomeScreen>
   Future isSubsicribed({isfromPlaceOreder = true}) async {
     AppProvider appProvider = Provider.of(context, listen: false);
 
+    // Skip for guest users (no token)
+    final isGuest = appProvider.userModel == null || 
+                   appProvider.userModel?.token == null || 
+                   appProvider.userModel!.token.isEmpty;
+    
+    if (isGuest) {
+      setState(() {
+        loading5 = false;
+      });
+      return;
+    }
+
     // Skip isSubsicribe if user logged in via backend-mms (has accessToken)
     // This endpoint is only for backend-oms users
     // Check if user is B2B user (MMS users: Admin 18, Team Leader 20, Technician 21, Sub-Technician 22)
@@ -949,11 +977,21 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future getActiveTicket() async {
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    
+    // Skip for guest users (no token)
+    final isGuest = appProvider.userModel == null || 
+                   appProvider.userModel?.token == null || 
+                   appProvider.userModel!.token.isEmpty;
+    
+    if (isGuest) {
+      return;
+    }
+    
     if (!mounted) return;
     setState(() {
       loading2 = true;
     });
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
       BookingApi.getActiveTicket(token: appProvider.userModel?.token ?? "")
           .then((value) {
@@ -980,8 +1018,14 @@ class _HomeScreenState extends State<HomeScreen>
       loading = true;
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    
+    // For guest users, pass null token instead of empty string
+    final token = appProvider.userModel?.token;
+    final isGuest = token == null || token.isEmpty;
+    
     try {
-      HomeApis.allHomeApis(token: appProvider.userModel?.token ?? "")
+      // Pass null for guest users, empty string might cause issues
+      HomeApis.allHomeApis(token: isGuest ? null : token)
           .then((value) {
         if (!mounted) return;
         setState(() {

@@ -213,6 +213,7 @@ class BookingApi {
                 'typeAr': ticketData['ticketType']?['nameArabic']?.toLowerCase() ?? '',
                 'date': ticketData['ticketDate'] ?? '',
                 'status': ticketData['ticketStatus']?['name'] ?? 'Pending',
+                'statusAr': ticketData['ticketStatus']?['nameArabic'] ?? 'قيد الانتظار',
 
                 // Price and user info
                 'totalPrice': null, // Not in API response

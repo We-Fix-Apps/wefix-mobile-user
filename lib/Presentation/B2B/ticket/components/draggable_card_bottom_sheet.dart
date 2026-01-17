@@ -138,17 +138,17 @@ class _CardItemWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon
-            if (item.icon != null)
+            // Icon or Image
+            if (item.iconWidget != null)
+              item.iconWidget!
+            else if (item.icon != null)
               Icon(
                 item.icon,
-                size: 40,
+                size: 70,
                 color: isSelected
                     ? AppColors(context).primaryColor
                     : Colors.grey[700],
-              )
-            else if (item.iconWidget != null)
-              item.iconWidget!,
+              ),
             const SizedBox(height: 8),
             // Title
             Padding(
@@ -167,18 +167,18 @@ class _CardItemWidget extends StatelessWidget {
                 ),
               ),
             ),
-            // Subtitle (optional)
-            if (item.subtitle != null) ...[
+            // Subtitle (optional) - show both names
+            if (item.subtitle != null && item.subtitle!.isNotEmpty) ...[
               const SizedBox(height: 4),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(
                   item.subtitle!,
                   textAlign: TextAlign.center,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Colors.grey[600],
                   ),
                 ),
