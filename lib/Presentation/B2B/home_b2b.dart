@@ -1136,7 +1136,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                   if (widget.ticketModel?.tickets[ticketIndex].delegatedToCompanyId != null) ...[
                                     const SizedBox(height: 4),
                                     Container(
-                                      constraints: const BoxConstraints(maxWidth: 100),
+                                      constraints: const BoxConstraints(maxWidth: 120),
                                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: Colors.green.withOpacity(.15),
@@ -1167,6 +1167,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                               ),
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
+                                              softWrap: true,
                                             ),
                                           ),
                                         ],

@@ -884,7 +884,7 @@ class _TicketCardState extends State<TicketCard> {
                                     fontWeight: FontWeight.w500,
                                     fontSize: 9,
                                   ),
-                                  maxLines: 1,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
