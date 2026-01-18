@@ -87,6 +87,8 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     // Show edit button for Admin, Team Leader, Super User, and Technicians (but Technicians are limited to status changes)
     // Role 23 will not see the edit button (completely restricted)
     final canEditTicket = canEditAllFields || isTechnician;
+    // Check if user is B2B (Admin 18, Team Leader 20, Technician 21, Sub-Technician 22, Super User 26)
+    final isB2B = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22 || roleIdInt == 26);
     
     String _formatTime(String? time) {
   if (time == null || time.isEmpty) return '';
@@ -126,7 +128,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
         backgroundColor: Colors.white,
         elevation: 0.5,
       ),
-      bottomNavigationBar: bookingDetailsModel?.objTickets.status == "Completed"
+      bottomNavigationBar: bookingDetailsModel?.objTickets.status == "Completed" && !isB2B
           ? Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
