@@ -400,5 +400,6 @@
     "delegatedBy": "مفوض من قبل",
     "delegatedToWefix": "مفوض إلى Wefix",
     "delegatedToWefixBy": "مفوض إلى Wefix من قبل",
-    "notAssigned": "غير معين"
+    "notAssigned": "غير معين",
+    "pleaseLoginWithMobileNumber": "الرجاء الدخول عن طريق رقم الموبايل"
 }

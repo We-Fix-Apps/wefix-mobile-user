@@ -668,4 +668,5 @@ class AppText {
   String get serviceUnavailable => getTranslation('serviceUnavailable');
   String get accountDoesNotExist => getTranslation('accountDoesNotExist');
   String get accountInactive => getTranslation('accountInactive');
+  String get pleaseLoginWithMobileNumber => getTranslation('pleaseLoginWithMobileNumber');
 }

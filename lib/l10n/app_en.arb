@@ -385,5 +385,6 @@
   "delegatedBy": "Delegated by",
   "delegatedToWefix": "Delegated to Wefix",
   "delegatedToWefixBy": "Delegated to Wefix by",
-  "notAssigned": "Not Assigned"
+  "notAssigned": "Not Assigned",
+  "pleaseLoginWithMobileNumber": "Please login using your mobile number"
 }

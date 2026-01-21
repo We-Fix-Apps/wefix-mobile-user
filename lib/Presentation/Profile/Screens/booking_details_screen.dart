@@ -1759,7 +1759,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Authentication error. Please login again.'),
+                  content: Text(AppText(context).pleaseLoginWithMobileNumber),
                   backgroundColor: Colors.red[600],
                   duration: const Duration(seconds: 5),
                 ),
