@@ -399,20 +399,29 @@ class _HeaderSectionState extends State<_HeaderSection> {
                       ),
               ),
         const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "${AppLocalizations.of(context)!.hello} $userName",
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            Text(
-              DateFormat('MMM d, yyyy').format(DateTime.now()),
-              style: TextStyle(
-                fontSize: AppSize(context).smallText1,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Text(
+                    "${AppLocalizations.of(context)!.hello} $userName",
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-            ),
-          ],
+              Text(
+                DateFormat('MMM d, yyyy').format(DateTime.now()),
+                style: TextStyle(
+                  fontSize: AppSize(context).smallText1,
+                ),
+              ),
+            ],
+          ),
         ),
         const Spacer(),
         Icon(Icons.notifications_none_rounded, color: Colors.grey[600]),
