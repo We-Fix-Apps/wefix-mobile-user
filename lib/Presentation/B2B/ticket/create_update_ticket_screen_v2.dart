@@ -277,20 +277,25 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       }
     }
 
+    // Get ticketId if editing
+    int? ticketIdForServices;
+    if (widget.ticketData != null && widget.ticketData!['id'] != null) {
+      ticketIdForServices = widget.ticketData!['id'] as int?;
+    }
+
     // Load contracts first, then load services based on selected contract
-    final contractsData = await BookingApi.getCompanyContracts(token: token, context: context);
+    // Pass ticketId to fetch contracts from the original company for delegated tickets
+    final contractsData = await BookingApi.getCompanyContracts(
+      token: token,
+      context: context,
+      ticketId: ticketIdForServices,
+    );
     
     // Get contract ID for filtering services (use ticket's contract if delegated, otherwise use first contract)
     if (!isDelegatedTicket) {
       if (contractsData != null && contractsData.isNotEmpty) {
         contractIdForServices = contractsData.first['id'] as int?;
       }
-    }
-
-    // Get ticketId if editing
-    int? ticketIdForServices;
-    if (widget.ticketData != null && widget.ticketData!['id'] != null) {
-      ticketIdForServices = widget.ticketData!['id'] as int?;
     }
 
     // Load all data in parallel (zones will be loaded when branch is selected)

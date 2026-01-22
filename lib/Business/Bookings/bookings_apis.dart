@@ -699,10 +699,16 @@ class BookingApi {
   static Future<List<Map<String, dynamic>>?> getCompanyContracts({
     required String token,
     BuildContext? context,
+    int? ticketId,
   }) async {
     try {
+      String query = EndPoints.mmsBaseUrl + EndPoints.mmsCompanyContracts;
+      if (ticketId != null) {
+        query += '?ticketId=$ticketId';
+      }
+
       final response = await HttpHelper.getData2(
-        query: EndPoints.mmsBaseUrl + EndPoints.mmsCompanyContracts,
+        query: query,
         token: token,
         context: context,
       );
