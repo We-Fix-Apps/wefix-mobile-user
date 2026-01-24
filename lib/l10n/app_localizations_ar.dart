@@ -312,7 +312,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get youLikeToTellUsAboutSomtheng =>
-      'You\'d like to tell us about something? We look forward to hearing from you.';
+      'هل تود إخبارنا بشيء ما؟ نحن نتطلع إلى سماع رأيك.';
 
   @override
   String get youeMessage => 'رسالتك .....';
@@ -871,10 +871,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'يسعدنا إبلاغك بأن طلبك قد تمت معالجته وإرساله بنجاح.';
 
   @override
-  String get verify => 'verify';
+  String get verify => 'تحقق';
 
   @override
-  String get verifyYourMobailNumber => 'Verify Your Mobail Number';
+  String get verifyYourMobailNumber => 'تحقق من رقم هاتفك المحمول';
 
   @override
   String get addTicket => 'إضافة تذكرة';

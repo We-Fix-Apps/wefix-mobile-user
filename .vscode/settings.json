@@ -1,3 +1,7 @@
 {
-  "dart.flutterSdkPath": ".fvm/versions/3.35.0"
+  "terminal.integrated.env.osx": {
+    "PATH": "${env:HOME}/.rbenv/shims:${env:HOME}/.rbenv/bin:${env:HOME}/bin:${env:PATH}"
+  },
+  "terminal.integrated.inheritEnv": true,
+  "dart.flutterSdkPath": ".fvm/versions/3.38.5"
 }

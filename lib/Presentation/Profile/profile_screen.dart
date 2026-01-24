@@ -8,6 +8,7 @@ import 'package:wefix/Business/Authantication/auth_apis.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Presentation/B2B/branch/branches_list_screen.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
@@ -228,13 +229,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       await Authantication.mmsLogout(token: appProvider.accessToken!);
                     }
                   }
-                  // Clear from provider (local storage and memory) regardless
+                  // Clear from provider (local storage and memory) but preserve user data and tokens for biometric
                   setState(() {
-                    appProvider.clearUser();
-                    appProvider.clearTokens();
+                    appProvider.clearUser(preserveUserDataForBiometric: true); // Preserve user data for biometric login
+                    // DON'T clear tokens - they're needed for biometric login to work
+                    // Tokens will be refreshed on successful login anyway
                   });
+                  // Set logout flag so splash screen knows user logged out manually
+                  await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
+                  // Remove all routes and navigate to login screen
                   Navigator.pushAndRemoveUntil(context,
-                      rightToLeft(const LoginScreen()), (route) => true);
+                      rightToLeft(const LoginScreen()), (route) => false);
                 },
               ),
 

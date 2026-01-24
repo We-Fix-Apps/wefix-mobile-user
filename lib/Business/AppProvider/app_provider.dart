@@ -308,7 +308,11 @@ class AppProvider with ChangeNotifier {
 
   void clearUser({bool preserveUserDataForBiometric = true}) {
     userModel = null;
-    clearTokens();
+    // Only clear tokens if we're not preserving user data for biometric login
+    // Tokens are needed for biometric login to work properly
+    if (!preserveUserDataForBiometric) {
+      clearTokens();
+    }
     // Preserve user data in cache for biometric authentication after logout
     // Only clear it if explicitly requested (e.g., for security/account deletion)
     if (!preserveUserDataForBiometric) {

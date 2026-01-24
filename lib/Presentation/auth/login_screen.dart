@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_svg/svg.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'package:wefix/Business/AppProvider/app_provider.dart';
@@ -15,6 +14,7 @@ import 'package:wefix/Business/Authantication/auth_apis.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Functions/permissions_helper.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/login_model.dart';
@@ -71,6 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final String? user = CacheHelper.getData(key: CacheHelper.userData);
   final LocalAuthentication _localAuthentication = LocalAuthentication();
   String authrized = "not Auth";
+  String? lastLoginType; // Store last login type: 'Business Services' or 'My Services'
 
   LoginModel? loginModel;
   
@@ -82,7 +83,9 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _checkCachedUserData();
     isBiometricAuthAvailable();
-    requestNotificationPermission(context);
+    // Don't request notification permission here - it's already requested in main()
+    // iOS only shows the native dialog ONCE per app installation
+    // If user denied it on launch, they must go to Settings to enable it
     checkBiometrics();
     
     // Add listener to remove leading zero for Jordanian numbers
@@ -97,9 +100,19 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     });
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Re-check cached user data when screen becomes visible (e.g., after logout)
+    // This ensures fingerprint button appears if user data exists
+    _checkCachedUserData();
+  }
   
   void _checkCachedUserData() {
     final String? userData = CacheHelper.getData(key: CacheHelper.userData);
+    final String? storedLoginType = CacheHelper.getData(key: CacheHelper.lastLoginType);
+    
     // Check if userData is a valid JSON string (not null, not 'null', not 'CLEAR_USER_DATA')
     bool isValid = false;
     bool isB2B = false;
@@ -135,6 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       hasValidCachedUserData = isValid;
       isCachedUserB2B = isB2B;
+      lastLoginType = storedLoginType;
     });
   }
   
@@ -144,13 +158,6 @@ class _LoginScreenState extends State<LoginScreen> {
     password.dispose();
     email.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Refresh cached user data check when screen becomes visible
-    _checkCachedUserData();
   }
 
   @override
@@ -191,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: AppSize(context).height * 0.02),
                       
-                      // * Login Type Toggle
+                      // * Login Type Toggle - Always show both buttons
                       Row(
                         children: [
                           Expanded(
@@ -412,37 +419,35 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           Builder(
                             builder: (context) {
-                              // Only show fingerprint if cached user type matches selected service type
-                              // My Services (isCompanyPersonnel=false) -> show if cached user is NOT B2B
-                              // Business Services (isCompanyPersonnel=true) -> show if cached user IS B2B
-                              final bool userTypeMatches = isCompanyPersonnel 
-                                  ? isCachedUserB2B  // Business Services: need B2B user
-                                  : !isCachedUserB2B; // My Services: need regular user
-                              return issupport
-                                  ? isFaceIdEnabled
-                                      ? hasValidCachedUserData && userTypeMatches
-                                          ? InkWell(
-                                          onTap: () => authenticate(),
-                                          child: Container(
-                                            width: AppSize(context).width * .12,
-                                            height:
-                                                AppSize(context).height * .06,
-                                            decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                border: Border.all(
-                                                  color:
-                                                      AppColors.greyColorback,
-                                                )),
-                                            child: Center(
-                                              child: SvgPicture.asset(
-                                                  "assets/icon/finger.svg"),
-                                            ),
-                                          ),
-                                        )
-                                      : SizedBox()
-                                  : const SizedBox()
-                              : const SizedBox();
+                              // Show fingerprint button if:
+                              // 1. Biometric is supported and enabled
+                              // 2. Valid cached user data exists
+                              // 3. Last login type matches currently selected login type
+                              final bool shouldShowFingerprint = issupport &&
+                                  isFaceIdEnabled &&
+                                  hasValidCachedUserData &&
+                                  ((lastLoginType == 'Business Services' && isCompanyPersonnel) ||
+                                   (lastLoginType == 'My Services' && !isCompanyPersonnel) ||
+                                   lastLoginType == null); // Show if no previous login type
+                              
+                              return shouldShowFingerprint
+                                  ? InkWell(
+                                      onTap: () => authenticate(),
+                                      child: Container(
+                                        width: AppSize(context).width * .12,
+                                        height: AppSize(context).height * .06,
+                                        decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: AppColors.greyColorback,
+                                            )),
+                                        child: Center(
+                                          child: SvgPicture.asset(
+                                              "assets/icon/finger.svg"),
+                                        ),
+                                      ),
+                                    )
+                                  : const SizedBox();
                             },
                           ),
                         ],
@@ -598,33 +603,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> requestNotificationPermission(BuildContext context) async {
-    // Check the current permission status
-    var status = await Permission.notification.status;
-
-    if (status.isDenied) {
-      // Ask user for permission
-      var result = await Permission.notification.request();
-
-      if (result.isGranted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Notifications enabled!')),
-        );
-      } else if (result.isDenied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Notifications denied.')),
-        );
-      } else if (result.isPermanentlyDenied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Notifications permanently denied. Please enable in settings.')),
-        );
-      }
-    } else if (status.isGranted) {
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text('Notifications already enabled.')),
-      // );
-    }
+    // Use PermissionsHelper for consistent permission handling
+    await PermissionsHelper.requestNotificationPermission(context);
   }
 
   Future login() async {

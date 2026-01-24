@@ -466,6 +466,12 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
               );
             }
 
+            // Clear logout flag on successful login
+            await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: false);
+            
+            // Save login type: Business Services
+            await CacheHelper.saveData(key: CacheHelper.lastLoginType, value: 'Business Services');
+
             if (mounted) {
               Navigator.pushAndRemoveUntil(
                 context,
@@ -532,6 +538,12 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
                     "checkout": true,
                   }));
             }
+
+            // Clear logout flag on successful login
+            await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: false);
+            
+            // Save login type: My Services
+            await CacheHelper.saveData(key: CacheHelper.lastLoginType, value: 'My Services');
 
             Navigator.pushAndRemoveUntil(
               context,

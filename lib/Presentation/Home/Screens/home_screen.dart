@@ -191,8 +191,8 @@ class _HomeScreenState extends State<HomeScreen>
     });
     } else {
       // For B2B users, just forward the controller
+      // Skip getActiveTicket() - B2B users use MMS API (getCompanyTicketsFromMMS) in B2B home screen
       _controller.forward();
-      getActiveTicket();
     }
   }
 
@@ -985,6 +985,24 @@ class _HomeScreenState extends State<HomeScreen>
                    appProvider.userModel!.token.isEmpty;
     
     if (isGuest) {
+      return;
+    }
+    
+    // Skip for B2B users (MMS users) - they use MMS API endpoints, not OMS
+    // B2B users should use getCompanyTicketsFromMMS() in B2B home screen
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    
+    if (isB2BUser) {
+      // B2B users use MMS API, skip this OMS endpoint call
       return;
     }
     

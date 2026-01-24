@@ -62,6 +62,71 @@ class AttachmentsWidget extends StatelessWidget {
     return '$baseUrl/WeFixFiles/Contracts/$filename';
   }
 
+  /// Helper function to determine if a file is a video
+  bool _isVideoFile(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.mp4') ||
+        lowerPath.endsWith('.mov') ||
+        lowerPath.endsWith('.avi') ||
+        lowerPath.endsWith('.mkv') ||
+        lowerPath.endsWith('.m4v') ||
+        lowerPath.endsWith('.webm');
+  }
+
+  /// Helper function to determine if a file is an image
+  bool _isImageFile(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.jpg') ||
+        lowerPath.endsWith('.jpeg') ||
+        lowerPath.endsWith('.png') ||
+        lowerPath.endsWith('.gif') ||
+        lowerPath.endsWith('.bmp') ||
+        lowerPath.endsWith('.webp');
+  }
+
+  /// Helper function to determine if a file is an audio file
+  bool _isAudioFile(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.m4a') ||
+        lowerPath.endsWith('.mp3') ||
+        lowerPath.endsWith('.wav') ||
+        lowerPath.endsWith('.aac') ||
+        lowerPath.endsWith('.ogg');
+  }
+
+  /// Helper function to get the appropriate icon for a file
+  Widget _getFileIcon(String? fileUrl) {
+    if (fileUrl == null || fileUrl.isEmpty) {
+      return SvgPicture.asset("assets/icon/file.svg", width: 40);
+    }
+    
+    // Check audio files first
+    if (_isAudioFile(fileUrl)) {
+      return SvgPicture.asset("assets/icon/mp4.svg", width: 40);
+    }
+    
+    // Check video files
+    if (_isVideoFile(fileUrl)) {
+      return SvgPicture.asset("assets/icon/vid.svg", width: 40);
+    }
+    
+    // Check PDF files
+    if (fileUrl.toLowerCase().endsWith('.pdf')) {
+      return SvgPicture.asset("assets/icon/pdf.svg", width: 40);
+    }
+    
+    // Check image files
+    if (_isImageFile(fileUrl)) {
+      return SvgPicture.asset("assets/icon/imge.svg", width: 40);
+    }
+    
+    // Default to file icon for other types
+    return SvgPicture.asset("assets/icon/file.svg", width: 40);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -72,13 +137,7 @@ class AttachmentsWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: ListTile(
-          leading: url!.endsWith("mp4")
-              ? SvgPicture.asset("assets/icon/vid.svg", width: 40)
-              : url!.endsWith("m4a")
-                  ? SvgPicture.asset("assets/icon/mp4.svg", width: 40)
-                  : url!.endsWith("pdf")
-                      ? SvgPicture.asset("assets/icon/pdf.svg", width: 40)
-                      : SvgPicture.asset("assets/icon/imge.svg", width: 40),
+          leading: _getFileIcon(url),
           title: Text("$image"),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,

@@ -35,5 +35,7 @@ class CacheHelper {
   static String tokenType = 'TOKEN_TYPE';
   static String expiresIn = 'EXPIRES_IN';
   static String tokenExpiresAt = 'TOKEN_EXPIRES_AT';
+  static String isLoggedOut = 'IS_LOGGED_OUT'; // Track if user manually logged out
+  static String lastLoginType = 'LAST_LOGIN_TYPE'; // Track last login type: 'Business Services' or 'My Services'
   
 }

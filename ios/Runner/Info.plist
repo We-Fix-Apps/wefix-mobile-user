@@ -15,6 +15,12 @@
   <string>fetch</string>
   <string>remote-notification</string>
 </array>
+
+	<!-- Notification Permission -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>We need permission to send you notifications about your orders, appointments, and important updates.</string>
+	<!-- End Notification Permission -->
+
 <key>CFBundleURLTypes</key>
 <array>
   <dict>
@@ -39,29 +45,29 @@
   <string>google</string>
 </array>
 
-	<!-- Start Location -->
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Wefix needs your location to match you with nearby service requests and provide accurate navigation while driving.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Wefix needs your location to match you with nearby service requests and provide accurate navigation while driving.</string>
-	<key>NSLocationUsageDescription</key>
-	<string>Wefix uses your location to help you receive nearby jobs and optimize your routes while on duty.</string>
+	<!-- Location Permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Wefix uses your location to find nearby service requests and guide you to your destination.</string>
-	<!-- End Location -->
+	<string>This app requires your location to offer navigation assistance and local weather updates.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app requires continuous access to your location to enable real-time location tracking for safety features and travel updates.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app requires continuous access to your location to enable real-time location tracking for safety features and travel updates.</string>
+	<!-- End Location Permissions -->
 
-	<!-- Start Screen Recording -->
+	<!-- Camera and Media Permissions -->
 	<key>NSCameraUsageDescription</key>
-	<string>Wefix needs access to your camera to scan QR codes and capture images when needed.</string>
+	<string>We need access to your camera to allow you to take photos and videos within the app.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to your photo and video library to save media from the app, allowing you to keep and share your creations.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Wefix needs access to your photo library to allow uploading or attaching images related to service requests.</string>
+	<string>Our app needs access to your photo and video gallery to let you select media for creating and sharing custom story posts. For instance, you can pick images and videos from your gallery to include in a story that you can edit and post directly within the app.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Wefix requires microphone access to record audio during screen recording for support or reporting purposes.</string>
+	<string>We need access to your microphone to record audio when capturing videos within the app.</string>
 	<key>RPScreenRecordingUsageDescription</key>
 	<string>Wefix needs screen recording permission to capture your screen for support, diagnostics, or training purposes.</string>
 	<key>UISupportsDocumentBrowser</key>
 	<true/>
-	<!-- End Screen Recording -->
+	<!-- End Camera and Media Permissions -->
 	
 	<!-- Start Local Network -->
 	<key>NSLocalNetworkUsageDescription</key>

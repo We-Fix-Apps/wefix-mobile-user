@@ -3717,6 +3717,52 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               final fileName = file['filename'] ?? file['image']?.split('/').last ?? file['file']?.split('/').last ?? file['audio']?.split('/').last ?? 'File ${index + 1}';
               final filePath = file['file'] ?? file['image'] ?? file['audio'];
 
+  // Helper function to determine if a file is a video
+  bool _isVideoFile(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.mp4') ||
+        lowerPath.endsWith('.mov') ||
+        lowerPath.endsWith('.avi') ||
+        lowerPath.endsWith('.mkv') ||
+        lowerPath.endsWith('.m4v') ||
+        lowerPath.endsWith('.webm');
+  }
+
+  // Helper function to determine if a file is an image
+  bool _isImageFile(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.jpg') ||
+        lowerPath.endsWith('.jpeg') ||
+        lowerPath.endsWith('.png') ||
+        lowerPath.endsWith('.gif') ||
+        lowerPath.endsWith('.bmp') ||
+        lowerPath.endsWith('.webp');
+  }
+
+  // Helper function to get the appropriate icon for a file
+  IconData _getFileIconData(String? filePath, Map<String, String?> file) {
+    // Check audio files first
+    if (file['audio'] != null) {
+      return Icons.audiotrack;
+    }
+    
+    // Check video files
+    final path = filePath ?? file['file'] ?? file['image'];
+    if (_isVideoFile(path)) {
+      return Icons.videocam;
+    }
+    
+    // Check image files
+    if (_isImageFile(path)) {
+      return Icons.image;
+    }
+    
+    // Default to file icon
+    return Icons.insert_drive_file;
+  }
+
               return InkWell(
                 onTap: filePath != null
                     ? () {
@@ -3725,11 +3771,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                     : null,
                 child: Chip(
                   avatar: Icon(
-                    file['file'] != null
-                        ? Icons.insert_drive_file
-                        : file['image'] != null
-                            ? Icons.image
-                            : Icons.audiotrack,
+                    _getFileIconData(filePath, file),
                     size: 18,
                   ),
                   label: Text(
@@ -3991,45 +4033,59 @@ class _VideoPlayerFileWidget extends StatefulWidget {
 }
 
 class _VideoPlayerFileWidgetState extends State<_VideoPlayerFileWidget> {
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _isInitialized = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(File(widget.filePath))
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isInitialized = true;
-          });
-        }
-      });
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    if (_isDisposed) return;
+    
+    _controller = VideoPlayerController.file(File(widget.filePath));
+    
+    try {
+      await _controller!.initialize();
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (error) {
+      if (mounted && !_isDisposed) {
+        print('VideoPlayer initialization error: $error');
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized) {
+    if (!_isInitialized || _controller == null || _isDisposed) {
       return const Center(child: CircularProgressIndicator());
     }
     return AspectRatio(
-      aspectRatio: _controller.value.aspectRatio,
+      aspectRatio: _controller!.value.aspectRatio,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          VideoPlayer(_controller),
+          VideoPlayer(_controller!),
           IconButton(
             icon: Icon(
-              _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
               color: Colors.white,
               size: 50,
             ),
             onPressed: () {
+              if (_isDisposed || _controller == null) return;
               setState(() {
-                if (_controller.value.isPlaying) {
-                  _controller.pause();
+                if (_controller!.value.isPlaying) {
+                  _controller!.pause();
                 } else {
-                  _controller.play();
+                  _controller!.play();
                 }
               });
             },
@@ -4041,7 +4097,30 @@ class _VideoPlayerFileWidgetState extends State<_VideoPlayerFileWidget> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _isDisposed = true;
+    
+    // Store reference and clear immediately
+    final controller = _controller;
+    _controller = null;
+    
+    // Dispose asynchronously to avoid blocking
+    if (controller != null) {
+      Future.microtask(() async {
+        try {
+          // Wait a bit for any pending operations
+          await Future.delayed(const Duration(milliseconds: 50));
+          
+          if (controller.value.isInitialized) {
+            await controller.pause();
+          }
+          
+          controller.dispose();
+        } catch (e) {
+          // Silently catch disposal errors
+        }
+      });
+    }
+    
     super.dispose();
   }
 }
@@ -4056,45 +4135,59 @@ class _VideoPlayerNetworkWidget extends StatefulWidget {
 }
 
 class _VideoPlayerNetworkWidgetState extends State<_VideoPlayerNetworkWidget> {
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _isInitialized = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isInitialized = true;
-          });
-        }
-      });
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    if (_isDisposed) return;
+    
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    
+    try {
+      await _controller!.initialize();
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (error) {
+      if (mounted && !_isDisposed) {
+        print('VideoPlayer initialization error: $error');
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized) {
+    if (!_isInitialized || _controller == null || _isDisposed) {
       return const Center(child: CircularProgressIndicator());
     }
     return AspectRatio(
-      aspectRatio: _controller.value.aspectRatio,
+      aspectRatio: _controller!.value.aspectRatio,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          VideoPlayer(_controller),
+          VideoPlayer(_controller!),
           IconButton(
             icon: Icon(
-              _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
               color: Colors.white,
               size: 50,
             ),
             onPressed: () {
+              if (_isDisposed || _controller == null) return;
               setState(() {
-                if (_controller.value.isPlaying) {
-                  _controller.pause();
+                if (_controller!.value.isPlaying) {
+                  _controller!.pause();
                 } else {
-                  _controller.play();
+                  _controller!.play();
                 }
               });
             },
@@ -4106,7 +4199,30 @@ class _VideoPlayerNetworkWidgetState extends State<_VideoPlayerNetworkWidget> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _isDisposed = true;
+    
+    // Store reference and clear immediately
+    final controller = _controller;
+    _controller = null;
+    
+    // Dispose asynchronously to avoid blocking
+    if (controller != null) {
+      Future.microtask(() async {
+        try {
+          // Wait a bit for any pending operations
+          await Future.delayed(const Duration(milliseconds: 50));
+          
+          if (controller.value.isInitialized) {
+            await controller.pause();
+          }
+          
+          controller.dispose();
+        } catch (e) {
+          // Silently catch disposal errors
+        }
+      });
+    }
+    
     super.dispose();
   }
 }

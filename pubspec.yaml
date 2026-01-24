@@ -59,6 +59,7 @@ dependencies:
   # fluttertoast: ^8.2.5
   # flutter_paypal_checkout: ^1.0.1
   image_picker: ^1.2.0
+  flutter_image_compress: ^2.3.0
   # Html Widget
   flutter_widget_from_html: ^0.15.2
   # Icon Luncher

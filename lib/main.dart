@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:bot_toast/bot_toast.dart';
@@ -21,6 +20,7 @@ import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Presentation/SplashScreen/splash_screen.dart';
 import 'package:wefix/Data/Functions/token_refresh.dart';
 import 'package:wefix/Data/Functions/token_utils.dart';
+import 'package:wefix/Data/Functions/permissions_helper.dart';
 import 'Data/model/user_model.dart';
 import 'l10n/app_localizations.dart';
 
@@ -36,14 +36,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Request notification permission FIRST - before anything else
+  // This ensures the native iOS dialog shows immediately
+  await PermissionsHelper.requestNotificationPermissionOnLaunch();
+  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await Permission.notification.isDenied.then((value) {
-    if (value) {
-      Permission.notification.request();
-    }
-  });
 
   // REGISTER BACKGROUND HANDLER BEFORE runApp
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -83,34 +83,13 @@ Future<void> main() async {
   );
 }
 
+// All permissions are now requested in main() function, so this is no longer needed
+
+// Notification permission is now handled by PermissionsHelper
+// This function is kept for backward compatibility but uses PermissionsHelper
 Future<void> requestNotificationPermission(BuildContext context) async {
-  // Check the current permission status
-  var status = await Permission.notification.status;
-
-  if (status.isDenied) {
-    // Ask user for permission
-    var result = await Permission.notification.request();
-
-    if (result.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifications enabled!')),
-      );
-    } else if (result.isDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifications denied.')),
-      );
-    } else if (result.isPermanentlyDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Notifications permanently denied. Please enable in settings.')),
-      );
-    }
-  } else if (status.isGranted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Notifications already enabled.')),
-    );
-  }
+  if (!context.mounted) return;
+  await PermissionsHelper.requestNotificationPermission(context);
 }
 
 class MyApp extends StatefulWidget {
@@ -129,7 +108,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    requestNotificationPermission(context);
+    
+    // Notification permission is already requested in main() via PermissionsHelper
+    // No need to request again here
 
     MainManagements.handelNotification(
       context: context,

@@ -401,6 +401,7 @@ class _HeaderSectionState extends State<_HeaderSection> {
         const SizedBox(width: 12),
         Expanded(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Flexible(
