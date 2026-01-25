@@ -77,6 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
   
   // Store the PhoneNumber object to get the full international format when needed
   PhoneNumber? currentPhoneNumber;
+  
+  bool _hasInitialized = false; // Track if initial setup is done to prevent resetting user selection
 
   @override
   void initState() {
@@ -100,12 +102,13 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     });
   }
-
+  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Re-check cached user data when screen becomes visible (e.g., after logout)
     // This ensures fingerprint button appears if user data exists
+    // Only reset isCompanyPersonnel on first initialization, not on subsequent calls
     _checkCachedUserData();
   }
   
@@ -149,9 +152,13 @@ class _LoginScreenState extends State<LoginScreen> {
       hasValidCachedUserData = isValid;
       isCachedUserB2B = isB2B;
       lastLoginType = storedLoginType;
-      // Always reset to My Services (isCompanyPersonnel = false) on app open
-      // Both buttons will always be visible, user can choose which one to use
-      isCompanyPersonnel = false;
+      // Only reset to My Services (isCompanyPersonnel = false) on first initialization
+      // Preserve user's selection on subsequent calls (e.g., when focusing on input field)
+      if (!_hasInitialized) {
+        isCompanyPersonnel = false;
+        _hasInitialized = true;
+      }
+      // Don't change isCompanyPersonnel if user has already made a selection
     });
   }
   

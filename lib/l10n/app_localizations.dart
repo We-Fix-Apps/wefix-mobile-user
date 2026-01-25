@@ -1787,7 +1787,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifyYourMobailNumber.
   ///
   /// In en, this message translates to:
-  /// **'Verify Your Mobail Number'**
+  /// **'Verify Your Mobile Number'**
   String get verifyYourMobailNumber;
 
   /// No description provided for @addTicket.

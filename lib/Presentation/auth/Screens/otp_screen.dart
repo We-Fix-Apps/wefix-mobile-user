@@ -212,7 +212,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
                           : RichText(
                               textAlign: TextAlign.center,
                               text: TextSpan(
-                                text: '${AppText(context).dontreceivecode} ? ',
+                                text: '${AppText(context).dontreceivecode}  ',
                                 style: TextStyle(
                                   fontSize: AppSize(context).smallText2,
                                   color: AppColors.blackColor1,

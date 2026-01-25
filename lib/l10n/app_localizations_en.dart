@@ -878,7 +878,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verify => 'verify';
 
   @override
-  String get verifyYourMobailNumber => 'Verify Your Mobail Number';
+  String get verifyYourMobailNumber => 'Verify Your Mobile Number';
 
   @override
   String get addTicket => 'Add Ticket';
