@@ -161,7 +161,7 @@ class _BranchCard extends StatelessWidget {
     required this.city,
     required this.phone,
     required this.onEdit,
-    required this.onDelete,
+    required this.onDelete, this.image,
   });
 
   @override
