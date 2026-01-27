@@ -6,7 +6,7 @@ class MaintenanceStepper extends StatelessWidget {
   final int currentStep; // 0-based index
   final String? confirmationNote; // 'With Approval' or 'Without Approval'
 
-  MaintenanceStepper({
+  const MaintenanceStepper({super.key, 
     required this.currentStep,
     this.confirmationNote,
   });

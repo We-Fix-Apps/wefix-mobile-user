@@ -34,7 +34,7 @@ class _TransactionsWidgetLoadingState extends State<TransactionsWidgetLoading> {
             ),
           ),
         ),
-        title: LoadingText(
+        title: const LoadingText(
           width: 100,
           height: 10,
         ),
@@ -44,7 +44,7 @@ class _TransactionsWidgetLoadingState extends State<TransactionsWidgetLoading> {
             height: 10,
           ),
         ),
-        trailing: LoadingText(
+        trailing: const LoadingText(
           width: 60,
           height: 30,
         ));

@@ -10,7 +10,6 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:wefix/firebase_options.dart';
-// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:wefix/main_managements.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
@@ -29,7 +28,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   log('Handling a background message: ${message.messageId}');
   log('Message data: ${message.data}');
-  // For background, show a system notification using flutter_local_notifications
 }
 
 Future<void> main() async {
@@ -82,32 +80,18 @@ Future<void> main() async {
 }
 
 Future<void> requestNotificationPermission(BuildContext context) async {
-  // Check the current permission status
   var status = await Permission.notification.status;
-
   if (status.isDenied) {
-    // Ask user for permission
     var result = await Permission.notification.request();
-
     if (result.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifications enabled!')),
-      );
+      log('Notifications enabled.');
     } else if (result.isDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notifications denied.')),
-      );
+      log('Notifications denied.');
     } else if (result.isPermanentlyDenied) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Notifications permanently denied. Please enable in settings.')),
-      );
+      log('Notifications permanently denied. Please enable in settings.');
     }
   } else if (status.isGranted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Notifications already enabled.')),
-    );
+    log('Notifications already enabled.');
   }
 }
 
@@ -161,8 +145,7 @@ class _MyAppState extends State<MyApp> {
           context,
           MediaQuery(
             data: MediaQuery.of(context).copyWith(
-              textScaleFactor:
-                  MediaQuery.of(context).textScaleFactor.clamp(.7, 1),
+              textScaler: TextScaler.linear(MediaQuery.of(context).textScaleFactor.clamp(.7, 1)),
             ),
             child: child!,
           ),

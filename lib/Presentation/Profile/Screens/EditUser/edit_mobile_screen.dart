@@ -27,7 +27,7 @@ class _EditMobileScreenState extends State<EditMobileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          actions: [
+          actions: const [
            LanguageButton(),
         ],
         centerTitle: true,

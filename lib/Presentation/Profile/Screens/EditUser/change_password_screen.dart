@@ -44,7 +44,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
+        actions: const [
            LanguageButton(),
         ],
         title: Text(

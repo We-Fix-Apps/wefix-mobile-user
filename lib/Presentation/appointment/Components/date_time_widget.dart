@@ -127,12 +127,12 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
           height: 5,
         ),
         appProvider.userModel?.customer.roleId == 2
-            ? SizedBox()
+            ? const SizedBox()
             : const Divider(
                 color: AppColors.backgroundColor,
               ),
         appProvider.userModel?.customer.roleId == 2
-            ? SizedBox()
+            ? const SizedBox()
             : Container(
                 key: widget.featureKey,
                 child: Column(
@@ -192,7 +192,7 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
                         ),
                         inactiveThumbColor: AppColors.whiteColor1,
                         inactiveTrackColor: AppColors.greyColor1,
-                        overlayColor: MaterialStateProperty.all(
+                        overlayColor: WidgetStateProperty.all(
                           AppColors(context).primaryColor.withOpacity(.2),
                         ),
                         value: isFemale ?? false,

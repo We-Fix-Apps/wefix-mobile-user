@@ -356,7 +356,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                             runSpacing: 8,
                             children:
                                 bookingDetailsModel?.objTickets.ticketTools
-                                        ?.map((tool) => Chip(
+                                        .map((tool) => Chip(
                                               label: Text(tool["title"] ?? ""),
                                               backgroundColor:
                                                   AppColors(context)
@@ -510,7 +510,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
           Row(
             children: [
               SizedBox(
-                child: Text("${left} : ",
+                child: Text("$left : ",
                     style: TextStyle(
                         color: AppColors.greyColor5,
                         fontSize: AppSize(context).smallText2)),
@@ -534,18 +534,18 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
               : Row(
                   children: [
                     SizedBox(
-                      child: Text("${right}  ${":"} ",
+                      child: Text("$right  ${":"} ",
                           style: TextStyle(
                               color: AppColors.greyColor5,
                               fontSize: AppSize(context).smallText2)),
                     ),
-                    if (rightValue != null) ...[
-                      const SizedBox(width: 4),
-                      Text(rightValue,
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: AppSize(context).smallText2)),
-                    ],
+                    ...[
+                    const SizedBox(width: 4),
+                    Text(rightValue,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: AppSize(context).smallText2)),
+                  ],
                   ],
                 ),
         ],
@@ -626,7 +626,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount:
-                bookingDetailsModel?.objTickets.maintenanceTickets?.length ?? 0,
+                bookingDetailsModel?.objTickets.maintenanceTickets.length ?? 0,
             separatorBuilder: (context, index) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               return ListTile(
@@ -643,7 +643,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                       color: AppColors(context).primaryColor),
                 ),
                 title: Text(
-                  bookingDetailsModel?.objTickets.maintenanceTickets?[index]
+                  bookingDetailsModel?.objTickets.maintenanceTickets[index]
                           ["name"] ??
                       "",
                   style: TextStyle(

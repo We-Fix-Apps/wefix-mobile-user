@@ -69,19 +69,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // ),
               const SizedBox(height: 10),
               appProvider.userModel?.customer.roleId == 1
-                  ? SizedBox()
+                  ? const SizedBox()
                   : WidgetCard(
                       title: "Branches",
                       onTap: () {
                         Navigator.push(
-                            context, rightToLeft(BranchesListScreen()));
+                            context, rightToLeft(const BranchesListScreen()));
                       },
                     ),
               const SizedBox(height: 10),
               appProvider.userModel?.token == null
                   ? const SizedBox()
                   : appProvider.userModel?.customer.roleId == 2
-                      ? SizedBox()
+                      ? const SizedBox()
                       : WidgetCard(
                           title: AppText(context).wallet,
                           onTap: () {
@@ -90,7 +90,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                         ),
               appProvider.userModel?.customer.roleId == 2
-                  ? SizedBox()
+                  ? const SizedBox()
                   : const SizedBox(height: 10),
               appProvider.userModel?.token == null
                   ? const SizedBox()
@@ -105,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               appProvider.userModel?.token == null
                   ? const SizedBox()
                   : appProvider.userModel?.customer.roleId == 2
-                      ? SizedBox()
+                      ? const SizedBox()
                       : WidgetCard(
                           title: AppText(context).myProperty,
                           onTap: () {
@@ -118,7 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                         ),
               appProvider.userModel?.customer.roleId == 2
-                  ? SizedBox()
+                  ? const SizedBox()
                   : const SizedBox(height: 10),
 
               appProvider.userModel?.token == null

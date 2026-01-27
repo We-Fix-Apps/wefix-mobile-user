@@ -78,19 +78,19 @@ class _WidgetPhoneFieldState extends State<WidgetPhoneField> {
               const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           border: OutlineInputBorder(
               gapPadding: 0,
-              borderSide: BorderSide(color: AppColors.backgroundColor),
+              borderSide: const BorderSide(color: AppColors.backgroundColor),
               borderRadius: BorderRadius.circular(7)),
           focusedBorder: OutlineInputBorder(
               gapPadding: 0,
-              borderSide: BorderSide(color: AppColors.backgroundColor),
+              borderSide: const BorderSide(color: AppColors.backgroundColor),
               borderRadius: BorderRadius.circular(7)),
           disabledBorder: OutlineInputBorder(
               gapPadding: 0,
-              borderSide: BorderSide(color: AppColors.backgroundColor),
+              borderSide: const BorderSide(color: AppColors.backgroundColor),
               borderRadius: BorderRadius.circular(7)),
           enabledBorder: OutlineInputBorder(
               gapPadding: 0,
-              borderSide: BorderSide(color: AppColors.backgroundColor),
+              borderSide: const BorderSide(color: AppColors.backgroundColor),
               borderRadius: BorderRadius.circular(7)),
           errorBorder: OutlineInputBorder(
             gapPadding: 0,

@@ -2,74 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-
-<!-- Start Face ID -->
-	<key>NSFaceIDUsageDescription</key>
-	<string>Why is my app authenticating using face id ?</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-	<!-- Start Face ID -->
-
-	<key>UIBackgroundModes</key>
-<array>
-  <string>fetch</string>
-  <string>remote-notification</string>
-</array>
-<key>CFBundleURLTypes</key>
-<array>
-  <dict>
-    <key>CFBundleTypeRole</key>
-    <string>Editor</string>
-    <key>CFBundleURLSchemes</key>
-    <array>
-      <string>com.googleusercontent.apps.167167966746-jn3etauvntmk5q390pj5ifsradn31225</string>
-    </array>
-  </dict>
-</array>
-<!-- Google Sign-In Configuration -->
-    <key>GIDClientID</key>
-    <string>167167966746-jn3etauvntmk5q390pj5ifsradn31225.apps.googleusercontent.com</string>
-
-    <key>GIDServerClientID</key>
-    <string>167167966746-jn3etauvntmk5q390pj5ifsradn31225.apps.googleusercontent.com</string>
-
-
-<key>LSApplicationQueriesSchemes</key>
-<array>
-  <string>google</string>
-</array>
-
-	<!-- Start Location -->
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Wefix needs your location to match you with nearby service requests and provide accurate navigation while driving.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Wefix needs your location to match you with nearby service requests and provide accurate navigation while driving.</string>
-	<key>NSLocationUsageDescription</key>
-	<string>Wefix uses your location to help you receive nearby jobs and optimize your routes while on duty.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Wefix uses your location to find nearby service requests and guide you to your destination.</string>
-	<!-- End Location -->
-
-	<!-- Start Screen Recording -->
-	<key>NSCameraUsageDescription</key>
-	<string>Wefix needs access to your camera to scan QR codes and capture images when needed.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Wefix needs access to your photo library to allow uploading or attaching images related to service requests.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Wefix requires microphone access to record audio during screen recording for support or reporting purposes.</string>
-	<key>RPScreenRecordingUsageDescription</key>
-	<string>Wefix needs screen recording permission to capture your screen for support, diagnostics, or training purposes.</string>
-	<key>UISupportsDocumentBrowser</key>
-	<true/>
-	<!-- End Screen Recording -->
-	
-	<!-- Start Local Network -->
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Wefix needs access to your local network to discover and connect with nearby devices and services essential for app functionality.</string>
-	<!-- End Local Network -->
-
-
-
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -88,10 +22,58 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.167167966746-jn3etauvntmk5q390pj5ifsradn31225</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GIDClientID</key>
+	<string>167167966746-jn3etauvntmk5q390pj5ifsradn31225.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>167167966746-jn3etauvntmk5q390pj5ifsradn31225.apps.googleusercontent.com</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>google</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Wefix needs access to your camera to scan QR codes and capture images when needed.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Why is my app authenticating using face id ?</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Wefix needs access to your local network to discover and connect with nearby devices and services essential for app functionality.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Wefix needs your location to match you with nearby service requests and provide accurate navigation while driving.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Wefix needs your location to match you with nearby service requests and provide accurate navigation while driving.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Wefix uses your location to help you receive nearby jobs and optimize your routes while on duty.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Wefix uses your location to find nearby service requests and guide you to your destination.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Wefix requires microphone access to record audio during screen recording for support or reporting purposes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Wefix needs access to your photo library to allow uploading or attaching images related to service requests.</string>
+	<key>RPScreenRecordingUsageDescription</key>
+	<string>Wefix needs screen recording permission to capture your screen for support, diagnostics, or training purposes.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+
+	
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -99,19 +81,15 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<key>UISupportsDocumentBrowser</key>
 	<true/>
 </dict>
 </plist>

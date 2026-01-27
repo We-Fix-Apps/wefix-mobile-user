@@ -54,7 +54,7 @@ class _BranchesListScreenState extends State<BranchesListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           "Branches",
           style: TextStyle(
             color: Colors.black,
@@ -70,7 +70,7 @@ class _BranchesListScreenState extends State<BranchesListScreen>
         backgroundColor: AppColors(context).primaryColor,
         onPressed: () async {
           final a =
-              await Navigator.push(context, rightToLeft(AddBranchScreen()));
+              await Navigator.push(context, rightToLeft(const AddBranchScreen()));
 
           if (a == true) {
             getBranches();
@@ -157,7 +157,6 @@ class _BranchCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   const _BranchCard({
-    this.image,
     required this.name,
     required this.city,
     required this.phone,

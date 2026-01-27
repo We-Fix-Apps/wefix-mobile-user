@@ -30,7 +30,7 @@ class _UsageDetailsWidgetState extends State<UsageDetailsWidget> {
             children: [
               Text(widget.title),
               Text(
-                  "${widget.value} / ${widget.total == 100 ? "${AppText(context).unlimited}" : widget.total}"),
+                  "${widget.value} / ${widget.total == 100 ? AppText(context).unlimited : widget.total}"),
             ],
           ),
           const SizedBox(height: 4),

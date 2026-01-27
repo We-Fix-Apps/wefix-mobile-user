@@ -46,12 +46,12 @@ class _ApartmentScreenState extends State<ApartmentScreen> {
         actions: const [LanguageButton()],
       ),
       bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8.0),
         child: CustomBotton(
           title: AppText(context).addProperty,
           onTap: () async {
             final a = await Navigator.push(
-                context, rightToLeft(AddRealStateScreen()));
+                context, rightToLeft(const AddRealStateScreen()));
 
             if (a) {
               getRealState();
@@ -65,7 +65,7 @@ class _ApartmentScreenState extends State<ApartmentScreen> {
               backgroundColor: AppColors.secoundryColor,
             )
           : realEstatesModel?.realEstates.isEmpty == true
-              ? EmptyScreen()
+              ? const EmptyScreen()
               : ListView.separated(
                   itemCount: realEstatesModel?.realEstates.length ?? 0,
                   padding: const EdgeInsets.all(8),

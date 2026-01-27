@@ -9,6 +9,7 @@ class HomeModel {
   List<Category> categories;
   List<Service> serviceOffers;
   List<Service> servicePopular;
+  int ? roleId ;
   Tickets? tickets;
 
   HomeModel({
@@ -17,11 +18,13 @@ class HomeModel {
     required this.serviceOffers,
     required this.servicePopular,
     required this.tickets,
+    required this.roleId
   });
 
   factory HomeModel.fromJson(Map<String, dynamic> json) => HomeModel(
         sliders: List<SliderModel>.from(
             json["sliders"].map((x) => SliderModel.fromJson(x))),
+            roleId : json["roleId"],
         categories: List<Category>.from(
             json["categories"].map((x) => Category.fromJson(x))),
         serviceOffers: List<Service>.from(
@@ -49,7 +52,7 @@ class SliderModel {
   String? titleAr;
   String? image;
   bool isActive;
-  dynamic? sortOrder;
+  dynamic sortOrder;
   int? categoryId;
 
   SliderModel({
@@ -85,7 +88,7 @@ class SliderModel {
 
 class Category {
   dynamic id;
-  dynamic? parentId;
+  dynamic parentId;
   String titleEn;
   String titleAr;
   String? icon;
@@ -139,21 +142,21 @@ class Category {
 
 class Service {
   dynamic id;
-  dynamic? categoryId;
+  dynamic categoryId;
   String name;
   String nameAr;
   String icon;
   String image;
   String? description;
-  dynamic? price;
-  dynamic? discountPrice;
+  dynamic price;
+  dynamic discountPrice;
   bool isOffer;
   bool isPopular;
   bool haveQuantity;
   String? descriptionAr;
-  dynamic? sortOrder;
-  dynamic? numOfTicket;
-  dynamic? subscriptionPrice;
+  dynamic sortOrder;
+  dynamic numOfTicket;
+  dynamic subscriptionPrice;
   dynamic category;
   List<dynamic>? serviceTickets;
 
@@ -227,8 +230,8 @@ class Service {
 
 class Tickets {
   dynamic id;
-  dynamic? customerId;
-  dynamic? ticketTypeId;
+  dynamic customerId;
+  dynamic ticketTypeId;
   String promoCode;
   DateTime requestedDate;
   DateTime selectedDate;
@@ -243,15 +246,15 @@ class Tickets {
   dynamic gender;
   bool isWithMaterial;
   dynamic priority;
-  dynamic? createdBy;
-  dynamic? customerPackageId;
+  dynamic createdBy;
+  dynamic customerPackageId;
   dynamic totalPrice;
   dynamic serviceprovide;
   dynamic serviceprovideImage;
   String? description;
   String? descriptionAr;
   String? qrCodePath;
-  dynamic? rating;
+  dynamic rating;
   bool isRated;
   String? qrCode;
   String? statusAr;

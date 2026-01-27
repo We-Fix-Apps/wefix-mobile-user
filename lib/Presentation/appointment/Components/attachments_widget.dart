@@ -28,7 +28,7 @@ class AttachmentsWidget extends StatelessWidget {
                       : SvgPicture.asset("assets/icon/imge.svg", width: 40),
           title: Text("$image"),
           trailing: IconButton(
-            icon: Icon(Icons.remove_red_eye),
+            icon: const Icon(Icons.remove_red_eye),
             onPressed: () {
               _launchInAppWithBrowserOptions(url ?? "https://www.google.com");
             },
@@ -43,7 +43,7 @@ class AttachmentsWidget extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      throw 'Could not launch ${url}';
+      throw 'Could not launch $url';
     }
   }
 }

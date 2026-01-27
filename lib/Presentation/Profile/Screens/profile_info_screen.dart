@@ -286,7 +286,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
       centerTitle: true,
-      actions: [
+      actions: const [
         LanguageButton(),
       ],
       systemOverlayStyle: SystemUiOverlayStyle(

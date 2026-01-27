@@ -279,7 +279,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('${AppText(context).checkout}'),
+        title: Text(AppText(context).checkout),
         centerTitle: true,
         actions: const [
           LanguageButton(),
@@ -311,7 +311,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                             ),
                           ))
-                  : subsicripeModel?.status == true
+                  : ((subsicripeModel?.status ?? false) &&
+                          (subsicripeModel?.onDemandVisit ?? 0) > 0)
                       ? showConfirmAppointmentDialog(context, () {
                           addRequest();
                         })
@@ -326,6 +327,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ? LinearProgressIndicator(
               color: AppColors(context).primaryColor,
               backgroundColor: AppColors.secoundryColor,
+
             )
           : loading5 == true
               ? LinearProgressIndicator(
@@ -369,7 +371,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                             }
                                           },
                                           child: Text(
-                                            "${AppText(context).change}",
+                                            AppText(context).change,
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 color: AppColors(context)
@@ -410,7 +412,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       ),
 
                             appProvider.userModel?.customer.roleId == 2
-                                ? SizedBox()
+                                ? const SizedBox()
                                 : Row(
                                     children: [
                                       Text(
@@ -446,7 +448,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
 
                             appProvider.userModel?.customer.roleId == 2
-                                ? SizedBox()
+                                ? const SizedBox()
                                 : Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: SwitchListTile.adaptive(
@@ -479,7 +481,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       ),
                                       inactiveThumbColor: AppColors.whiteColor1,
                                       inactiveTrackColor: AppColors.greyColor1,
-                                      overlayColor: MaterialStateProperty.all(
+                                      overlayColor: WidgetStateProperty.all(
                                         AppColors(context)
                                             .primaryColor
                                             .withOpacity(.2),
@@ -786,8 +788,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           extraTickets;
 
       double finalPrice = extraPrice + totalExtra;
-       int ticketCount =
-        calculateTotalTickets(appointmentInfo, subsicripeModel, isSubscribed);
+      int ticketCount =
+          calculateTotalTickets(appointmentInfo, subsicripeModel, isSubscribed);
 
       if (finalPrice > 0) {
         return "$allowedTickets ${AppText(context).ticket} + ${AppText(context).jod} ${finalPrice.toStringAsFixed(2)}";
@@ -844,6 +846,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return basePrice;
   }
+
+
+
+
+
+
 
   makeLoadingFor2Seconds() {
     setState(() {
@@ -1101,7 +1109,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     // --- Payload ---
     Map<String, dynamic> data = {
-      "TicketTypeId": appProvider.appoitmentInfo["TicketTypeId"],
+      "TicketTypeId":
+          appProvider.appoitmentInfo["services"][0]["ServiceId"] == 104
+              ? 4
+              : appProvider.appoitmentInfo["TicketTypeId"],
       "PromoCode": promoCodeController.text,
       "SelectedDate":
           appProvider.appoitmentInfo["date"].toString().substring(0, 10),

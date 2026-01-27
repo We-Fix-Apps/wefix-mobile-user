@@ -44,7 +44,7 @@ class _HomeLayoutState extends State<HomeLayout> {
   }
 
   List<Widget> screen = [
-    HomeScreen(),
+    const HomeScreen(),
     BookingScreen(),
     const SubscriptionScreen(),
     const ProfileScreen(),

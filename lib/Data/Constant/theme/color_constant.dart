@@ -6,7 +6,7 @@ import 'package:wefix/Data/Functions/color.dart';
 /// App Colors Class - Resource class for storing app level color constants
 class AppColors {
   BuildContext context;
-  AppColors(this.context) : assert(context != null);
+  AppColors(this.context);
 
   AppProvider get appProvider =>
       Provider.of<AppProvider>(context, listen: true);

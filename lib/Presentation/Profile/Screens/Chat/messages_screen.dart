@@ -69,8 +69,8 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          actions: [
-            const LanguageButton(),
+          actions: const [
+            LanguageButton(),
           ],
           title: Text(
             AppText(context).massages,

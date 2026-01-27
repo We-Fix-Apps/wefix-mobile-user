@@ -60,7 +60,7 @@ class CustomeTutorialCoachMark {
                                 //   ),
                                 // ),
                                 data["isTop"] == true
-                                    ? SizedBox()
+                                    ? const SizedBox()
                                     : Image.asset(
                                         "assets/image/white c-01.png",
                                         width: 150,
@@ -99,7 +99,7 @@ class CustomeTutorialCoachMark {
   static void createTutorial(List<GlobalKey<State<StatefulWidget>>?> keys,
       List<Map<dynamic, dynamic>> content) {
     tutorialCoachMark = TutorialCoachMark(
-      skipWidget: SizedBox(),
+      skipWidget: const SizedBox(),
       targets: addTargets(content, keys),
       colorShadow: Colors.black,
       textSkip: "SKIP",

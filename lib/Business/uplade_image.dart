@@ -13,9 +13,9 @@ class UpladeImages {
       var headers = {
         'authrization': token,
       };
-      var request = http.MultipartRequest('POST',
-          Uri.parse('https://api.wefixjo.com/Common/uploadMultiFiles'));
-      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+      var request = http.MultipartRequest(
+          'POST', Uri.parse('https://api.wefixjo.com/Common/uploadMultiFiles'));
+      request.files.add(await http.MultipartFile.fromPath('files', file.path));
       request.headers.addAll(headers);
 
       http.StreamedResponse response = await request.send();
@@ -24,7 +24,7 @@ class UpladeImages {
       if (responses.statusCode == 200) {
         return body['link'];
       } else {
-        log('upladeImage() [ Error ]   ');
+        log('upladeImage() [ Error ]');
         return null;
       }
     } catch (e) {

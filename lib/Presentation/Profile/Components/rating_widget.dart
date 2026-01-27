@@ -42,7 +42,7 @@ class _RatingModalState extends State<RatingModal> {
               children: [
                 Text(
                   AppText(context, isFunction: true).ratethevendor,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -53,13 +53,13 @@ class _RatingModalState extends State<RatingModal> {
             const SizedBox(height: 10),
             Text(
               AppText(context, isFunction: true).serviceFeedback,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
             const SizedBox(height: 5),
             Text(
                 AppText(context, isFunction: true)
                     .pleaserateyourexperiencebelow,
-                style: TextStyle(color: Colors.grey)),
+                style: const TextStyle(color: Colors.grey)),
             const SizedBox(height: 15),
             RatingBar.builder(
               initialRating: rating,
@@ -89,7 +89,7 @@ class _RatingModalState extends State<RatingModal> {
             const SizedBox(height: 20),
             CustomBotton(
               loading: loading,
-              title: "${AppText(context, isFunction: true).ratethevendor}",
+              title: AppText(context, isFunction: true).ratethevendor,
               onTap: () {
                 addRate();
               },

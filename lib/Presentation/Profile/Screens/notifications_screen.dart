@@ -14,6 +14,8 @@ import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
+  const NotificationsScreen({super.key});
+
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
@@ -33,7 +35,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppText(context).notifications),
-        actions: [
+        actions: const [
           LanguageButton(),
         ],
         centerTitle: true,
@@ -54,7 +56,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     shape: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                         borderSide:
-                            BorderSide(color: AppColors.backgroundColor)),
+                            const BorderSide(color: AppColors.backgroundColor)),
                     tileColor: AppColors.backgroundColor,
                     leading: SvgPicture.asset("assets/icon/notification.svg"),
                     title: Text(
@@ -72,7 +74,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     //   ),
                     // ),
                     trailing: Text(
-                      "${DateFormat('yyyy-MM-dd').format(DateTime.parse(notification?.createdDate.toString() ?? ''))}",
+                      DateFormat('yyyy-MM-dd').format(DateTime.parse(notification?.createdDate.toString() ?? '')),
                       style: TextStyle(
                           fontSize: AppSize(context).smallText3,
                           color: AppColors.greyColor2),

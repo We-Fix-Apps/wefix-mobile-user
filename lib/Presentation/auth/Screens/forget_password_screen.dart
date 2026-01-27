@@ -27,7 +27,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
+        actions: const [
           LanguageButton(),
         ],
         centerTitle: true,
@@ -82,7 +82,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
               // * Email Or Phone
               Text(
-                "${AppText(context, isFunction: true).email}",
+                AppText(context, isFunction: true).email,
                 style: TextStyle(
                   color: AppColors.greyColor3,
                   fontSize: AppSize(context).smallText3,
@@ -90,7 +90,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
               ),
               SizedBox(height: AppSize(context).height * 0.02),
               WidgetTextField(
-                "${AppText(context, isFunction: true).email}",
+                AppText(context, isFunction: true).email,
                 controller: controller,
                 keyboardType: TextInputType.emailAddress,
                 validator: (p0) => Validations.checkNull(
@@ -101,7 +101,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: CustomBotton(
           title: AppText(context).send,
           loading: loading,

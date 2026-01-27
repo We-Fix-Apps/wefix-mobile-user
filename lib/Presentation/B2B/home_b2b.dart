@@ -76,7 +76,7 @@ class _B2BHomeState extends State<B2BHome> {
                   );
                 },
               ),
-              SizedBox(height: 25),
+              const SizedBox(height: 25),
             ],
           ),
         ),
@@ -198,7 +198,7 @@ class _CorrectiveTicketCard extends StatefulWidget {
   final String? used;
   final String? total;
 
-  const _CorrectiveTicketCard({super.key, this.used, this.total});
+  const _CorrectiveTicketCard({this.used, this.total});
 
   @override
   State<_CorrectiveTicketCard> createState() => _CorrectiveTicketCardState();

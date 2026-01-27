@@ -133,7 +133,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                 onTap: () {
                                                   subsicribeNow(sub.id).then((value) {});
                                                 },
-                                                price: "${sub.price.toString()}",
+                                                price: sub.price.toString(),
                                                 priceAnnual: sub.price.toString(),
                                                 features: sub.features,
                                                 isSelected: isSelected,

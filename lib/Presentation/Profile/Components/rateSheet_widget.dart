@@ -360,7 +360,7 @@ class _MultiRateSheetState extends State<MultiRateSheet>
               Expanded(
                 // ✅ Prevent Row overflow
                 child: Text(
-                  " ${AppText(context, isFunction: true).whatmadeyou} ${image?.contains("smile") ?? false ? "${AppText(context, isFunction: true).happy}" : image?.contains("sadface") ?? false ? "${AppText(context, isFunction: true).bad}" : "${AppText(context, isFunction: true).good} ${languageProvider.lang == "ar" ? "؟" : "?"}"}",
+                  " ${AppText(context, isFunction: true).whatmadeyou} ${image?.contains("smile") ?? false ? AppText(context, isFunction: true).happy : image?.contains("sadface") ?? false ? AppText(context, isFunction: true).bad : "${AppText(context, isFunction: true).good} ${languageProvider.lang == "ar" ? "؟" : "?"}"}",
                   style: TextStyle(
                     fontSize: AppSize(context).smallText1,
                     fontWeight: FontWeight.bold,
@@ -412,7 +412,7 @@ class _MultiRateSheetState extends State<MultiRateSheet>
                 color: AppColors.greenColor, width: 40, height: 40),
             const SizedBox(width: 5),
             Text(
-              "${AppText(context, isFunction: true).tellusmore}",
+              AppText(context, isFunction: true).tellusmore,
               style: TextStyle(
                 fontSize: AppSize(context).smallText1,
                 fontWeight: FontWeight.bold,
@@ -423,7 +423,7 @@ class _MultiRateSheetState extends State<MultiRateSheet>
         const Divider(color: AppColors.backgroundColor),
         const SizedBox(height: 10),
         WidgetTextField(
-          "${"${AppText(context, isFunction: true).tellusmore}"} ...",
+          "${AppText(context, isFunction: true).tellusmore} ...",
           maxLines: 3,
           controller: desc,
           validator: (p0) {

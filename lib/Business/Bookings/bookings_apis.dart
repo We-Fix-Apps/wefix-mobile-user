@@ -137,7 +137,7 @@ class BookingApi {
   static Future getPackagesDetails({required String token, String? id}) async {
     try {
       final response = await HttpHelper.getData(
-        query: EndPoints.packages + "${id ?? ""}",
+        query: "${EndPoints.packages}${id ?? ""}",
         token: token,
       );
 

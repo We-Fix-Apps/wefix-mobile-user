@@ -57,8 +57,8 @@ class _BorderPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..shader = LinearGradient(
-        colors: [Colors.orange, Colors.grey, Colors.white],
-        stops: [0.0, 0.5, 1.0],
+        colors: const [Colors.orange, Colors.grey, Colors.white],
+        stops: const [0.0, 0.5, 1.0],
         begin: Alignment(-1.0 + 2 * animationValue, 0),
         end: Alignment(1.0 + 2 * animationValue, 0),
         tileMode: TileMode.mirror,
@@ -67,7 +67,7 @@ class _BorderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final rRect = RRect.fromRectAndRadius(rect, Radius.circular(10));
+    final rRect = RRect.fromRectAndRadius(rect, const Radius.circular(10));
     canvas.drawRRect(rRect, paint);
   }
 

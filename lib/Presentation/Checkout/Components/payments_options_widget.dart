@@ -38,11 +38,10 @@ class PaymentsOptions extends StatelessWidget {
             groupValue: true,
             onChanged: (value) {},
             fillColor:
-                MaterialStatePropertyAll(AppColors(context).primaryColor),
+                WidgetStatePropertyAll(AppColors(context).primaryColor),
           ),
         ],
       ),
     );
-    ;
   }
 }

@@ -15,9 +15,9 @@ class WebviewScreen extends StatelessWidget {
       ..clearCache()
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (_) => CircularProgressIndicator(),
-          onPageFinished: (_) => CircularProgressIndicator(),
-          onWebResourceError: (_) => CircularProgressIndicator(),
+          onPageStarted: (_) => const CircularProgressIndicator(),
+          onPageFinished: (_) => const CircularProgressIndicator(),
+          onWebResourceError: (_) => const CircularProgressIndicator(),
         ),
       )
       ..loadRequest(Uri.parse(url ?? 'https://example.com'));
@@ -33,7 +33,7 @@ class WebviewScreen extends StatelessWidget {
         backgroundColor: AppColors(context).primaryColor.withOpacity(0.45),
         title: Text(
           title ?? '',
-          style: TextStyle(color: AppColors.blackColor1),
+          style: const TextStyle(color: AppColors.blackColor1),
         ),
       ),
       body: WebViewWidget(controller: controller),

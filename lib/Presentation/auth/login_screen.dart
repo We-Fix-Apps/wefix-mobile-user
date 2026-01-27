@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        actions: [LanguageButton()],
+        actions: const [LanguageButton()],
         automaticallyImplyLeading: false,
       ),
       body: WillPopScope(
@@ -182,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           issupport
                               ? isFaceIdEnabled
                                   ? appProvider.userModel == null
-                                      ? SizedBox()
+                                      ? const SizedBox()
                                       : InkWell(
                                           onTap: () => authenticate(),
                                           child: Container(
@@ -398,7 +398,7 @@ class _LoginScreenState extends State<LoginScreen> {
             builder: (context) => WidgetDialog(
               title: AppText(context, isFunction: true).warning,
               desc: AppText(context, isFunction: true).theUsername,
-              bottonText: "${AppText(context, isFunction: true).createAccount}",
+              bottonText: AppText(context, isFunction: true).createAccount,
               onTap: () {
                 Navigator.push(
                     context,

@@ -25,6 +25,7 @@ import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Components/empty_screen.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/tour_widget.dart';
+import 'package:wefix/Presentation/Components/widget_bottom_sheet.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Home/Components/popular_section_widget.dart';
 import 'package:wefix/Presentation/Home/Components/services_list_widget.dart';
@@ -48,7 +49,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
 
   ActiveTicketModel? ticketModel;
@@ -85,44 +85,30 @@ class _HomeScreenState extends State<HomeScreen>
     isSubsicribed();
 
     getAllHomeApis().then((value) {
-      _controller.forward();
-
       getActiveTicket();
 
-      try {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          CustomeTutorialCoachMark.createTutorial(keyButtons, contents);
-          Future.delayed(const Duration(seconds: 2), () {
-            Map showTour =
-                json.decode(CacheHelper.getData(key: CacheHelper.showTour));
-            CustomeTutorialCoachMark.showTutorial(context,
-                isShow: showTour["home"] ?? true);
-            setState(() {
-              showTour["home"] = false;
-            });
-            CacheHelper.saveData(
-                key: CacheHelper.showTour, value: json.encode(showTour));
-            log(showTour.toString());
-          });
-        });
-      } catch (e) {
-        log(e.toString());
-      }
+      // try {
+      //   WidgetsBinding.instance.addPostFrameCallback((_) {
+      //     CustomeTutorialCoachMark.createTutorial(keyButtons, contents);
+      //     Future.delayed(const Duration(seconds: 2), () {
+      //       Map showTour =
+      //           json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+      //       CustomeTutorialCoachMark.showTutorial(context,
+      //           isShow: showTour["home"] ?? true);
+      //       setState(() {
+      //         showTour["home"] = false;
+      //       });
+      //       CacheHelper.saveData(
+      //           key: CacheHelper.showTour, value: json.encode(showTour));
+      //       log(showTour.toString());
+      //     });
+      //   });
+      // } catch (e) {
+      //   log(e.toString());
+      // }
     });
 
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-
     // Slide from bottom to top (down to up)
-    _offsetAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 1.0), // start offscreen bottom
-      end: Offset.zero, // on screen
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutExpo,
-    ));
   }
 
   getCatId() {
@@ -130,12 +116,6 @@ class _HomeScreenState extends State<HomeScreen>
       log("Category ID: ${element.categoryId}");
       return element.categoryId;
     }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   HomeModel? homeModel;
@@ -175,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen>
                   )
         : Scaffold(
             appBar: AppBar(
+              toolbarHeight: AppSize(context).height * .1,
               leadingWidth: AppSize(context).width * .5,
               leading: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -636,168 +617,124 @@ class _HomeScreenState extends State<HomeScreen>
                             ],
                           ),
                         ),
-
-                        // Animated Bottom Sheet
-                        SlideTransition(
-                          position: _offsetAnimation,
-                          child: DraggableScrollableSheet(
-                            initialChildSize: ticketModel?.tickets != null
-                                ? 0.5
-                                : 0.65, // higher initial size
-                            minChildSize: 0.2,
-                            maxChildSize: 0.9,
-                            builder: (context, scrollController) {
-                              return Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.whiteColor1,
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(30)),
+                        WidgetBottomSheet(
+                          children: [
+                            Center(
+                              child: Container(
+                                width: 50,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[400],
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: ListView(
-                                  controller: scrollController,
-                                  children: [
-                                    Center(
-                                      child: Container(
-                                        width: 50,
-                                        height: 5,
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[400],
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-                                    WidgetTextField(
-                                        "${AppText(context).searchforservice}",
-                                        key: keyButtons[1],
-                                        fillColor: AppColors.greyColorback
-                                            .withOpacity(.5),
-                                        haveBorder: false,
-                                        radius: 15, onChanged: (value) {
-                                      setState(() {
-                                        allSearchCategories.clear();
-                                        startsSearch = true;
-                                      });
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            WidgetTextField(
+                                AppText(context).searchforservice,
+                                key: keyButtons[1],
+                                fillColor:
+                                    AppColors.greyColorback.withOpacity(.5),
+                                haveBorder: false,
+                                radius: 15, onChanged: (value) {
+                              setState(() {
+                                allSearchCategories.clear();
+                                startsSearch = true;
+                              });
 
-                                      final searchValue = value.toLowerCase();
+                              final searchValue = value.toLowerCase();
 
-                                      for (var category
-                                          in homeModel?.categories ?? []) {
-                                        final isCategoryTitleMatch =
-                                            languageProvider.lang == "ar"
-                                                ? category.titleAr
-                                                        ?.toLowerCase()
-                                                        .contains(
-                                                            searchValue) ??
-                                                    false
-                                                : category.titleEn
-                                                        ?.toLowerCase()
-                                                        .contains(
-                                                            searchValue) ??
-                                                    false;
-
-                                        bool isMatchInSubCategoryOrService =
+                              for (var category
+                                  in homeModel?.categories ?? []) {
+                                final isCategoryTitleMatch =
+                                    languageProvider.lang == "ar"
+                                        ? category.titleAr
+                                                ?.toLowerCase()
+                                                .contains(searchValue) ??
+                                            false
+                                        : category.titleEn
+                                                ?.toLowerCase()
+                                                .contains(searchValue) ??
                                             false;
 
-                                        // ✅ Check subcategories if they exist
-                                        if (category.subCategory != null &&
-                                            category.subCategory!.isNotEmpty) {
-                                          for (var subCat
-                                              in category.subCategory!) {
-                                            final isSubTitleMatch =
-                                                languageProvider.lang == "ar"
-                                                    ? subCat.titleAr
-                                                            ?.toLowerCase()
-                                                            .contains(
-                                                                searchValue) ??
-                                                        false
-                                                    : subCat.titleEn
-                                                            ?.toLowerCase()
-                                                            .contains(
-                                                                searchValue) ??
-                                                        false;
+                                bool isMatchInSubCategoryOrService = false;
 
-                                            final isServiceMatch =
-                                                (subCat.service
-                                                            as List<Service>?)
-                                                        ?.any((srv) {
-                                                      return languageProvider
-                                                                  .lang ==
-                                                              "ar"
-                                                          ? srv.nameAr
-                                                                  ?.toLowerCase()
-                                                                  .contains(
-                                                                      searchValue) ??
-                                                              false
-                                                          : srv.name
-                                                                  ?.toLowerCase()
-                                                                  .contains(
-                                                                      searchValue) ??
-                                                              false;
-                                                    }) ??
-                                                    false;
+                                // ✅ Check subcategories if they exist
+                                if (category.subCategory != null &&
+                                    category.subCategory!.isNotEmpty) {
+                                  for (var subCat in category.subCategory!) {
+                                    final isSubTitleMatch =
+                                        languageProvider.lang == "ar"
+                                            ? subCat.titleAr
+                                                    ?.toLowerCase()
+                                                    .contains(searchValue) ??
+                                                false
+                                            : subCat.titleEn
+                                                    ?.toLowerCase()
+                                                    .contains(searchValue) ??
+                                                false;
 
-                                            if (isSubTitleMatch ||
-                                                isServiceMatch) {
-                                              isMatchInSubCategoryOrService =
-                                                  true;
-                                              break;
-                                            }
-                                          }
-                                        }
+                                    final isServiceMatch = (subCat.service
+                                                as List<Service>?)
+                                            ?.any((srv) {
+                                          return languageProvider.lang == "ar"
+                                              ? srv.nameAr
+                                                      .toLowerCase()
+                                                      .contains(searchValue) ??
+                                                  false
+                                              : srv.name
+                                                      .toLowerCase()
+                                                      .contains(searchValue) ??
+                                                  false;
+                                        }) ??
+                                        false;
 
-                                        // ✅ Fallback: check services directly inside category (if any)
-                                        if (!isMatchInSubCategoryOrService &&
-                                            category is dynamic &&
-                                            category.service != null) {
-                                          final isDirectServiceMatch = (category
-                                                          .service
-                                                      as List<Service>?)
-                                                  ?.any((srv) {
-                                                return languageProvider.lang ==
-                                                        "ar"
-                                                    ? srv.nameAr
-                                                            ?.toLowerCase()
-                                                            .contains(
-                                                                searchValue) ??
-                                                        false
-                                                    : srv.name
-                                                            ?.toLowerCase()
-                                                            .contains(
-                                                                searchValue) ??
-                                                        false;
-                                              }) ??
-                                              false;
+                                    if (isSubTitleMatch || isServiceMatch) {
+                                      isMatchInSubCategoryOrService = true;
+                                      break;
+                                    }
+                                  }
+                                }
 
-                                          if (isDirectServiceMatch) {
-                                            isMatchInSubCategoryOrService =
-                                                true;
-                                          }
-                                        }
+                                // ✅ Fallback: check services directly inside category (if any)
+                                if (!isMatchInSubCategoryOrService &&
+                                    category.service != null) {
+                                  final isDirectServiceMatch = (category.service
+                                              as List<Service>?)
+                                          ?.any((srv) {
+                                        return languageProvider.lang == "ar"
+                                            ? srv.nameAr
+                                                    .toLowerCase()
+                                                    .contains(searchValue) ??
+                                                false
+                                            : srv.name
+                                                    .toLowerCase()
+                                                    .contains(searchValue) ??
+                                                false;
+                                      }) ??
+                                      false;
 
-                                        // ✅ If any match — add the category
-                                        if (isCategoryTitleMatch ||
-                                            isMatchInSubCategoryOrService) {
-                                          setState(() {
-                                            allSearchCategories.add(category);
-                                          });
-                                        }
-                                      }
-                                    }),
-                                    SizedBox(
-                                        height: AppSize(context).height * .01),
-                                    ServicesWidget(
-                                        categories: startsSearch == false
-                                            ? homeModel?.categories ?? []
-                                            : allSearchCategories),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+                                  if (isDirectServiceMatch) {
+                                    isMatchInSubCategoryOrService = true;
+                                  }
+                                }
+
+                                if (isCategoryTitleMatch ||
+                                    isMatchInSubCategoryOrService) {
+                                  setState(() {
+                                    allSearchCategories.add(category);
+                                  });
+                                }
+                              }
+                            }),
+                            SizedBox(height: AppSize(context).height * .01),
+                            ServicesWidget(
+                                roleId: homeModel?.roleId ?? 0,
+                                categories: startsSearch == false
+                                    ? homeModel?.categories ?? []
+                                    : allSearchCategories),
+                          ],
+                        )
                       ],
                     ),
                   ),

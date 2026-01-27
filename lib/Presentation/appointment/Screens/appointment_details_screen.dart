@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +16,6 @@ import 'package:wefix/Data/model/advantages_model.dart';
 import 'package:wefix/Data/model/branch_model.dart';
 import 'package:wefix/Data/model/realstate_model.dart';
 import 'package:wefix/Presentation/Components/tour_widget.dart';
-
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Loading/loading_text.dart';
 import 'package:wefix/Presentation/appointment/Components/attachments_widget.dart';
@@ -26,8 +24,8 @@ import 'package:wefix/Presentation/Checkout/Screens/checkout_screen.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/main.dart';
-
 import '../../../Business/orders/profile_api.dart';
+
 
 class AppoitmentDetailsScreen extends StatefulWidget {
   const AppoitmentDetailsScreen({super.key});
@@ -39,6 +37,7 @@ class AppoitmentDetailsScreen extends StatefulWidget {
 
 class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
     with TickerProviderStateMixin {
+  
   List attachments = [
     "assets/icon/imge.svg",
     "assets/icon/vid.svg",
@@ -194,7 +193,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                           time: appProvider.appoitmentInfo["time"].toString(),
                         ),
                         appProvider.userModel?.customer.roleId == 2
-                            ? SizedBox()
+                            ? const SizedBox()
                             : Column(
                                 children: [
                                   Padding(
@@ -216,7 +215,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                                       ),
                                       inactiveThumbColor: AppColors.whiteColor1,
                                       inactiveTrackColor: AppColors.greyColor1,
-                                      overlayColor: MaterialStateProperty.all(
+                                      overlayColor: WidgetStateProperty.all(
                                         AppColors(context)
                                             .primaryColor
                                             .withOpacity(.2),
@@ -322,7 +321,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                                                 inactiveTrackColor:
                                                     AppColors.greyColor1,
                                                 overlayColor:
-                                                    MaterialStateProperty.all(
+                                                    WidgetStateProperty.all(
                                                   AppColors(context)
                                                       .primaryColor
                                                       .withOpacity(.2),
@@ -367,7 +366,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                                               0,
                                           shrinkWrap: true,
                                           physics:
-                                              NeverScrollableScrollPhysics(),
+                                              const NeverScrollableScrollPhysics(),
                                         ),
                                 ],
                               ),
@@ -408,7 +407,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                         realEstatesModel?.realEstates.isEmpty == true
                             ? const SizedBox()
                             : appProvider.userModel?.customer.roleId == 2
-                                ? SizedBox()
+                                ? const SizedBox()
                                 : Text(
                                     "🏠	 ${AppText(context).propertyName}",
                                     style: TextStyle(

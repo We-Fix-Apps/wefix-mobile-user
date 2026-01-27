@@ -37,7 +37,7 @@ class Notification {
   String? descriptionAr;
   bool isRead;
   DateTime createdDate;
-  dynamic? user;
+  dynamic user;
 
   Notification({
     required this.id,

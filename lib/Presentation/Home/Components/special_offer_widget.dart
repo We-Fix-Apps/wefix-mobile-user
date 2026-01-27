@@ -46,7 +46,7 @@ class _OffersSectionState extends State<OffersSection> {
                         ? Navigator.pushAndRemoveUntil(context,
                             MaterialPageRoute(
                             builder: (context) {
-                              return HomeLayout(
+                              return const HomeLayout(
                                 index: 2,
                               );
                             },

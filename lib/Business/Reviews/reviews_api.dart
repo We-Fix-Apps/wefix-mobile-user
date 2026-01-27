@@ -3,9 +3,7 @@ import 'dart:developer';
 
 import 'package:wefix/Business/end_points.dart';
 import 'package:wefix/Data/Api/http_request.dart';
-import 'package:wefix/Data/model/packages_model.dart';
 import 'package:wefix/Data/model/questions_model.dart';
-import 'package:wefix/Data/model/ticket_model.dart';
 
 class ReviewsApi {
   static QuestionsModel? questionsModel;

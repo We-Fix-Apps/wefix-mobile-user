@@ -80,7 +80,6 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   // Pick from camera
   Future<void> pickFromCamera() async {
     final status = await Permission.camera.request();
-    if (!status.isGranted) return;
 
     // ignore: use_build_context_synchronously
     showModalBottomSheet(
@@ -123,10 +122,10 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                       "audio": null,
                       "image": picked.path,
                     });
-                    // noteController.clear();
+                    noteController.clear();
                   });
                 }
-                Navigator.pop(context);
+                // Navigator.pop(context);
               },
             ),
           ],
@@ -307,7 +306,9 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   ];
   @override
   void initState() {
+    Permission.camera.request();
     _requestPermissionsOnce();
+
     try {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         CustomeTutorialCoachMark.createTutorial(keyButton, content);

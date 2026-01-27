@@ -43,7 +43,7 @@ class _WidgetCardState extends State<WidgetCard> {
                 fontWeight: FontWeight.normal,
               ),
             ),
-            Spacer(),
+            const Spacer(),
             SvgPicture.asset(
               'assets/icon/arrowright2.svg',
               width: AppSize(context).width * .05,

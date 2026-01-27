@@ -60,7 +60,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: [const LanguageButton()],
+        actions: const [LanguageButton()],
         leading: InkWell(
           onTap: () {
             showModalBottomSheet(
@@ -122,14 +122,11 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                           "mailto:"),
                       _listTile(
                           infoContactModel?.languages.whatsapp ?? "0798100944",
-                          SvgPicture.asset(
-                            "assets/icon/whatsapp.svg",
-                            height: 20,
-                            width: 20,
-                          ),
+                          SvgPicture.asset("assets/icon/whatsapp.svg",
+                              height: 20, width: 20),
                           AppText(context).send,
                           Colors.green,
-                          "https://wa.me/${infoContactModel?.languages.whatsapp ?? "+962798100944"}?text=مرحبااا ، أنا حاب أعرف أكتر عن خدمات الصيانة اللي بتقدموها. ممكن تحكولي شو العروض المتوفرة عندكم؟"),
+                          "https://wa.me/${infoContactModel?.languages.whatsapp ?? "+962798100944"}?text=مرحباً بك 👋 يسعدنا تواصلك مع خدمة عملاء وي فكس 😊 خبرنا كيف نقدر نساعدك؟"),
                     ],
                   ),
                   spacing,

@@ -49,7 +49,7 @@ class _ContentScreenState extends State<ContentScreen> {
     LanguageProvider languageProvider = Provider.of<LanguageProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        actions: [
+        actions: const [
           LanguageButton(),
         ],
         centerTitle: true,

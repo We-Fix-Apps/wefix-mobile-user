@@ -379,8 +379,9 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                             }
 
                             // Close this bottom sheet and open payment
-                            else
+                            else {
                               Navigator.pop(context);
+                            }
                             showPaymentMethod(context);
                           },
                         ),
@@ -423,7 +424,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         _paymentOption("qlic", AppText(context, isFunction: true).cliq, "assets/icon/final_cliq_logo-02_1.svg", set),
                         _paymentOption("wallet", AppText(context, isFunction: true).wallet, "assets/icon/wallet.svg", set),
                         _paymentOption("Paybal", AppText(context, isFunction: true).paypal, "assets/icon/paybal.svg", set),
-                        _paymentOption("later", "${AppText(context, isFunction: true).paylater}", "assets/icon/delay_3360328.svg", set),
+                        _paymentOption("later", AppText(context, isFunction: true).paylater, "assets/icon/delay_3360328.svg", set),
                         const Divider(),
                         const SizedBox(height: 20),
                         Center(

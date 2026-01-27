@@ -87,7 +87,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
   Scaffold _buildBody() {
     return Scaffold(
       appBar: AppBar(
-        actions: [LanguageButton()],
+        actions: const [LanguageButton()],
         automaticallyImplyLeading: true,
         centerTitle: true,
         title: Text(AppText(context).verify),
@@ -187,7 +187,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  '${AppText(context).dontreceivecode}',
+                                  AppText(context).dontreceivecode,
                                   style: TextStyle(
                                     fontSize: AppSize(context).smallText2,
                                     color: AppColors.blackColor1,

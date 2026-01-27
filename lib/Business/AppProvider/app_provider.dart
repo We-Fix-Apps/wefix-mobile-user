@@ -26,7 +26,7 @@ class AppProvider with ChangeNotifier {
 
   DateTime? selectedDate = DateTime.now();
 
-  List<Map<String, int>> _selectedAnswers = [];
+  final List<Map<String, int>> _selectedAnswers = [];
 
   List<Map<String, dynamic>> get selectedAnswers => _selectedAnswers;
 

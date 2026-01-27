@@ -136,7 +136,7 @@ class _ContractScreenState extends State<ContractScreen> {
                                         fontSize: AppSize(context).smallText1,
                                         fontWeight: FontWeight.bold),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
                                   Column(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     crossAxisAlignment:
@@ -156,7 +156,7 @@ class _ContractScreenState extends State<ContractScreen> {
                                       contractDetails?.customerPackages
                                                   .interiorDesign ==
                                               null
-                                          ? SizedBox()
+                                          ? const SizedBox()
                                           : Row(
                                               children: [
                                                 Text(
@@ -291,7 +291,7 @@ class _ContractScreenState extends State<ContractScreen> {
                               onTap: () {
                                 Navigator.pushAndRemoveUntil(
                                     context,
-                                    downToTop(HomeLayout(
+                                    downToTop(const HomeLayout(
                                       index: 2,
                                     )),
                                     (route) => false);

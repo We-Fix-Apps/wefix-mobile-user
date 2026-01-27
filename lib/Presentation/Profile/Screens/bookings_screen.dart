@@ -20,6 +20,8 @@ import 'package:wefix/Presentation/Profile/Components/rating_widget.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 
 class BookingScreen extends StatefulWidget {
+  const BookingScreen({super.key});
+
   @override
   State<BookingScreen> createState() => _BookingScreenState();
 }
@@ -49,10 +51,10 @@ class _BookingScreenState extends State<BookingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${AppText(context).bookings}'),
+        title: Text(AppText(context).bookings),
         centerTitle: true,
-        actions: [
-          const LanguageButton(),
+        actions: const [
+          LanguageButton(),
         ],
       ),
       body: RefreshIndicator(
@@ -166,7 +168,7 @@ class BookingCard extends StatefulWidget {
   Function? onValue;
   final Ticket? ticket;
   BookingCard(
-      {required this.status,
+      {super.key, required this.status,
       this.ticket,
       this.onValue,
       this.onTapCancle,
@@ -311,7 +313,7 @@ class _BookingCardState extends State<BookingCard> {
                                 child: CustomBotton(
                                   height: AppSize(context).height * .04,
                                   width: AppSize(context).width * .15,
-                                  title: "${AppText(context).rate}",
+                                  title: AppText(context).rate,
                                   border: true,
                                   borderColor: AppColors(context).primaryColor,
                                   color: AppColors.whiteColor1,
@@ -340,7 +342,7 @@ class _BookingCardState extends State<BookingCard> {
                 ),
               if (widget.status == 'Pending')
                 widget.ticket?.cancelButton == true
-                    ? SizedBox()
+                    ? const SizedBox()
                     : Center(
                         child: Padding(
                           padding: const EdgeInsets.only(top: 10),
