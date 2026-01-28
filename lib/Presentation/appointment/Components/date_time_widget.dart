@@ -104,20 +104,7 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "${(() {
-                        final dateValue = appProvider.appoitmentInfo["date"];
-                        if (dateValue == null) return '';
-                        if (dateValue is DateTime) {
-                          return DateFormat('yyyy-MM-dd').format(dateValue);
-                        }
-                        final dateStr = dateValue.toString();
-                        try {
-                          final parsedDate = DateTime.parse(dateStr);
-                          return DateFormat('yyyy-MM-dd').format(parsedDate);
-                        } catch (e) {
-                          return dateStr.length >= 10 ? dateStr.substring(0, 10) : dateStr;
-                        }
-                      })()} - ${appProvider.appoitmentInfo["time"] ?? ''}",
+                      "${appProvider.appoitmentInfo["date"].toString().substring(0, 10)} - ${appProvider.appoitmentInfo["time"]}",
                       style: TextStyle(fontSize: AppSize(context).smallText2),
                     ),
                     appProvider.appoitmentInfo["TicketTypeId"] == 1
@@ -140,12 +127,12 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
           height: 5,
         ),
         appProvider.userModel?.customer.roleId == 2
-            ? SizedBox()
+            ? const SizedBox()
             : const Divider(
                 color: AppColors.backgroundColor,
               ),
         appProvider.userModel?.customer.roleId == 2
-            ? SizedBox()
+            ? const SizedBox()
             : Container(
                 key: widget.featureKey,
                 child: Column(
@@ -205,7 +192,7 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
                         ),
                         inactiveThumbColor: AppColors.whiteColor1,
                         inactiveTrackColor: AppColors.greyColor1,
-                        overlayColor: MaterialStateProperty.all(
+                        overlayColor: WidgetStateProperty.all(
                           AppColors(context).primaryColor.withOpacity(.2),
                         ),
                         value: isFemale ?? false,
@@ -493,59 +480,9 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
                                 children: [
                                   const SizedBox(),
                                   Center(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
+                                    child: Text(
                                         AppText(context, isFunction: true)
-                                              .estimatedTimeToArrivalminutes,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 24,
-                                            vertical: 16,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors(context)
-                                                .primaryColor
-                                                .withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            border: Border.all(
-                                              color: AppColors(context)
-                                                  .primaryColor
-                                                  .withOpacity(0.3),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.access_time,
-                                                color: AppColors(context)
-                                                    .primaryColor,
-                                                size: 24,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                '90 - 120 ${AppText(context).minutes}',
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppColors(context)
-                                                      .primaryColor,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                            .estimatedTimeToArrivalminutes),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(16.0),
@@ -553,30 +490,6 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
                                       title: AppText(context, isFunction: true)
                                           .continuesss,
                                       onTap: () {
-                                        // Set Emergency time when continuing
-                                        AppProvider appProvider =
-                                            Provider.of<AppProvider>(context,
-                                                listen: false);
-                                        appProvider.saveAppoitmentInfo({
-                                          "TicketTypeId":
-                                              appProvider.appoitmentInfo[
-                                                  "TicketTypeId"],
-                                          "gender": isFemale == false
-                                              ? "Male"
-                                              : "Female",
-                                          "date": appProvider.selectedDate ??
-                                              DateTime.now(),
-                                          "time": "After 90 - 120 minutes",
-                                          "services": services ??
-                                              appProvider.appoitmentInfo[
-                                                  "services"],
-                                          "totalPrice": totalPrice ??
-                                              appProvider.appoitmentInfo[
-                                                  "totalPrice"],
-                                          "totalTickets":
-                                              appProvider.appoitmentInfo[
-                                                  "totalTickets"]
-                                        });
                                         Navigator.pop(context);
                                         Navigator.push(
                                           context,
@@ -610,9 +523,9 @@ class _DateTimeWidgetState extends State<DateTimeWidget> {
       loadingTime = true;
     });
 
-    final selectedDateStr = appProvider.selectedDate != null
-        ? DateFormat('yyyy-MM-dd').format(appProvider.selectedDate!)
-        : DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final selectedDateStr = appProvider.selectedDate.toString().isEmpty
+        ? DateTime.now().toString().substring(0, 10)
+        : appProvider.selectedDate.toString().substring(0, 10);
 
     final result = await ProfileApis.getAppitmentTime(
       token: '${appProvider.userModel?.token}',

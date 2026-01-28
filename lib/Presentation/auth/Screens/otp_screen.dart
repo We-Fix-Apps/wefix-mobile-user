@@ -19,10 +19,6 @@ import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:wefix/Data/services/device_info_service.dart';
-import 'package:wefix/Data/model/mms_user_model.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:wefix/l10n/app_localizations.dart';
 
 import '../../../Data/Helper/cache_helper.dart';
 
@@ -31,7 +27,6 @@ class VerifyCodeScreen extends StatefulWidget {
   final String? otp;
   final String? phone;
   final List? signUp;
-  final bool? isBusinessServices; // Flag to indicate Business Services login
 
   const VerifyCodeScreen({
     super.key,
@@ -39,7 +34,6 @@ class VerifyCodeScreen extends StatefulWidget {
     this.phone,
     this.signUp,
     this.otp,
-    this.isBusinessServices = false,
   });
 
   @override
@@ -93,7 +87,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
   Scaffold _buildBody() {
     return Scaffold(
       appBar: AppBar(
-        actions: [LanguageButton()],
+        actions: const [LanguageButton()],
         automaticallyImplyLeading: true,
         centerTitle: true,
         title: Text(AppText(context).verify),
@@ -136,10 +130,8 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
                     ),
                     SizedBox(height: AppSize(context).height * 0.1),
 
-                    /// ✅ Pin Code with Autofill (Force LTR direction)
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: PinCodeTextField(
+                    /// ✅ Pin Code with Autofill
+                    PinCodeTextField(
                       appContext: context,
                       controller: textEditingController,
                       length: 4,
@@ -187,7 +179,6 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
                       onChanged: (value) {
                         setState(() => currentText = value);
                       },
-                      ),
                     ),
                     SizedBox(height: AppSize(context).height * 0.01),
                     Center(
@@ -196,7 +187,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  '${AppText(context).dontreceivecode}',
+                                  AppText(context).dontreceivecode,
                                   style: TextStyle(
                                     fontSize: AppSize(context).smallText2,
                                     color: AppColors.blackColor1,
@@ -212,7 +203,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
                           : RichText(
                               textAlign: TextAlign.center,
                               text: TextSpan(
-                                text: '${AppText(context).dontreceivecode}  ',
+                                text: '${AppText(context).dontreceivecode} ? ',
                                 style: TextStyle(
                                   fontSize: AppSize(context).smallText2,
                                   color: AppColors.blackColor1,
@@ -270,33 +261,17 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
   }
 
   checkOtp() {
-    // For Business Services, always verify with backend (widget.otp is only for dev/testing)
-    // For My Services, widget.otp might be used for quick validation, but still verify with backend
-    if (widget.isBusinessServices == true) {
-      // Business Services: Always verify with backend API
-      // Skip the widget.otp check since it's only for development/testing
+    if (widget.otp == textEditingController.text) {
       checkOtpFun();
     } else {
-      // My Services: If widget.otp is provided (for development/testing), do a quick check
-      // But still verify with backend in checkOtpFun()
-      if (widget.otp != null && widget.otp!.isNotEmpty) {
-        // Quick validation for development (optional)
-        if (widget.otp == textEditingController.text.trim()) {
-          checkOtpFun();
-        } else {
-          showDialog(
-            context: context,
-            builder: (context) => WidgetDialog(
-              title: AppText(context, isFunction: true).warning,
-              desc: AppText(context, isFunction: true).otpWrong,
-              isError: true,
-            ),
-          );
-        }
-      } else {
-        // No widget.otp provided, verify directly with backend
-        checkOtpFun();
-      }
+      showDialog(
+        context: context,
+        builder: (context) => WidgetDialog(
+          title: AppText(context, isFunction: true).warning,
+          desc: AppText(context, isFunction: true).otpWrong,
+          isError: true,
+        ),
+      );
     }
   }
 
@@ -322,291 +297,49 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> with CodeAutoFill {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
       setState(() => loading = true);
-      
-      // Check if this is Business Services login
-      if (widget.isBusinessServices == true) {
-        // Use Business Services OTP verification
-        try {
-          // Get FCM token
-          String? fcmToken;
-          try {
-            fcmToken = await FirebaseMessaging.instance.getToken();
-          } catch (e) {
-            log('Error getting FCM token: $e');
-            fcmToken = 'device-token-placeholder';
+      await Authantication.checkOtp(
+        otp: textEditingController.text,
+        fcmToken: appProvider.fcmToken ?? "",
+        phone: widget.phone.toString(),
+      ).then((value) {
+        setState(() => userModel = value);
+        if (value?.status == true) {
+          appProvider.addUser(user: value);
+          log(appProvider.userModel?.token.toString() ?? "");
+          Map? showTour = CacheHelper.getData(key: CacheHelper.showTour) == null
+              ? null
+              : json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+          if (showTour == null) {
+            CacheHelper.saveData(
+                key: CacheHelper.showTour,
+                value: json.encode({
+                  "home": true,
+                  "subCategory": true,
+                  "addAttachment": true,
+                  "appointmentDetails": true,
+                  "checkout": true,
+                }));
           }
 
-          // Get device ID with full metadata
-          final deviceMetadata = await DeviceInfoService.getDeviceMetadata();
-          final deviceId = jsonEncode(deviceMetadata);
-
-          // Trim OTP to remove any whitespace
-          final trimmedOTP = textEditingController.text.trim();
-          
-          // Validate OTP is not empty
-          if (trimmedOTP.isEmpty || trimmedOTP.length < 4) {
-            if (mounted) {
-              showDialog(
-                context: context,
-                builder: (context) => WidgetDialog(
-                  title: AppText(context, isFunction: true).warning,
-                  desc: AppLocalizations.of(context)!.otpRequired,
-                  isError: true,
-                ),
-              );
-            }
-            setState(() => loading = false);
-            return;
-          }
-          
-          final loginResult = await Authantication.mmsVerifyOTP(
-            mobile: widget.phone ?? '',
-            otp: trimmedOTP,
-            deviceId: deviceId,
-            fcmToken: fcmToken ?? 'device-token-placeholder',
+          Navigator.pushAndRemoveUntil(
+            context,
+            downToTop(const HomeLayout()),
+            (route) => false,
           );
-
-          if (!loginResult['success']) {
-            if (mounted) {
-              // Get localized error message from backend response or use default
-              final lang = Localizations.localeOf(context).languageCode;
-              String errorMessage = (lang == 'ar' && loginResult['messageAr'] != null)
-                  ? loginResult['messageAr']
-                  : (loginResult['message'] ?? AppLocalizations.of(context)!.invalidCredentials);
-              
-              // Check if this is an account does not exist error
-              final errorLower = errorMessage.toLowerCase();
-              if (errorLower.contains('does not exist') || 
-                  errorLower.contains('account does not exist') ||
-                  errorLower.contains('not exist with this phone') ||
-                  errorLower.contains('الحساب غير موجود')) {
-                final localized = AppText(context, isFunction: true).accountDoesNotExist;
-                if (localized.isNotEmpty) {
-                  errorMessage = localized;
-                } else {
-                  // Fallback if translation not found in API
-                  errorMessage = lang == 'ar' ? 'الحساب غير موجود بهذا الرقم' : 'Account does not exist with this phone number';
-                }
-              }
-              // Check if this is an account inactive error
-              else if (errorLower.contains('inactive') || 
-                       errorLower.contains('account is inactive') ||
-                       errorLower.contains('حسابك غير نشط') ||
-                       errorLower.contains('غير نشط')) {
-                final localized = AppText(context, isFunction: true).accountInactive;
-                if (localized.isNotEmpty) {
-                  errorMessage = localized;
-                } else {
-                  // Fallback if translation not found in API
-                  errorMessage = lang == 'ar' ? 'حسابك غير نشط. يرجى التواصل مع المسؤول لتفعيل حسابك.' : 'Your account is inactive. Please contact your administrator to activate your account.';
-                }
-              }
-              // Check if this is a rate limit error (wait/seconds/rate)
-              else if (errorMessage.toLowerCase().contains('wait') || 
-                  errorMessage.toLowerCase().contains('rate') ||
-                  errorMessage.toLowerCase().contains('60 seconds') ||
-                  errorMessage.toLowerCase().contains('seconds before')) {
-                // Extract seconds from message if available
-                final secondsMatch = RegExp(r'(\d+)\s*seconds?').firstMatch(errorMessage);
-                final seconds = secondsMatch?.group(1) ?? '60';
-                
-                // Use localized message with seconds
-                if (lang == 'ar') {
-                  errorMessage = 'يرجى الانتظار $seconds ثانية قبل طلب رمز جديد';
-                } else {
-                  errorMessage = 'Please wait $seconds seconds before requesting a new OTP';
-                }
-              }
-              
-              showDialog(
-                context: context,
-                builder: (context) => WidgetDialog(
-                  title: AppText(context, isFunction: true).warning,
-                  desc: errorMessage,
-                  isError: true,
-                ),
-              );
-            }
-            setState(() => loading = false);
-            return;
-          }
-
-          final mmsUser = loginResult['data'] as MmsUserModel?;
-          if (mmsUser != null && mmsUser.success && mmsUser.user != null) {
-            // Role validation is handled by the backend - if we reach here, the user is authorized
-            final userModel = UserModel(
-              status: true,
-              token: mmsUser.token?.accessToken ?? '',
-              message: mmsUser.message,
-              qrCodePath: null,
-              wallet: 0,
-              customer: Customer(
-                id: mmsUser.user!.id,
-                roleId: mmsUser.user!.userRoleId,
-                name: mmsUser.user!.fullName,
-                mobile: mmsUser.user!.mobileNumber ?? '',
-                email: mmsUser.user!.email ?? '',
-                createdDate: mmsUser.user!.createdAt,
-                password: null,
-                oldPassword: null,
-                otp: 0,
-                address: '',
-                providerId: 0,
-              ),
-            );
-
-            appProvider.addUser(user: userModel);
-            
-            if (mmsUser.token != null) {
-              appProvider.setTokens(
-                access: mmsUser.token!.accessToken,
-                refresh: mmsUser.token!.refreshToken,
-                type: mmsUser.token!.tokenType,
-                expires: mmsUser.token!.expiresIn,
-              );
-            }
-
-            // Clear logout flag on successful login
-            await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: false);
-            
-            // Save login type: Business Services
-            await CacheHelper.saveData(key: CacheHelper.lastLoginType, value: 'Business Services');
-
-            if (mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                downToTop(const HomeLayout()),
-                (route) => false,
-              );
-            }
-          } else {
-            if (mounted) {
-              showDialog(
-                context: context,
-                builder: (context) => WidgetDialog(
-                  title: AppText(context, isFunction: true).someThingError,
-                  desc: AppLocalizations.of(context)!.invalidCredentials,
-                  isError: true,
-                ),
-              );
-            }
-          }
-          setState(() => loading = false);
-        } catch (e) {
-          log('Business Services OTP verification error: $e');
-          if (mounted) {
-            final lang = Localizations.localeOf(context).languageCode;
-            final errorMessage = lang == 'ar' 
-                ? 'الخدمة غير متوفرة حاليا'
-                : 'Service is currently unavailable';
-            showDialog(
-              context: context,
-              builder: (context) => WidgetDialog(
-                title: AppText(context, isFunction: true).someThingError,
-                desc: errorMessage,
-                isError: true,
-              ),
-            );
-          }
-          setState(() => loading = false);
-        }
-      } else {
-        // Use My Services OTP verification (existing flow)
-        final checkOtpResult = await Authantication.checkOtp(
-          otp: textEditingController.text.trim(),
-          fcmToken: appProvider.fcmToken ?? "",
-          phone: widget.phone.toString(),
-        );
-
-        if (checkOtpResult['success'] == true && checkOtpResult['data'] != null) {
-          final value = checkOtpResult['data'] as UserModel;
-          setState(() => userModel = value);
-          if (value.status == true) {
-            appProvider.addUser(user: value);
-            log(appProvider.userModel?.token.toString() ?? "");
-            Map? showTour = CacheHelper.getData(key: CacheHelper.showTour) == null
-                ? null
-                : json.decode(CacheHelper.getData(key: CacheHelper.showTour));
-            if (showTour == null) {
-              CacheHelper.saveData(
-                  key: CacheHelper.showTour,
-                  value: json.encode({
-                    "home": true,
-                    "subCategory": true,
-                    "addAttachment": true,
-                    "appointmentDetails": true,
-                    "checkout": true,
-                  }));
-            }
-
-            // Clear logout flag on successful login
-            await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: false);
-            
-            // Save login type: My Services
-            await CacheHelper.saveData(key: CacheHelper.lastLoginType, value: 'My Services');
-
-            Navigator.pushAndRemoveUntil(
-              context,
-              downToTop(const HomeLayout()),
-              (route) => false,
-            );
-          } else {
-            if (mounted) {
-              // Get localized error message from backend response or use default
-              final lang = Localizations.localeOf(context).languageCode;
-              String errorMessage = (lang == 'ar' && checkOtpResult['messageAr'] != null)
-                  ? checkOtpResult['messageAr']
-                  : (checkOtpResult['message'] ?? AppLocalizations.of(context)!.invalidCredentials);
-              
-              showDialog(
-                context: context,
-                builder: (context) => WidgetDialog(
-                  title: AppText(context, isFunction: true).warning,
-                  desc: errorMessage,
-                  isError: true,
-                ),
-              );
-            }
-          }
         } else {
-          if (mounted) {
-            // Get localized error message from backend response or use default
-            final lang = Localizations.localeOf(context).languageCode;
-            String errorMessage = (lang == 'ar' && checkOtpResult['messageAr'] != null)
-                ? checkOtpResult['messageAr']
-                : (checkOtpResult['message'] ?? AppLocalizations.of(context)!.invalidCredentials);
-            
-            // Check if this is a rate limit error (wait/seconds/rate)
-            if (errorMessage.toLowerCase().contains('wait') || 
-                errorMessage.toLowerCase().contains('rate') ||
-                errorMessage.toLowerCase().contains('60 seconds') ||
-                errorMessage.toLowerCase().contains('seconds before')) {
-              // Extract seconds from message if available
-              final secondsMatch = RegExp(r'(\d+)\s*seconds?').firstMatch(errorMessage);
-              final seconds = secondsMatch?.group(1) ?? '60';
-              
-              // Use localized message with seconds
-              if (lang == 'ar') {
-                errorMessage = 'يرجى الانتظار $seconds ثانية قبل طلب رمز جديد';
-              } else {
-                errorMessage = 'Please wait $seconds seconds before requesting a new OTP';
-              }
-            }
-            
-            showDialog(
-              context: context,
-              builder: (context) => WidgetDialog(
-                title: AppText(context, isFunction: true).warning,
-                desc: errorMessage,
-                isError: true,
-              ),
-            );
-          }
+          showDialog(
+            context: context,
+            builder: (context) => WidgetDialog(
+              title: AppText(context, isFunction: true).warning,
+              desc: AppText(context, isFunction: true).otpWrong,
+              isError: true,
+            ),
+          );
         }
         setState(() => loading = false);
-      }
+      });
     } catch (e) {
-      log('checkOtpFun() [ ERROR ] -> $e');
+      log('Login Is Error');
       setState(() => loading = false);
     }
   }

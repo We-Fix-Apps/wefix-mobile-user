@@ -36,18 +36,6 @@ class Branch {
   String address;
   String latitude;
   String longitude;
-  String? representativeName;
-  String? representativeEmail;
-  int? teamLeaderLookupId;
-  String? teamLeaderName;
-  String? teamLeaderNameArabic;
-  String? teamLeaderCode;
-  String? teamLeaderDescription;
-  String? companyName;
-  String? companyNameArabic;
-  String? companyId;
-  String? companyTitle;
-  String? companyHoAddress;
 
   Branch({
     required this.id,
@@ -59,18 +47,6 @@ class Branch {
     required this.address,
     required this.latitude,
     required this.longitude,
-    this.representativeName,
-    this.representativeEmail,
-    this.teamLeaderLookupId,
-    this.teamLeaderName,
-    this.teamLeaderNameArabic,
-    this.teamLeaderCode,
-    this.teamLeaderDescription,
-    this.companyName,
-    this.companyNameArabic,
-    this.companyId,
-    this.companyTitle,
-    this.companyHoAddress,
   });
 
   factory Branch.fromJson(Map<String, dynamic> json) => Branch(
@@ -83,18 +59,6 @@ class Branch {
         address: json["address"],
         latitude: json["latitude"],
         longitude: json["longitude"],
-        representativeName: json["representativeName"],
-        representativeEmail: json["representativeEmail"],
-        teamLeaderLookupId: json["teamLeaderLookupId"],
-        teamLeaderName: json["teamLeaderName"],
-        teamLeaderNameArabic: json["teamLeaderNameArabic"],
-        teamLeaderCode: json["teamLeaderCode"],
-        teamLeaderDescription: json["teamLeaderDescription"],
-        companyName: json["companyName"],
-        companyNameArabic: json["companyNameArabic"],
-        companyId: json["companyId"],
-        companyTitle: json["companyTitle"],
-        companyHoAddress: json["companyHoAddress"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -107,17 +71,5 @@ class Branch {
         "address": address,
         "latitude": latitude,
         "longitude": longitude,
-        "representativeName": representativeName,
-        "representativeEmail": representativeEmail,
-        "teamLeaderLookupId": teamLeaderLookupId,
-        "teamLeaderName": teamLeaderName,
-        "teamLeaderNameArabic": teamLeaderNameArabic,
-        "teamLeaderCode": teamLeaderCode,
-        "teamLeaderDescription": teamLeaderDescription,
-        "companyName": companyName,
-        "companyNameArabic": companyNameArabic,
-        "companyId": companyId,
-        "companyTitle": companyTitle,
-        "companyHoAddress": companyHoAddress,
       };
 }

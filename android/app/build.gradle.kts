@@ -17,7 +17,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.tenderjo.wefixapp"
-    compileSdk = 35
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -31,11 +31,9 @@ android {
 
     defaultConfig {
         applicationId = "com.tenderjo.wefixapp"
-        // Kotlin DSL syntax: use 'minSdk =' (not 'minSdkVersion')
-        // Ensure it's at least 23 for firebase_auth
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 39
+        versionCode = 19
         versionName = flutter.versionName
     }
 

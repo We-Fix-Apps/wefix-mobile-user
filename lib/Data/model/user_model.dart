@@ -28,26 +28,12 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        status: json["status"] ?? false,
+        status: json["status"],
         wallet: json["wallet"] ?? 0,
         qrCodePath: json["qrCodePath"] ?? "",
-        token: json["token"] ?? "",
-        message: json["message"] ?? "",
-        customer: json["customer"] != null 
-            ? Customer.fromJson(json["customer"] as Map<String, dynamic>)
-            : Customer(
-                id: 0,
-                roleId: 1,
-                name: "",
-                mobile: "",
-                email: "",
-                createdDate: DateTime.now(),
-                password: null,
-                oldPassword: null,
-                otp: 0,
-                address: "",
-                providerId: 0,
-              ),
+        token: json["token"],
+        message: json["message"],
+        customer: Customer.fromJson(json["customer"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -88,21 +74,17 @@ class Customer {
   });
 
   factory Customer.fromJson(Map<String, dynamic> json) => Customer(
-        id: json["id"] ?? 0,
+        id: json["id"],
         roleId: json["roleId"],
-        name: json["name"] ?? "",
-        mobile: json["mobile"] ?? "",
-        email: json["email"] ?? "",
-        createdDate: json["createdDate"] != null 
-            ? (json["createdDate"] is String 
-                ? DateTime.parse(json["createdDate"]) 
-                : DateTime.parse(json["createdDate"].toString()))
-            : DateTime.now(),
+        name: json["name"],
+        mobile: json["mobile"],
+        email: json["email"],
+        createdDate: DateTime.parse(json["createdDate"]),
         password: json["password"],
         oldPassword: json["oldPassword"],
-        otp: json["otp"] ?? 0,
-        address: json["address"] ?? "",
-        providerId: json["providerId"] ?? 0,
+        otp: json["otp"],
+        address: json["address"],
+        providerId: json["providerId"],
       );
 
   Map<String, dynamic> toJson() => {

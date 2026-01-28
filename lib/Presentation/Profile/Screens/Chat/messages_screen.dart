@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:googleapis/cloudsearch/v1.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
@@ -69,8 +70,8 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          actions: [
-            const LanguageButton(),
+          actions: const [
+            LanguageButton(),
           ],
           title: Text(
             AppText(context).massages,
@@ -79,53 +80,49 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
           centerTitle: true,
           iconTheme: const IconThemeData(color: Colors.black),
         ),
-        bottomNavigationBar: Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: Row(
-            children: [
-              SizedBox(
-                width: MediaQuery.of(context).size.width * .85,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Form(
-                    key: _formKey,
-                    child: WidgetTextField(
-                      AppText(context).enterText,
-                      prefixIcon: IconButton(
-                          onPressed: () {
-                            showBottom().then((value) {});
-                          },
-                          icon: const Icon(
-                            Icons.attach_file,
-                            color: AppColors.greyColor1,
-                          )),
-                      validator: (v) {
-                        if (commentController.text.isEmpty) {
-                          return AppText(context, isFunction: true)
-                              .thisfeildcanbeempty;
-                        } else {
-                          return null;
-                        }
-                      },
-                      fillColor: AppColors.whiteColor3,
-                      controller: commentController,
-                    ),
-                  ),
-                ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: 10,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 10,
+              left: 15,
+              right: 15,
+            ),
+            child: Form(
+              key: _formKey,
+              child: WidgetTextField(
+                AppText(context).enterText,
+                prefixIcon: IconButton(
+                    onPressed: () {
+                      showBottom().then((value) {});
+                    },
+                    icon: const Icon(
+                      Icons.attach_file,
+                      color: AppColors.greyColor1,
+                    )),
+                validator: (v) {
+                  if (commentController.text.isEmpty) {
+                    return AppText(context, isFunction: true).thisfeildcanbeempty;
+                  } else {
+                    return null;
+                  }
+                },
+                fillColor: AppColors.greyColor1.withOpacity(0.1),
+                controller: commentController,
+                suffixIcon: IconButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        sendMEssages("").then((value) {
+                          commentController.clear();
+                        });
+                      }
+                    },
+                    icon: Icon(
+                      Icons.send,
+                      color: AppColors(context).primaryColor,
+                    )),
               ),
-              IconButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      sendMEssages("").then((value) {
-                        commentController.clear();
-                      });
-                    }
-                  },
-                  icon: Icon(
-                    Icons.send,
-                    color: AppColors(context).primaryColor,
-                  )),
-            ],
+            ),
           ),
         ),
         body: loadingMessage == true
@@ -145,13 +142,7 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
                         children: [
                           Row(
                             children: [
-                              ClipRRect(
-                                  borderRadius: BorderRadius.circular(1000),
-                                  child: Image.asset(
-                                      "assets/image/icon_logo.png",
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.cover)),
+                              ClipRRect(borderRadius: BorderRadius.circular(1000), child: Image.asset("assets/image/icon_logo.png", width: 50, height: 50, fit: BoxFit.cover)),
                               const SizedBox(
                                 width: 10,
                               ),
@@ -189,128 +180,51 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
                                   children: [
                                     Expanded(
                                       child: ListView.separated(
-                                        separatorBuilder: (context, index) =>
-                                            const SizedBox(
+                                        separatorBuilder: (context, index) => const SizedBox(
                                           height: 10,
                                         ),
                                         shrinkWrap: true,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
+                                        physics: const NeverScrollableScrollPhysics(),
                                         itemCount: messagesList.length ?? 0,
                                         itemBuilder: (context, index) {
                                           return Row(
-                                            mainAxisAlignment:
-                                                messagesList[index]
-                                                            ["toUserId"] ==
-                                                        widget.toUserId
-                                                    ? MainAxisAlignment.end
-                                                    : MainAxisAlignment.start,
+                                            mainAxisAlignment: messagesList[index]["toUserId"] == widget.toUserId ? MainAxisAlignment.end : MainAxisAlignment.start,
                                             children: [
-                                              messagesList[index]["message"] ==
-                                                      ""
+                                              messagesList[index]["message"] == ""
                                                   ? Container(
                                                       decoration: BoxDecoration(
                                                         border: Border.all(
-                                                          color: AppColors
-                                                              .greyColor1,
+                                                          color: AppColors.greyColor1,
                                                           width: 1,
                                                         ),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
+                                                        borderRadius: BorderRadius.circular(10),
                                                       ),
                                                       child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
+                                                        borderRadius: BorderRadius.circular(10),
                                                         child: WidgetCachNetworkImage(
-                                                            boxFit:
-                                                                BoxFit.contain,
-                                                            width:
-                                                                AppSize(context)
-                                                                        .width *
-                                                                    .5,
-                                                            height:
-                                                                AppSize(context)
-                                                                        .width *
-                                                                    .5,
-                                                            image: messagesList[
-                                                                        index]
-                                                                    ["image"] ??
-                                                                ""),
+                                                            boxFit: BoxFit.contain, width: AppSize(context).width * .5, height: AppSize(context).width * .5, image: messagesList[index]["image"] ?? ""),
                                                       ),
                                                     )
                                                   : Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .start,
-                                                      crossAxisAlignment: messagesList[
-                                                                      index][
-                                                                  "toUserId"] ==
-                                                              widget.toUserId
-                                                          ? CrossAxisAlignment
-                                                              .end
-                                                          : CrossAxisAlignment
-                                                              .start,
+                                                      mainAxisAlignment: MainAxisAlignment.start,
+                                                      crossAxisAlignment: messagesList[index]["toUserId"] == widget.toUserId ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                                       children: [
                                                         Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(4.0),
+                                                          padding: const EdgeInsets.all(4.0),
                                                           child: Container(
-                                                            width: (messagesList[index]
-                                                                            [
-                                                                            "message"]
-                                                                        .toString()
-                                                                        .length) >
-                                                                    30
-                                                                ? AppSize(context)
-                                                                        .width *
-                                                                    .65
-                                                                : null,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: messagesList[
-                                                                              index]
-                                                                          [
-                                                                          "toUserId"] ==
-                                                                      widget
-                                                                          .toUserId
-                                                                  ? AppColors
-                                                                      .lightGreyColor
-                                                                  : AppColors(
-                                                                          context)
-                                                                      .primaryColor,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10),
+                                                            width: (messagesList[index]["message"].toString().length) > 30 ? AppSize(context).width * .65 : null,
+                                                            decoration: BoxDecoration(
+                                                              color: messagesList[index]["toUserId"] == widget.toUserId ? AppColors.lightGreyColor : AppColors(context).primaryColor,
+                                                              borderRadius: BorderRadius.circular(10),
                                                             ),
                                                             child: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(8.0),
+                                                              padding: const EdgeInsets.all(8.0),
                                                               child: Text(
-                                                                messagesList[
-                                                                            index]
-                                                                        [
-                                                                        "message"] ??
-                                                                    "",
+                                                                messagesList[index]["message"] ?? "",
                                                                 maxLines: 20,
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: messagesList[index]
-                                                                              [
-                                                                              "toUserId"] ==
-                                                                          widget
-                                                                              .toUserId
-                                                                      ? AppColors
-                                                                          .blackColor1
-                                                                      : AppColors
-                                                                          .whiteColor1,
+                                                                overflow: TextOverflow.ellipsis,
+                                                                style: TextStyle(
+                                                                  color: messagesList[index]["toUserId"] == widget.toUserId ? AppColors.blackColor1 : AppColors.whiteColor1,
                                                                 ),
                                                               ),
                                                             ),
@@ -360,8 +274,7 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
     setState(() {
       messagesList.add(arguments![0]);
     });
-    await _audioPlayer
-        .play(AssetSource('video/mixkit-correct-answer-tone-2870.wav'));
+    await _audioPlayer.play(AssetSource('video/mixkit-correct-answer-tone-2870.wav'));
 
     log(messagesList.toString());
   }
@@ -444,9 +357,7 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
   Future showBottom({bool isCover = false}) async {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20))),
       builder: (context) {
         return SafeArea(
           child: SizedBox(
@@ -461,24 +372,17 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
                   Container(
                     width: 70,
                     height: 5,
-                    decoration: BoxDecoration(
-                        color: AppColors.greyColor1,
-                        borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(color: AppColors.greyColor1, borderRadius: BorderRadius.circular(10)),
                   ),
                   // * Add Car
                   InkWell(
                     onTap: () {
-                      pickImage(
-                              source: ImageSource.gallery,
-                              context: context,
-                              needPath: true)
-                          .then((value) async {
+                      pickImage(source: ImageSource.gallery, context: context, needPath: true).then((value) async {
                         if (value != null) {
                           setState(() {
                             imageFile = value;
                           });
-                          await uploadFile(isCavar: isCover)
-                              .whenComplete(() {});
+                          await uploadFile(isCavar: isCover).whenComplete(() {});
                           setState(() {
                             someUpdate = true;
                           });
@@ -517,17 +421,12 @@ class _CommentsScreenByIdState extends State<CommentsScreenById> {
                   // * Add WishList
                   InkWell(
                     onTap: () {
-                      pickImage(
-                              source: ImageSource.camera,
-                              context: context,
-                              needPath: true)
-                          .then((value) async {
+                      pickImage(source: ImageSource.camera, context: context, needPath: true).then((value) async {
                         if (value != null) {
                           setState(() {
                             imageFile = value;
                           });
-                          await uploadFile(isCavar: isCover)
-                              .whenComplete(() {});
+                          await uploadFile(isCavar: isCover).whenComplete(() {});
                           setState(() {
                             someUpdate = true;
                           });

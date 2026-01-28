@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/B2b/b2b_api.dart';
@@ -25,7 +24,7 @@ import 'package:wefix/Presentation/Checkout/Screens/checkout_screen.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/main.dart';
-import 'package:wefix/l10n/app_localizations.dart';
+import '../../../Business/orders/profile_api.dart';
 
 
 class AppoitmentDetailsScreen extends StatefulWidget {
@@ -103,6 +102,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
 
   @override
   void initState() {
+    getRealState();
     getBranches();
     getAdv();
 
@@ -166,7 +166,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
         actions: const [
           LanguageButton(),
         ],
-        title: Text(AppLocalizations.of(context)!.ticketSummary),
+        title: Text(AppText(context).appointmentDetails),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -187,23 +187,10 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                         DateTimeWidget(
                           dateKey: keyButton[0],
                           featureKey: keyButton[1],
-                          date: (() {
-                            final dateValue = appProvider.appoitmentInfo["date"];
-                            if (dateValue == null) return '';
-                            if (dateValue is DateTime) {
-                              return DateFormat('yyyy-MM-dd').format(dateValue);
-                            }
-                            final dateStr = dateValue.toString();
-                            // Try to parse as DateTime first
-                            try {
-                              final parsedDate = DateTime.parse(dateStr);
-                              return DateFormat('yyyy-MM-dd').format(parsedDate);
-                            } catch (e) {
-                              // If parsing fails, return first 10 characters if available
-                              return dateStr.length >= 10 ? dateStr.substring(0, 10) : dateStr;
-                            }
-                          })(),
-                          time: appProvider.appoitmentInfo["time"]?.toString() ?? '',
+                          date: appProvider.appoitmentInfo["date"]
+                              .toString()
+                              .substring(0, 10),
+                          time: appProvider.appoitmentInfo["time"].toString(),
                         ),
                         appProvider.userModel?.customer.roleId == 2
                             ? const SizedBox()
@@ -228,7 +215,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                                       ),
                                       inactiveThumbColor: AppColors.whiteColor1,
                                       inactiveTrackColor: AppColors.greyColor1,
-                                      overlayColor: MaterialStateProperty.all(
+                                      overlayColor: WidgetStateProperty.all(
                                         AppColors(context)
                                             .primaryColor
                                             .withOpacity(.2),
@@ -334,7 +321,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                                                 inactiveTrackColor:
                                                     AppColors.greyColor1,
                                                 overlayColor:
-                                                    MaterialStateProperty.all(
+                                                    WidgetStateProperty.all(
                                                   AppColors(context)
                                                       .primaryColor
                                                       .withOpacity(.2),
@@ -416,6 +403,74 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                         const Divider(
                           color: AppColors.backgroundColor,
                         ),
+
+                        realEstatesModel?.realEstates.isEmpty == true
+                            ? const SizedBox()
+                            : appProvider.userModel?.customer.roleId == 2
+                                ? const SizedBox()
+                                : Text(
+                                    "🏠	 ${AppText(context).propertyName}",
+                                    style: TextStyle(
+                                      fontSize: AppSize(context).smallText1,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+
+                        loading == true
+                            ? const LoadingText(width: 100)
+                            : realEstatesModel?.realEstates.isEmpty == true
+                                ? const SizedBox()
+                                : Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: Container(
+                                      width: AppSize(context).width,
+                                      height: AppSize(context).height * 0.06,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.backgroundColor,
+                                        borderRadius: BorderRadius.circular(7),
+                                        border: Border.all(
+                                            color: AppColors.greyColor3),
+                                      ),
+                                      child: Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: DropdownButton<String>(
+                                            isDense: true,
+                                            isExpanded: true,
+                                            underline: const SizedBox(),
+                                            value: selectedType,
+                                            hint: const Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 8, vertical: 4),
+                                              child: Text(""),
+                                            ),
+                                            items: realEstatesModel?.realEstates
+                                                .map((item) => DropdownMenuItem(
+                                                      value: item.id.toString(),
+                                                      child: Text(item.title),
+                                                    ))
+                                                .toList(),
+                                            onChanged: (value) {
+                                              appProvider
+                                                  .setRealStateId(value ?? "");
+                                              setState(() {
+                                                selectedType = value;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                        realEstatesModel?.realEstates.isEmpty == true
+                            ? const SizedBox()
+                            : const Divider(
+                                color: AppColors.backgroundColor,
+                              ),
                         // Text(
                         //   "🏠 Branch name",
                         //   style: TextStyle(
@@ -494,13 +549,11 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
 
   Future getBranches() async {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    if (!mounted) return;
     setState(() {
       loading = true;
     });
     B2bApi.getBranches(token: appProvider.userModel?.token ?? '').then((value) {
-      if (!mounted) return;
-      if (value != null && value is BranchesModel) {
+      if (value != null) {
         setState(() {
           loading = false;
           branchesModel = value;
@@ -508,15 +561,8 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
       } else {
         setState(() {
           loading = false;
-          branchesModel = null;
         });
       }
-    }).catchError((error) {
-      if (!mounted) return;
-      setState(() {
-        loading = false;
-        branchesModel = null;
-      });
     });
   }
 
@@ -553,6 +599,34 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
         );
       },
     );
+  }
+
+  Future getRealState() async {
+    AppProvider appProvider = Provider.of(context, listen: false);
+
+    if (mounted) {
+      setState(() {
+        loading = true;
+      });
+    }
+    await ProfileApis.getRealState(
+      token: '${appProvider.userModel?.token}',
+    ).then((value) {
+      if (value != null) {
+        if (mounted) {
+          setState(() {
+            loading = false;
+            realEstatesModel = value;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            loading = false;
+          });
+        }
+      }
+    });
   }
 
   Future getAdv() async {

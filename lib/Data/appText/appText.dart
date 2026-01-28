@@ -11,62 +11,45 @@ class AppText {
 
   String? languages = CacheHelper.getData(key: LANG_CACHE);
 
-  AppProvider get languageProvider => Provider.of<AppProvider>(context,
-      listen: isFunction == false ? true : false);
+  AppProvider get languageProvider => Provider.of<AppProvider>(context, listen: isFunction == false ? true : false);
 
   String get langCode => languages ?? 'en';
 
   String getTranslation(String key) {
-    try {
-      final languageList = languageProvider.allLanguage
-            .where((element) => element.key == langCode)
-          .toList();
-      
-      if (languageList.isEmpty) return '';
-      
-      final languages = languageList.first.languages;
-      if (languages == null || languages.isEmpty) return '';
-      
-      try {
-        final translation = languages.firstWhere(
-          (element) => element.wordKey == key,
-        );
-        return translation.value ?? '';
-      } catch (e) {
-        // Translation key not found, return empty string
-        return '';
-      }
-    } catch (e) {
-      // Return empty string if any error occurs
-      return '';
-    }
+    return languageProvider.allLanguage.where((element) => element.key == langCode).toList().first.languages?.firstWhere((element) => element.wordKey == key).value ?? '';
   }
 
+  String get submitFeedback => getTranslation('submitFeedback');
+  String get wefixLocation => getTranslation('wefixLocation');
+  String get remarks => getTranslation('remarks');
+  String get complaint => getTranslation('complaint');
+  String get suggestion => getTranslation('suggestion');
+  String get weValueYourTime => getTranslation('weValueYourTime');
+  String get youtube => getTranslation('youtube');
+  String get chat => getTranslation('chat');
+  String get faq => getTranslation('faq');
+  String get whatsapp => getTranslation('whatsapp');
+  String get callCenter => getTranslation('callCenter');
+  String get callUs => getTranslation('callUs');
+  String get forEmergencies => getTranslation('forEmergencies');
   String get home => getTranslation('home');
   String get noteM => getTranslation('noteM');
   String get youcansearch => getTranslation('youcansearch');
   String get checkProfile => getTranslation('checkProfile');
   String get yourdetails => getTranslation('yourdetails');
   String get searchforservice => getTranslation('searchforservice');
-
   String get unlimited => getTranslation('unlimited');
-
   String get editAppointmentTime => getTranslation('editAppointmentTime');
-  String get editAppointmentTimeDescription =>
-      getTranslation('editAppointmentTimeDescription');
+  String get editAppointmentTimeDescription => getTranslation('editAppointmentTimeDescription');
 
   String get addAdditionalServices => getTranslation('addAdditionalServices');
-  String get addAdditionalServicesDescription =>
-      getTranslation('addAdditionalServicesDescription');
+  String get addAdditionalServicesDescription => getTranslation('addAdditionalServicesDescription');
 
   String get viewYourAttachments => getTranslation('viewYourAttachments');
-  String get viewYourAttachmentsDescription =>
-      getTranslation('viewYourAttachmentsDescription');
+  String get viewYourAttachmentsDescription => getTranslation('viewYourAttachmentsDescription');
 
-  String get continueYourAppointment =>
-      getTranslation('continueYourAppointment');
-  String get continueYourAppointmentDescription =>
-      getTranslation('continueYourAppointmentDescription');
+  String get continueYourAppointment => getTranslation('continueYourAppointment');
+  String get continueYourAppointmentDescription => getTranslation('continueYourAppointmentDescription');
   String get pleaseSelectTime => getTranslation('pleaseSelectTime');
 
   String get discount => getTranslation('discount');
@@ -82,20 +65,16 @@ class AppText {
   String get waitingforConfirmation => getTranslation('waitingforConfirmation');
 
   String get changeLocation => getTranslation('changeLocation');
-  String get changeLocationDescription =>
-      getTranslation('changeLocationDescription');
+  String get changeLocationDescription => getTranslation('changeLocationDescription');
 
   String get getDiscount => getTranslation('getDiscount');
   String get getDiscountDescription => getTranslation('getDiscountDescription');
 
   String get paymentSummary => getTranslation('paymentSummary');
-  String get paymentSummaryDescription =>
-      getTranslation('paymentSummaryDescription');
+  String get paymentSummaryDescription => getTranslation('paymentSummaryDescription');
 
-  String get placeOrderAndChoosePaymentMethod =>
-      getTranslation('placeOrderAndChoosePaymentMethod');
-  String get placeOrderAndChoosePaymentMethodDescription =>
-      getTranslation('placeOrderAndChoosePaymentMethodDescription');
+  String get placeOrderAndChoosePaymentMethod => getTranslation('placeOrderAndChoosePaymentMethod');
+  String get placeOrderAndChoosePaymentMethodDescription => getTranslation('placeOrderAndChoosePaymentMethodDescription');
 
   String get proAtt => getTranslation('proAtt');
   String get corrective => getTranslation('corrective');
@@ -106,8 +85,7 @@ class AppText {
 
   String get consultations => getTranslation('consultations');
 
-  String get youwillbechargedTicketextra =>
-      getTranslation('youwillbechargedTicketextra');
+  String get youwillbechargedTicketextra => getTranslation('youwillbechargedTicketextra');
 
   String get visa => getTranslation('visa');
   String get cliq => getTranslation('cliq');
@@ -132,12 +110,10 @@ class AppText {
   String get ticket => getTranslation('ticket');
   String get rate => getTranslation('rate');
   String get jod => getTranslation('jod');
-  String get youwillbecharged10JODextra =>
-      getTranslation('youwillbecharged10JODextra');
+  String get youwillbecharged10JODextra => getTranslation('youwillbecharged10JODextra');
   String get otpWrong => getTranslation('otpWrong');
   String get subSuccess => getTranslation('subSuccess');
-  String get preventivemaintenancevisit =>
-      getTranslation('preventivemaintenancevisit');
+  String get preventivemaintenancevisit => getTranslation('preventivemaintenancevisit');
   String get myProperty => getTranslation('myProperty');
   String get addProperty => getTranslation('addProperty');
   String get propertyName => getTranslation('propertyName');
@@ -194,13 +170,11 @@ class AppText {
   String get tellusmore => getTranslation('tellusmore');
   String get remove => getTranslation('remove');
 
-  String get youhavetoanswerallquestions =>
-      getTranslation('youhavetoanswerallquestions');
+  String get youhavetoanswerallquestions => getTranslation('youhavetoanswerallquestions');
 
   String get location => getTranslation('location');
   String get stopRecording => getTranslation('stopRecording');
-  String get previewnotavailableforthisfiletype =>
-      getTranslation('previewnotavailableforthisfiletype');
+  String get previewnotavailableforthisfiletype => getTranslation('previewnotavailableforthisfiletype');
 
   String get uploadFilefromDevice => getTranslation('uploadFilefromDevice');
 
@@ -214,8 +188,7 @@ class AppText {
   String get type => getTranslation('type');
   String get hours => getTranslation('hours');
 
-  String get maintenanceTicketDetails =>
-      getTranslation('maintenanceTicketDetails');
+  String get maintenanceTicketDetails => getTranslation('maintenanceTicketDetails');
   String get customerDetails => getTranslation('customerDetails');
   String get issueDescription => getTranslation('issueDescription');
   String get serviceProviderActions => getTranslation('serviceProviderActions');
@@ -227,10 +200,8 @@ class AppText {
   String get audioRecorded => getTranslation('audioRecorded');
   String get time => getTranslation('time');
   String get describeyourproblem => getTranslation('describeyourproblem');
-  String get needafemaletechnicianforsupport =>
-      getTranslation('needafemaletechnicianforsupport');
-  String get Youhavetochooseproparety =>
-      getTranslation('Youhavetochooseproparety');
+  String get needafemaletechnicianforsupport => getTranslation('needafemaletechnicianforsupport');
+  String get Youhavetochooseproparety => getTranslation('Youhavetochooseproparety');
 
   String get contractDetails => getTranslation('contractDetails');
 
@@ -270,34 +241,21 @@ class AppText {
   String get weFixStations => getTranslation('weFixStations');
   String get supportType => getTranslation('supportType');
   String get bookings => getTranslation('bookings');
-  String get tickets {
-    final translation = getTranslation('tickets');
-    // Fallback if translation not found in backend
-    if (translation.isEmpty) {
-      return langCode == 'ar' ? 'تذاكر' : 'Tickets';
-    }
-    return translation;
-  }
   String get callforemergency => getTranslation('callforemergency');
   String get call => getTranslation('call');
-  String get welcomePleaseenteryourdetailsbelow =>
-      getTranslation('welcomePleaseenteryourdetailsbelow');
+  String get welcomePleaseenteryourdetailsbelow => getTranslation('welcomePleaseenteryourdetailsbelow');
   String get thisfeildcanbeempty => getTranslation('thisfeildcanbeempty');
   String get enterText => getTranslation('enterText');
   String get ofyourgoal => getTranslation('ofyourgoal');
   String get savingsThisYear => getTranslation('savingsThisYear');
   String get additionalfeedback => getTranslation('additionalfeedback');
-  String get pleaserateyourexperiencebelow =>
-      getTranslation('pleaserateyourexperiencebelow');
+  String get pleaserateyourexperiencebelow => getTranslation('pleaserateyourexperiencebelow');
   String get serviceFeedback => getTranslation('serviceFeedback');
   String get ratethevendor => getTranslation('ratethevendor');
   String get thankyou => getTranslation('thankyou');
-  String get weappreciateyourfeedback =>
-      getTranslation('weappreciateyourfeedback');
-  String get pleaseenteryourphonenumber =>
-      getTranslation('pleaseenteryourphonenumber');
-  String get pleaseenteryourfeedback =>
-      getTranslation('pleaseenteryourfeedback');
+  String get weappreciateyourfeedback => getTranslation('weappreciateyourfeedback');
+  String get pleaseenteryourphonenumber => getTranslation('pleaseenteryourphonenumber');
+  String get pleaseenteryourfeedback => getTranslation('pleaseenteryourfeedback');
   String get finish => getTranslation('finish');
   String get thisApp => getTranslation('thisApp');
   String get whatmadeyou => getTranslation('whatmadeyou');
@@ -306,38 +264,25 @@ class AppText {
   String get skip => getTranslation('skip');
   String get subscribeNow => getTranslation('subscribeNow');
   String get upgradeandSaveBig => getTranslation('upgradeandSaveBig');
-  String get subscribenowandsave50JODDonmissoutonthisspecialoffer =>
-      getTranslation('subscribenowandsave50JODDonmissoutonthisspecialoffer');
-  String get yourtransactionhasbeenfailed =>
-      getTranslation('yourtransactionhasbeenfailed');
-  String get yourtransactionhasbeensuccessfullycompleted =>
-      getTranslation('yourtransactionhasbeensuccessfullycompleted');
-  String get estimatedTimeToArrivalminutes =>
-      getTranslation('estimatedTimeToArrivalminutes');
-  String get responseTime => getTranslation('responseTime');
-  String get minutes => getTranslation('minutes');
+  String get subscribenowandsave50JODDonmissoutonthisspecialoffer => getTranslation('subscribenowandsave50JODDonmissoutonthisspecialoffer');
+  String get yourtransactionhasbeenfailed => getTranslation('yourtransactionhasbeenfailed');
+  String get yourtransactionhasbeensuccessfullycompleted => getTranslation('yourtransactionhasbeensuccessfullycompleted');
+  String get estimatedTimeToArrivalminutes => getTranslation('estimatedTimeToArrivalminutes');
   String get chooseTechniciaGender => getTranslation('chooseTechniciaGender');
   String get sincethematerialcostexceeds100JODanupfrontpaymentof50requiredWetouchwithyoutoconfirmthematerialprice =>
-      getTranslation(
-          'sincethematerialcostexceeds100JODanupfrontpaymentof50requiredWetouchwithyoutoconfirmthematerialprice');
-  String get canyoutelluswhatmaterialisneeded =>
-      getTranslation('canyoutelluswhatmaterialisneeded');
+      getTranslation('sincethematerialcostexceeds100JODanupfrontpaymentof50requiredWetouchwithyoutoconfirmthematerialprice');
+  String get canyoutelluswhatmaterialisneeded => getTranslation('canyoutelluswhatmaterialisneeded');
   String get pleaseentertheamount => getTranslation('pleaseentertheamount');
-  String get needmaterialfromprovider =>
-      getTranslation('needmaterialfromprovider');
-  String get thepromocodecantbeempty =>
-      getTranslation('thepromocodecantbeempty');
-  String get youhavetoaccepttermsandconditions =>
-      getTranslation('youhavetoaccepttermsandconditions');
+  String get needmaterialfromprovider => getTranslation('needmaterialfromprovider');
+  String get thepromocodecantbeempty => getTranslation('thepromocodecantbeempty');
+  String get youhavetoaccepttermsandconditions => getTranslation('youhavetoaccepttermsandconditions');
   String get appointmentDetails => getTranslation('appointmentDetails');
   String get attachments => getTranslation('attachments');
   String get viewAttachments => getTranslation('viewAttachments');
   // String get confirmAppointment => getTranslation('confirmAppointment');
   String get attachmentPreview => getTranslation('attachmentPreview');
-  String get yourrequesthasbeensentPleasecheckyouremail =>
-      getTranslation('yourrequesthasbeensentPleasecheckyouremail');
-  String get failedtoSendYourrequest =>
-      getTranslation('failedtoSendYourrequest');
+  String get yourrequesthasbeensentPleasecheckyouremail => getTranslation('yourrequesthasbeensentPleasecheckyouremail');
+  String get failedtoSendYourrequest => getTranslation('failedtoSendYourrequest');
   String get close => getTranslation('close');
   String get color => getTranslation('color');
   String get confirm => getTranslation('confirm');
@@ -383,8 +328,7 @@ class AppText {
   String get saturday => getTranslation('saturday');
   String get search => getTranslation('search');
   String get select => getTranslation('select');
-  String get selectApictureFromGallery =>
-      getTranslation('selectApictureFromGallery');
+  String get selectApictureFromGallery => getTranslation('selectApictureFromGallery');
   String get storeAddress => getTranslation('storeAddress');
   String get storeDomain => getTranslation('storeDomain');
   String get storeEmail => getTranslation('storeEmail');
@@ -411,32 +355,26 @@ class AppText {
   String get adddd => getTranslation('adddd');
   String get supplireLogin => getTranslation('supplireLogin');
   String get login => getTranslation('login');
-  String get automotivePartAccessories =>
-      getTranslation('automotivePartAccessories');
+  String get automotivePartAccessories => getTranslation('automotivePartAccessories');
   String get joinTheMostComperaccc => getTranslation('joinTheMostComperaccc');
   String get emailAddress => getTranslation('emailAddress');
   String get password => getTranslation('password');
-  String get byContinueWithYourEmailAgree =>
-      getTranslation('byContinueWithYourEmailAgree');
+  String get byContinueWithYourEmailAgree => getTranslation('byContinueWithYourEmailAgree');
   String get forgetPassword => getTranslation('forgetPassword');
   String get total => getTranslation('total');
   String get continuesss => getTranslation('continuesss');
   String get price => getTranslation('price');
   String get yes => getTranslation('yes');
   String get update => getTranslation('update');
-  String get youCanUploadedUpTo10Pictures =>
-      getTranslation('youCanUploadedUpTo10Pictures');
-  String get youLikeToTellUsAboutSomtheng =>
-      getTranslation('youLikeToTellUsAboutSomtheng');
+  String get youCanUploadedUpTo10Pictures => getTranslation('youCanUploadedUpTo10Pictures');
+  String get youLikeToTellUsAboutSomtheng => getTranslation('youLikeToTellUsAboutSomtheng');
   String get youeMessage => getTranslation('youeMessage');
   String get warning => getTranslation('warning');
   String get share => getTranslation('share');
   String get sucessSendYourMessage => getTranslation('sucessSendYourMessage');
-  String get somethingErrorInSendYourMessage =>
-      getTranslation('somethingErrorInSendYourMessage');
+  String get somethingErrorInSendYourMessage => getTranslation('somethingErrorInSendYourMessage');
   String get sucessUpdateProfile => getTranslation('sucessUpdateProfile');
-  String get somethingErrorInUpdateProfile =>
-      getTranslation('somethingErrorInUpdateProfile');
+  String get somethingErrorInUpdateProfile => getTranslation('somethingErrorInUpdateProfile');
   String get enterSellPrice => getTranslation('enterSellPrice');
   String get enterPayment => getTranslation('enterPayment');
   String get attachment => getTranslation('attachment');
@@ -483,8 +421,7 @@ class AppText {
   String get checkYourEmail => getTranslation('checkYourEmail');
   String get checkYourEmail2 => getTranslation('checkYourEmail2');
   String get someThingError => getTranslation('someThingError');
-  String get emailorpasswordincorrect =>
-      getTranslation('emailorpasswordincorrect');
+  String get emailorpasswordincorrect => getTranslation('emailorpasswordincorrect');
   String get invalidPhone => getTranslation('invalidPhone');
   String get empty1 => getTranslation('empty1');
   String get empty2 => getTranslation('empty2');
@@ -517,22 +454,19 @@ class AppText {
   String get checkout => getTranslation('checkout');
   String get cartsProducts => getTranslation('cartsProducts');
   String get shippingAddress => getTranslation('shippingAddress');
-  String get selectoneaddressforshipping =>
-      getTranslation('selectoneaddressforshipping');
+  String get selectoneaddressforshipping => getTranslation('selectoneaddressforshipping');
   String get firstName => getTranslation('firstName');
   String get lastName => getTranslation('lastName');
   String get addressType => getTranslation('addressType');
   String get buildingNumber => getTranslation('buildingNumber');
   String get addAddress => getTranslation('addAddress');
-  String get youneedtoplacethemarkeronthemap =>
-      getTranslation('youneedtoplacethemarkeronthemap');
+  String get youneedtoplacethemarkeronthemap => getTranslation('youneedtoplacethemarkeronthemap');
   String get saveonyourorder => getTranslation('saveonyourorder');
   String get shipping => getTranslation('shipping');
   String get applyPromoCode => getTranslation('applyPromoCode');
   String get paywith => getTranslation('paywith');
   String get placeOrder => getTranslation('placeOrder');
-  String get youneedtoselectoneshippingcompany =>
-      getTranslation('youneedtoselectoneshippingcompany');
+  String get youneedtoselectoneshippingcompany => getTranslation('youneedtoselectoneshippingcompany');
   String get orders => getTranslation('orders');
   String get wishlist => getTranslation('wishlist');
   String get addresses => getTranslation('addresses');
@@ -542,23 +476,19 @@ class AppText {
   String get changepassword => getTranslation('changepassword');
   String get deletemyAccount => getTranslation('deletemyAccount');
   String get noProductFound => getTranslation('noProductFound');
-  String get lookslikethereisnoresultforyourseraching =>
-      getTranslation('lookslikethereisnoresultforyourseraching');
-  String get lookslikewishlistisempty =>
-      getTranslation('lookslikewishlistisempty');
+  String get lookslikethereisnoresultforyourseraching => getTranslation('lookslikethereisnoresultforyourseraching');
+  String get lookslikewishlistisempty => getTranslation('lookslikewishlistisempty');
   String get yourwishlistisempty => getTranslation('yourwishlistisempty');
 
   String get shopDeatils => getTranslation('shopDeatils');
   String get desc => getTranslation('desc');
   String get comments => getTranslation('comments');
-  String get youcantacinformationwillnotbesharedwiththemerchant =>
-      getTranslation('youcantacinformationwillnotbesharedwiththemerchant');
+  String get youcantacinformationwillnotbesharedwiththemerchant => getTranslation('youcantacinformationwillnotbesharedwiththemerchant');
   String get noreviewsyet => getTranslation('noreviewsyet');
   String get setasdefaultlocation => getTranslation('setasdefaultlocation');
   String get popularSearch => getTranslation('popularSearch');
   String get loginnow => getTranslation('loginnow');
-  String get youneedtologintousethisfeature =>
-      getTranslation('youneedtologintousethisfeature');
+  String get youneedtologintousethisfeature => getTranslation('youneedtologintousethisfeature');
   String get similarproduct => getTranslation('similarproduct');
   String get featueredProduct => getTranslation('featueredProduct');
   String get askQuestion => getTranslation('askQuestion');
@@ -572,14 +502,11 @@ class AppText {
 
   String get transactiontype => getTranslation('transactiontype');
 
-  String get pleaseenteravalidnumber =>
-      getTranslation('pleaseenteravalidnumber');
+  String get pleaseenteravalidnumber => getTranslation('pleaseenteravalidnumber');
 
-  String get entertheamountyouwanttoaddtoyourwallet =>
-      getTranslation('entertheamountyouwanttoaddtoyourwallet');
+  String get entertheamountyouwanttoaddtoyourwallet => getTranslation('entertheamountyouwanttoaddtoyourwallet');
 
-  String get dontmissoutSubscribenowforspecialServices =>
-      getTranslation('dontmissoutSubscribenowforspecialServices');
+  String get dontmissoutSubscribenowforspecialServices => getTranslation('dontmissoutSubscribenowforspecialServices');
 
   String get addedToCart => getTranslation('addedToCart');
   String get withdraw => getTranslation('withdraw');
@@ -611,50 +538,38 @@ class AppText {
 
   String get createAccount => getTranslation('createAccount');
 
-  String get thephoneyouentereisalreadyinusePleasetradifferentphone =>
-      getTranslation('thephoneyouentereisalreadyinusePleasetradifferentphone');
+  String get thephoneyouentereisalreadyinusePleasetradifferentphone => getTranslation('thephoneyouentereisalreadyinusePleasetradifferentphone');
 
-  String get mustbecontainatleast8characters =>
-      getTranslation('mustbecontainatleast8characters');
+  String get mustbecontainatleast8characters => getTranslation('mustbecontainatleast8characters');
 
   String get successfully => getTranslation('successfully');
-  String get yourCommentWasSendSuccessfully =>
-      getTranslation('yourcommentwassendsuccessfully');
-  String get failedToSendYourComments =>
-      getTranslation('failedtoSendYourComments');
+  String get yourCommentWasSendSuccessfully => getTranslation('yourcommentwassendsuccessfully');
+  String get failedToSendYourComments => getTranslation('failedtoSendYourComments');
   String get topSoldProducts => getTranslation('topSoldProducts');
   String get orderStatus => getTranslation('orderStatus');
   String get paymentStatus => getTranslation('paymentStatus');
   String get note => getTranslation('note');
 
-  String get orderCanceledSuccessfully =>
-      getTranslation('ordercanceledSuccessfully');
+  String get orderCanceledSuccessfully => getTranslation('ordercanceledSuccessfully');
   String get failedToCancelOrder => getTranslation('failedtoCancelOrder');
   String get personalInformation => getTranslation('personalInformtion');
-  String get yourInformationHasBeenUpdatedSuccessfully =>
-      getTranslation('yourinformationhasbeenupdatedsuccessfully');
+  String get yourInformationHasBeenUpdatedSuccessfully => getTranslation('yourinformationhasbeenupdatedsuccessfully');
   String get thisFieldCantBeEmpty => getTranslation('thisfeildcanbeempty');
-  String get selectAPictureFromGallery =>
-      getTranslation('selectaPictureFromGallery');
+  String get selectAPictureFromGallery => getTranslation('selectaPictureFromGallery');
   String get takeAPictureFromCamera => getTranslation('takeaPictureFromCamera');
   String get currentPassword => getTranslation('currentPassword');
   String get newPassword => getTranslation('newPassword');
-  String get passwordMustHaveSymbolsNumbersAndLetters =>
-      getTranslation('passwordmusthavesymbolsnumbersandletters');
+  String get passwordMustHaveSymbolsNumbersAndLetters => getTranslation('passwordmusthavesymbolsnumbersandletters');
 
-  String get thePasswordIsDifferentFromThePreviousOne =>
-      getTranslation('thePasswordIsDifferentFromThePreviousOne');
-  String get yourPasswordHasBeenUpdatedSuccessfully =>
-      getTranslation('yourpasswordhasbeenupdatedsuccessfully.');
+  String get thePasswordIsDifferentFromThePreviousOne => getTranslation('thePasswordIsDifferentFromThePreviousOne');
+  String get yourPasswordHasBeenUpdatedSuccessfully => getTranslation('yourpasswordhasbeenupdatedsuccessfully.');
   String get editAddress => getTranslation('editAddress');
 
-  String get youNeedToPlaceTheMarkerOnTheMap =>
-      getTranslation('youneedtoplacethemarkeronthemap');
+  String get youNeedToPlaceTheMarkerOnTheMap => getTranslation('youneedtoplacethemarkeronthemap');
   String get writeYourMessage => getTranslation('writeYourMessage');
   String get sendMessage => getTranslation('sendMessage');
   String get askQuestions => getTranslation('askQuestions');
-  String get yourContactInformationWillNotBeSharedWithTheMerchant =>
-      getTranslation('yourcontacinformationillnotbeharedwiththemerchant');
+  String get yourContactInformationWillNotBeSharedWithTheMerchant => getTranslation('yourcontacinformationillnotbeharedwiththemerchant');
   String get from => getTranslation('from');
   String get to => getTranslation('to');
 
@@ -665,8 +580,4 @@ class AppText {
   String get totalAfterDiscount => getTranslation('totalafterdiscount');
   String get orderSentSuccessfully => getTranslation('orderSentSuuc');
   String get weArePless => getTranslation('weArePless');
-  String get serviceUnavailable => getTranslation('serviceUnavailable');
-  String get accountDoesNotExist => getTranslation('accountDoesNotExist');
-  String get accountInactive => getTranslation('accountInactive');
-  String get pleaseLoginWithMobileNumber => getTranslation('pleaseLoginWithMobileNumber');
 }

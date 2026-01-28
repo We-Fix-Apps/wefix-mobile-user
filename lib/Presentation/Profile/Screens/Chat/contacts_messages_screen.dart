@@ -29,10 +29,10 @@ class _ListUserState extends State<ListUser> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          actions: [
+          actions: const [
             LanguageButton(),
           ],
-          title: Text("${AppText(context).massages}"),
+          title: Text(AppText(context).massages),
           centerTitle: true,
         ),
         body: SingleChildScrollView(

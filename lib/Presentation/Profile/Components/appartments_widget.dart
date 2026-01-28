@@ -43,7 +43,7 @@ class _AppartmentCardWidgetState extends State<AppartmentCardWidget> {
               const SizedBox(height: 6),
               Text(
                 widget.realEstate?.title ?? "",
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -51,8 +51,8 @@ class _AppartmentCardWidgetState extends State<AppartmentCardWidget> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 14, color: Colors.grey),
-                  SizedBox(width: 5),
+                  const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                  const SizedBox(width: 5),
                   SizedBox(
                     width: AppSize(context).width * 0.7,
                     child: Text(

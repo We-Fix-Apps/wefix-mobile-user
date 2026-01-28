@@ -160,7 +160,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
               color: AppColors(context).primaryColor,
               backgroundColor: AppColors.secoundryColor,
             )
-          : subServiceModel?.service.length == 0
+          : subServiceModel?.service.isEmpty ?? true
               ? const EmptyScreen()
               : SafeArea(
                 child: SingleChildScrollView(
@@ -550,59 +550,9 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                   children: [
                                     const SizedBox(),
                                     Center(
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
+                                      child: Text(
                                           AppText(context, isFunction: true)
-                                                .estimatedTimeToArrivalminutes,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 24,
-                                              vertical: 16,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors(context)
-                                                  .primaryColor
-                                                  .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: AppColors(context)
-                                                    .primaryColor
-                                                    .withOpacity(0.3),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.access_time,
-                                                  color: AppColors(context)
-                                                      .primaryColor,
-                                                  size: 24,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  '90 - 120 ${AppText(context).minutes}',
-                                                  style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: AppColors(context)
-                                                        .primaryColor,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                              .estimatedTimeToArrivalminutes),
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.all(16.0),

@@ -40,7 +40,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: [
+        actions: const [
           LanguageButton(),
         ],
         title: Text(AppText(context).wallet),
@@ -142,7 +142,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     },
                   )
                 : transactions?.transactions.isEmpty ?? true
-                    ? EmptyScreen(
+                    ? const EmptyScreen(
                         image: "assets/icon/wallet_empty.svg",
                       )
                     : ListView.separated(
@@ -173,7 +173,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                   "${transactions?.transactions[index].type == "credit" ? "+" : "-"}  ${transactions?.transactions[index].amount.toString() ?? ""}");
                         },
                         separatorBuilder: (context, index) =>
-                            Divider(color: AppColors.greyColorback),
+                            const Divider(color: AppColors.greyColorback),
                         itemCount: transactions?.transactions.length ?? 0,
                       )
           ],

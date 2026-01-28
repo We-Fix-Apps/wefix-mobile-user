@@ -52,6 +52,5 @@ class PaymentSummaryWidget extends StatelessWidget {
         ],
       ),
     );
-    ;
   }
 }

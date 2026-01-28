@@ -23,16 +23,12 @@ class Profile {
   String? firstname;
   String? lastname;
   String? profileImage;
-  int? companyId; // Company ID for B2B users (for delegation logic)
-  int? userRoleId; // User role ID for role-based logic
 
   Profile({
     this.email,
     this.firstname,
     this.lastname,
     this.profileImage,
-    this.companyId,
-    this.userRoleId,
   });
 
   Profile.fromJson(Map<String, dynamic> json) {
@@ -40,8 +36,6 @@ class Profile {
     firstname = json['firstname'] as String?;
     lastname = json['lastname'] as String?;
     profileImage = json['profileImage'] as String?;
-    companyId = json['companyId'] as int?;
-    userRoleId = json['userRoleId'] as int?;
   }
 
   Map<String, dynamic> toJson() {
@@ -50,8 +44,6 @@ class Profile {
     json['firstname'] = firstname;
     json['lastname'] = lastname;
     json['profileImage'] = profileImage;
-    json['companyId'] = companyId;
-    json['userRoleId'] = userRoleId;
     return json;
   }
 }

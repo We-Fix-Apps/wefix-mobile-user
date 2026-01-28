@@ -105,7 +105,7 @@ class WidgetTextField extends StatelessWidget {
             borderRadius: BorderRadius.circular(radius ?? 7)),
         errorBorder: OutlineInputBorder(
             gapPadding: 0,
-            borderSide: BorderSide(color: AppColors.redColor),
+            borderSide: const BorderSide(color: AppColors.redColor),
             borderRadius: BorderRadius.circular(radius ?? 7)),
         disabledBorder: OutlineInputBorder(
             gapPadding: 0,

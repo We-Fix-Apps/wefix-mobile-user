@@ -1,16 +1,10 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
-import 'package:wefix/Business/Authantication/auth_apis.dart';
-import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
-import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
-import 'package:wefix/Presentation/B2B/branch/branches_list_screen.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Profile/Components/web_view_screen.dart';
@@ -25,7 +19,6 @@ import 'package:wefix/Presentation/Profile/Screens/profile_info_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/EditUser/edit_mobile_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/EditUser/change_password_screen.dart';
 import 'package:wefix/Presentation/wallet/screens/wallet_screen.dart';
-import 'package:wefix/l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -38,8 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    LanguageProvider languageProvider =
-        Provider.of<LanguageProvider>(context, listen: false);
+    LanguageProvider languageProvider = Provider.of<LanguageProvider>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -55,201 +47,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.all(15.0),
           child: Column(
             children: [
-              // appProvider.userModel?.token == null
-              //     ? const SizedBox()
-              //     : const SavingCard(savingsAmount: 3000, goalAmount: 5000),
-
-              appProvider.userModel?.token == null
-                  ? const SizedBox()
-                  : const SizedBox(
-                      height: 10,
-                    ),
-              // WidgetCard(
-              //   title: "Add Branch",
-              //   onTap: () {
-              //     Navigator.push(context, rightToLeft(AddBranchScreen()));
-              //   },
-              // ),
-              const SizedBox(height: 10),
-              appProvider.userModel?.token == null
-                  ? const SizedBox()
-                  : WidgetCard(
-                      title: AppText(context).profile,
-                      onTap: () {
-                        Navigator.push(
-                            context, rightToLeft(const MyProfileScreen()));
-                      },
-                    ),
-              appProvider.userModel?.token == null
-                  ? const SizedBox()
-                  : const SizedBox(height: 10),
-              appProvider.userModel?.customer.roleId == 1
-                  ? SizedBox()
-                  : WidgetCard(
-                      title: AppLocalizations.of(context)!.branches,
-                      onTap: () {
-                        Navigator.push(
-                            context, rightToLeft(BranchesListScreen()));
-                      },
-                    ),
-              const SizedBox(height: 10),
-              appProvider.userModel?.token == null
-                  ? const SizedBox()
-                  : appProvider.userModel?.customer.roleId == 2
-                      ? SizedBox()
-                      : WidgetCard(
-                          title: AppText(context).wallet,
-                          onTap: () {
-                            Navigator.push(
-                                context, rightToLeft(const WalletScreen()));
-                          },
-                        ),
-              appProvider.userModel?.customer.roleId == 2
-                  ? SizedBox()
-                  : const SizedBox(height: 10),
-              appProvider.userModel?.token == null
-                  ? const SizedBox()
-                  : WidgetCard(
-                      title: AppText(context).history,
-                      onTap: () {
-                        Navigator.push(context, rightToLeft(BookingScreen()));
-                      },
-                    ),
-              const SizedBox(height: 10),
-
-              appProvider.userModel?.token == null
-                  ? const SizedBox()
-                  : appProvider.userModel?.customer.roleId == 2
-                      ? SizedBox()
-                      : WidgetCard(
-                          title: AppText(context).myProperty,
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                rightToLeft(const ApartmentScreen(
-                                  status: "Active",
-                                  statusColor: AppColors.greenColor,
-                                )));
-                          },
-                        ),
-              appProvider.userModel?.customer.roleId == 2
-                  ? SizedBox()
-                  : const SizedBox(height: 10),
-
-              appProvider.userModel?.token == null
-                  ? const SizedBox()
-                  : WidgetCard(
-                      title: AppText(context).contractDetails,
-                      onTap: () {
-                        Navigator.push(
-                            context, rightToLeft(const ContractScreen()));
-                      },
-                    ),
-              const SizedBox(height: 10),
-
+              if (appProvider.userModel?.token != null) ...[
+                WidgetCard(title: AppText(context).wallet, onTap: () => Navigator.push(context, rightToLeft(const WalletScreen()))),
+                const SizedBox(height: 10),
+                WidgetCard(title: AppText(context).history, onTap: () => Navigator.push(context, rightToLeft(const BookingScreen()))),
+                const SizedBox(height: 10),
+                WidgetCard(title: AppText(context).myProperty, onTap: () => Navigator.push(context, rightToLeft(const ApartmentScreen(status: "Active", statusColor: AppColors.greenColor)))),
+                const SizedBox(height: 10),
+                WidgetCard(title: AppText(context).contractDetails, onTap: () => Navigator.push(context, rightToLeft(const ContractScreen()))),
+                const SizedBox(height: 10),
+              ],
               WidgetCard(
-                title: AppText(context).privacyPolicy,
-                onTap: () {
-                  languageProvider.lang == "ar"
-                      ? Navigator.push(
-                          context,
-                          rightToLeft(WebviewScreen(
-                            url:
-                                'https://wefixjo.com/AboutUs/PrivacyPolicyArApp',
-                            title: AppText(context, isFunction: true)
-                                .termsAndConditions,
-                          )))
-                      : Navigator.push(
-                          context,
-                          rightToLeft(WebviewScreen(
-                            url: 'https://wefixjo.com/AboutUs/PrivacyPolicyApp',
-                            title: AppText(context, isFunction: true)
-                                .termsAndConditions,
-                          )));
-                },
-              ),
+                  title: AppText(context).privacyPolicy,
+                  onTap: () => Navigator.push(
+                      context,
+                      rightToLeft(WebviewScreen(
+                          url: languageProvider.lang == "ar" ? 'https://wefixjo.com/AboutUs/PrivacyPolicyArApp' : 'https://wefixjo.com/AboutUs/PrivacyPolicyApp',
+                          title: AppText(context, isFunction: true).privacyPolicy)))),
               const SizedBox(height: 10),
               WidgetCard(
                 title: AppText(context).termsAndConditions,
-                onTap: () {
-                  languageProvider.lang == "ar"
-                      ? Navigator.push(
-                          context,
-                          rightToLeft(WebviewScreen(
-                            url:
-                                'https://wefixjo.com/AboutUs/TermAndConditionArApp',
-                            title: AppText(context, isFunction: true)
-                                .termsAndConditions,
-                          )))
-                      : Navigator.push(
-                          context,
-                          rightToLeft(WebviewScreen(
-                            url:
-                                'https://wefixjo.com/AboutUs/TermAndConditionApp',
-                            title: AppText(context, isFunction: true)
-                                .termsAndConditions,
-                          )));
-                },
+                onTap: () => Navigator.push(
+                    context,
+                    rightToLeft(WebviewScreen(
+                        url: languageProvider.lang == "ar" ? 'https://wefixjo.com/AboutUs/TermAndConditionArApp' : 'https://wefixjo.com/AboutUs/TermAndConditionApp',
+                        title: AppText(context, isFunction: true).termsAndConditions))),
               ),
               const SizedBox(height: 10),
-              WidgetCard(
-                title: AppText(context).aboutUs,
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      rightToLeft(const ContentScreen(
-                        isAbout: true,
-                      )));
-                },
-              ),
+              WidgetCard(title: AppText(context).aboutUs, onTap: () => Navigator.push(context, rightToLeft(const ContentScreen(isAbout: true)))),
               const SizedBox(height: 10),
               WidgetCard(
-                title: appProvider.userModel?.token == null
-                    ? AppText(context).login
-                    : AppText(context).logout,
-                onTap: () async {
-                  // Check if user is logged in and has accessToken
-                  // Call backend logout to remove token from DB
-                  
-                  if (appProvider.accessToken != null && appProvider.accessToken!.isNotEmpty) {
-                    // Check if user is B2B (company personnel: Admin 18, Team Leader 20, Technician 21, Sub-Technician 22)
-                    final currentUserRoleId = appProvider.userModel?.customer.roleId;
-                    int? roleIdInt;
-                    if (currentUserRoleId is int) {
-                      roleIdInt = currentUserRoleId;
-                    } else if (currentUserRoleId is String) {
-                      roleIdInt = int.tryParse(currentUserRoleId);
-                    } else if (currentUserRoleId != null) {
-                      roleIdInt = int.tryParse(currentUserRoleId.toString());
-                    }
-                    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
-                    
-                    if (isB2BUser) {
-                      // B2B user - call backend-mms logout to remove token from DB
-                      await Authantication.mmsLogout(token: appProvider.accessToken!);
-                    }
-                  }
-                  // Clear from provider (local storage and memory) but preserve user data and tokens for biometric
-                  setState(() {
-                    appProvider.clearUser(preserveUserDataForBiometric: true); // Preserve user data for biometric login
-                    // DON'T clear tokens - they're needed for biometric login to work
-                    // Tokens will be refreshed on successful login anyway
-                  });
-                  // Set logout flag so splash screen knows user logged out manually
-                  await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
-                  // Remove all routes and navigate to login screen
-                  Navigator.pushAndRemoveUntil(context,
-                      rightToLeft(const LoginScreen()), (route) => false);
-                },
-              ),
-
-              // WidgetCard(
-              //   title: AppText(context).myProperty,
-              //   onTap: () {
-              //     Navigator.push(
-              //         context, rightToLeft(const GetAppSignatureScreen()));
-              //   },
-              // ),
+                  title: appProvider.userModel?.token == null ? AppText(context).login : AppText(context).logout,
+                  onTap: () {
+                    setState(() => appProvider.clearUser());
+                    Navigator.pushAndRemoveUntil(context, rightToLeft(const LoginScreen()), (route) => true);
+                  }),
+              if (appProvider.userModel?.token != null) ...[
+                const SizedBox(height: 10),
+                WidgetCard(
+                    isDelete: true,
+                    title: AppText(context).deletemyAccount,
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return WidgetDialog(
+                            title: AppText(context, isFunction: true).successfully,
+                            desc: 'Your Account deleted Successfully',
+                            isError: false,
+                            onTap: () {
+                              setState(() => appProvider.clearUser());
+                              Navigator.pushAndRemoveUntil(context, downToTop(const LoginScreen()), (route) => false);
+                            },
+                          );
+                        },
+                      );
+                    }),
+              ],
             ],
           ),
         ),
@@ -263,11 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) {
         // ignore: prefer_const_constructors
         return Padding(
-          padding: EdgeInsets.only(
-              left: 15,
-              right: 15,
-              top: 15,
-              bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding: EdgeInsets.only(left: 15, right: 15, top: 15, bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -275,23 +125,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   width: AppSize(context).width * .15,
                   height: AppSize(context).height * .008,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: AppColors.greyColor),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: AppColors.greyColor),
                 ),
               ),
               const SizedBox(height: 20),
               // * Edit Profile
               ListTile(
-                leading: const Icon(
-                  Icons.person,
-                  color: AppColors.greyColor3,
-                ),
+                leading: const Icon(Icons.person, color: AppColors.greyColor3),
                 title: Text(
                   AppText(context).editProfile,
-                  style: TextStyle(
-                    fontSize: AppSize(context).smallText2,
-                  ),
+                  style: TextStyle(fontSize: AppSize(context).smallText2),
                 ),
                 onTap: () {
                   Navigator.push(context, rightToLeft(const MyProfileScreen()));
@@ -312,8 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   onTap: () {
                     pop(context);
-                    Navigator.push(
-                        context, rightToLeft(const EditMobileScreen()));
+                    Navigator.push(context, rightToLeft(const EditMobileScreen()));
                   }),
               const Divider(height: 1, color: AppColors.greyColorback),
               // * Change Password
@@ -330,66 +172,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 onTap: () {
                   pop(context);
-                  Navigator.push(
-                      context, rightToLeft(const ChangePasswordScreen()));
+                  Navigator.push(context, rightToLeft(const ChangePasswordScreen()));
                 },
               ),
               const Divider(height: 1, color: AppColors.greyColorback),
-              // * Delete My Account
-              ListTile(
-                leading: const Icon(
-                  Icons.delete,
-                  color: AppColors.redColor,
-                ),
-                title: Text(
-                  AppText(context).deletemyAccount,
-                  style: TextStyle(
-                    fontSize: AppSize(context).smallText2,
-                    color: AppColors.redColor,
-                  ),
-                ),
-                onTap: () async {
-                  await deleteAccount();
-                },
-              ),
             ],
           ),
         );
       },
     );
-  }
-
-  Future deleteAccount() async {
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    ProfileApis.deleteAccount(token: appProvider.userModel?.token ?? '')
-        .then((value) {
-      if (value == true) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return WidgetDialog(
-              title: AppText(context, isFunction: true).successfully,
-              desc: 'Your Account deleted Successfully',
-              isError: false,
-              onTap: () {
-                Navigator.pushAndRemoveUntil(
-                    context, downToTop(const LoginScreen()), (route) => false);
-              },
-            );
-          },
-        );
-      } else {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return const WidgetDialog(
-              title: 'Warning',
-              desc: 'Failed to Deleted Your Account',
-              isError: true,
-            );
-          },
-        );
-      }
-    });
   }
 }

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
-import 'package:wefix/Data/appText/appText.dart';
-import 'package:wefix/l10n/app_localizations.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 class WidgetPhoneField extends StatefulWidget {
@@ -36,22 +33,6 @@ class WidgetPhoneField extends StatefulWidget {
 class _WidgetPhoneFieldState extends State<WidgetPhoneField> {
   PhoneNumber number = PhoneNumber(isoCode: 'JO');
   final TextEditingController controller = TextEditingController();
-  
-  String? _getLocalizedErrorMessage(BuildContext context, String? messageKey) {
-    if (messageKey == null || messageKey.isEmpty) {
-      return null;
-    }
-    
-    // Get localized message based on key
-    switch (messageKey) {
-      case 'required':
-        return AppText(context, isFunction: true).required;
-      case 'invalidPhone':
-        return AppLocalizations.of(context)?.invalidPhone ?? AppText(context, isFunction: true).invalidPhone;
-      default:
-        return messageKey;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +47,7 @@ class _WidgetPhoneFieldState extends State<WidgetPhoneField> {
       textDirection: TextDirection.ltr,
       child: InternationalPhoneNumberInput(
         onSubmit: widget.onSubmit,
-        errorMessage: widget.hint != null ? null : _getLocalizedErrorMessage(context, widget.message),
+        // errorMessage: widget.hint != null ? null : widget.message ?? 'required',
         onFieldSubmitted: widget.onFieldSubmitted,
 
         keyboardAction: TextInputAction.next,
@@ -97,19 +78,19 @@ class _WidgetPhoneFieldState extends State<WidgetPhoneField> {
               const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
           border: OutlineInputBorder(
               gapPadding: 0,
-              borderSide: BorderSide(color: AppColors.backgroundColor),
+              borderSide: const BorderSide(color: AppColors.backgroundColor),
               borderRadius: BorderRadius.circular(7)),
           focusedBorder: OutlineInputBorder(
               gapPadding: 0,
-              borderSide: BorderSide(color: AppColors.backgroundColor),
+              borderSide: const BorderSide(color: AppColors.backgroundColor),
               borderRadius: BorderRadius.circular(7)),
           disabledBorder: OutlineInputBorder(
               gapPadding: 0,
-              borderSide: BorderSide(color: AppColors.backgroundColor),
+              borderSide: const BorderSide(color: AppColors.backgroundColor),
               borderRadius: BorderRadius.circular(7)),
           enabledBorder: OutlineInputBorder(
               gapPadding: 0,
-              borderSide: BorderSide(color: AppColors.backgroundColor),
+              borderSide: const BorderSide(color: AppColors.backgroundColor),
               borderRadius: BorderRadius.circular(7)),
           errorBorder: OutlineInputBorder(
             gapPadding: 0,

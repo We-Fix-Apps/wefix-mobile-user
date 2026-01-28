@@ -80,10 +80,10 @@ class _AddShippingAddressState extends State<AddShippingAddress> {
 
     return Scaffold(
       appBar: AppBar(
-        actions: [
+        actions: const [
           LanguageButton(),
         ],
-        title: Text("${AppText(context).addnewaddress}"),
+        title: Text(AppText(context).addnewaddress),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -192,7 +192,7 @@ class _AddShippingAddressState extends State<AddShippingAddress> {
 
     Map data = {
       "IsDefault": isDefault ?? false,
-      "Address": "${appProvider.ad.text}",
+      "Address": appProvider.ad.text,
       "Latitude": "${appProvider.position?.latitude}",
       "Longitude": "${appProvider.position?.longitude}",
       "AddressType": addressType.text

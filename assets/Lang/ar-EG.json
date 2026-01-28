@@ -71,14 +71,7 @@
     "Back":"رجوع",
     "Age":"العمر",
     "Error":"خطأ",
-    "wrongpassword":"كلمة السر خطأ",
-    "companyPersonnel":"افراد شركات",
-    "regularUser":"مستخدم عادي",
-    "invalidEmail":"البريد الإلكتروني غير صحيح",
-    "emailRequired":"البريد الإلكتروني مطلوب",
-    "passwordRequired":"كلمة السر مطلوبة",
-    "loginFailed":"فشل تسجيل الدخول",
-    "invalidCredentials":"بيانات الدخول غير صحيحة"
+    "wrongpassword":"كلمة السر خطأ"
 
 
 

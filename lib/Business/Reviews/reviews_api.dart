@@ -1,16 +1,17 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:flutter/material.dart';
+import 'package:googleapis/apigeeregistry/v1.dart';
+import 'package:provider/provider.dart';
+import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/end_points.dart';
 import 'package:wefix/Data/Api/http_request.dart';
-import 'package:wefix/Data/model/packages_model.dart';
 import 'package:wefix/Data/model/questions_model.dart';
-import 'package:wefix/Data/model/ticket_model.dart';
 
 class ReviewsApi {
   static QuestionsModel? questionsModel;
-  static Future<QuestionsModel?> getQuestionsReviews(
-      {required String token}) async {
+  static Future<QuestionsModel?> getQuestionsReviews({required String token}) async {
     try {
       final response = await HttpHelper.getData(
         query: EndPoints.questions,
@@ -37,17 +38,13 @@ class ReviewsApi {
     }
   }
 
-  static Future addReview(
-      {required String token,
-      String? phone,
-      String? desc,
-      int? mainAnswer,
-      List? customerQuestion}) async {
+  static Future addReview({required String token, String? desc, int? mainAnswer, required BuildContext context, List? customerQuestion}) async {
     try {
+      AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
       final response = await HttpHelper.postData(
         query: EndPoints.addReview,
         data: {
-          "PhoneNumber": phone,
+          "PhoneNumber": appProvider.userModel?.customer.mobile ?? "",
           "Name": desc,
           "CustomerReview": customerQuestion,
           "MainAnswer": mainAnswer,

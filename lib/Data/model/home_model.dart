@@ -22,22 +22,14 @@ class HomeModel {
   });
 
   factory HomeModel.fromJson(Map<String, dynamic> json) => HomeModel(
-        sliders: json["sliders"] == null
-            ? []
-            : List<SliderModel>.from(
+        sliders: List<SliderModel>.from(
             json["sliders"].map((x) => SliderModel.fromJson(x))),
-        roleId: json["roleId"],
-        categories: json["categories"] == null
-            ? []
-            : List<Category>.from(
+            roleId : json["roleId"],
+        categories: List<Category>.from(
             json["categories"].map((x) => Category.fromJson(x))),
-        serviceOffers: json["serviceOffers"] == null
-            ? []
-            : List<Service>.from(
+        serviceOffers: List<Service>.from(
             json["serviceOffers"].map((x) => Service.fromJson(x))),
-        servicePopular: json["servicePopular"] == null
-            ? []
-            : List<Service>.from(
+        servicePopular: List<Service>.from(
             json["servicePopular"].map((x) => Service.fromJson(x))),
         tickets:
             json["tickets"] != null ? Tickets.fromJson(json["tickets"]) : null,
@@ -60,7 +52,7 @@ class SliderModel {
   String? titleAr;
   String? image;
   bool isActive;
-  dynamic? sortOrder;
+  dynamic sortOrder;
   int? categoryId;
 
   SliderModel({
@@ -96,7 +88,7 @@ class SliderModel {
 
 class Category {
   dynamic id;
-  dynamic? parentId;
+  dynamic parentId;
   String titleEn;
   String titleAr;
   String? icon;
@@ -129,9 +121,8 @@ class Category {
             ? []
             : List<Category>.from(
                 json["subCategory"]!.map((x) => Category.fromJson(x))),
-        service: json["service"] == null
-            ? []
-            : List<Service>.from(json["service"].map((x) => Service.fromJson(x))),
+        service:
+            List<Service>.from(json["service"].map((x) => Service.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
@@ -151,21 +142,21 @@ class Category {
 
 class Service {
   dynamic id;
-  dynamic? categoryId;
+  dynamic categoryId;
   String name;
   String nameAr;
   String icon;
   String image;
   String? description;
-  dynamic? price;
-  dynamic? discountPrice;
+  dynamic price;
+  dynamic discountPrice;
   bool isOffer;
   bool isPopular;
   bool haveQuantity;
   String? descriptionAr;
-  dynamic? sortOrder;
-  dynamic? numOfTicket;
-  dynamic? subscriptionPrice;
+  dynamic sortOrder;
+  dynamic numOfTicket;
+  dynamic subscriptionPrice;
   dynamic category;
   List<dynamic>? serviceTickets;
 
@@ -239,8 +230,8 @@ class Service {
 
 class Tickets {
   dynamic id;
-  dynamic? customerId;
-  dynamic? ticketTypeId;
+  dynamic customerId;
+  dynamic ticketTypeId;
   String promoCode;
   DateTime requestedDate;
   DateTime selectedDate;
@@ -255,15 +246,15 @@ class Tickets {
   dynamic gender;
   bool isWithMaterial;
   dynamic priority;
-  dynamic? createdBy;
-  dynamic? customerPackageId;
+  dynamic createdBy;
+  dynamic customerPackageId;
   dynamic totalPrice;
   dynamic serviceprovide;
   dynamic serviceprovideImage;
   String? description;
   String? descriptionAr;
   String? qrCodePath;
-  dynamic? rating;
+  dynamic rating;
   bool isRated;
   String? qrCode;
   String? statusAr;

@@ -281,19 +281,19 @@ class _PaymentBottomSheetState extends State<PaymentBottomSheet> {
           title: Text(
             AppText(context, isFunction: true).upgradeandSaveBig,
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           // ignore: prefer_const_constructors
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
                 AppText(context, isFunction: true)
                     .subscribenowandsave50JODDonmissoutonthisspecialoffer,
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
             ],
           ),
           actions: [

@@ -119,7 +119,7 @@ class _ServiceQuintityCardWidgetState extends State<ServiceQuintityCardWidget> {
                                 ),
                                 (widget.isSubsicribed == false ||
                                         widget.isSubsicribed == null)
-                                    ? SizedBox()
+                                    ? const SizedBox()
                                     : Text(
                                         "${AppText(context).jod} ${widget.services?.price}",
                                         style: TextStyle(

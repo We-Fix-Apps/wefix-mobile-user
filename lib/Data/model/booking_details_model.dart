@@ -36,7 +36,6 @@ class ObjTickets {
   DateTime date;
   int? userId;
   String status;
-  String statusAr;
   dynamic totalPrice;
   String customerName;
   String customerImage;
@@ -73,7 +72,6 @@ class ObjTickets {
     required this.ticketImages,
     required this.date,
     required this.status,
-    required this.statusAr,
     required this.customerName,
     required this.customerImage,
     required this.customerAddress,
@@ -105,7 +103,6 @@ class ObjTickets {
         typeAr: json["typeAr"],
         date: DateTime.parse(json["date"]),
         status: json["status"],
-        statusAr: json["statusAr"] ?? json["status"],
         customerName: json["customerName"],
         customerImage: json["customerImage"],
         customerAddress: json["customerAddress"],
@@ -144,7 +141,6 @@ class ObjTickets {
         "typeAr": typeAr,
         "date": date.toIso8601String(),
         "status": status,
-        "statusAr": statusAr,
         "customerName": customerName,
         "customerImage": customerImage,
         "customerAddress": customerAddress,

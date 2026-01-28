@@ -15,10 +15,6 @@ class AppProvider with ChangeNotifier {
   UserModel? userModel;
   String? fcmToken;
   String? accessToken;
-  String? refreshToken;
-  String? tokenType; // Token type (e.g., "Bearer")
-  int? expiresIn; // Token expiration time in seconds
-  DateTime? tokenExpiresAt; // Token expiration timestamp (calculated on login)
   LatLng? currentLocation;
 
   List<Placemark>? places;
@@ -30,7 +26,7 @@ class AppProvider with ChangeNotifier {
 
   DateTime? selectedDate = DateTime.now();
 
-  List<Map<String, int>> _selectedAnswers = [];
+  final List<Map<String, int>> _selectedAnswers = [];
 
   List<Map<String, dynamic>> get selectedAnswers => _selectedAnswers;
 
@@ -113,7 +109,7 @@ class AppProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void createSelectedDate(DateTime? date) {
+  void createSelectedDate(DateTime date) {
     selectedDate = date ?? DateTime.now();
     notifyListeners();
   }
@@ -163,91 +159,8 @@ class AppProvider with ChangeNotifier {
 
   void addUser({UserModel? user}) {
     userModel = user;
-    // Save access token from userModel
-    if (user != null && user.token.isNotEmpty) {
-      accessToken = user.token;
-      CacheHelper.saveData(key: CacheHelper.accessToken, value: accessToken!);
-    }
-    // Only save user data to cache if user is not null
-    // This prevents saving "null" string which would break biometric authentication
-    if (user != null) {
-      CacheHelper.saveData(
-          key: CacheHelper.userData, value: json.encode(userModel));
-    }
-    notifyListeners();
-  }
-
-  void loadTokensFromCache() {
-    final cachedAccessToken = CacheHelper.getData(key: CacheHelper.accessToken);
-    final cachedRefreshToken = CacheHelper.getData(key: CacheHelper.refreshToken);
-    final cachedTokenType = CacheHelper.getData(key: CacheHelper.tokenType);
-    final cachedExpiresIn = CacheHelper.getData(key: CacheHelper.expiresIn);
-    final cachedTokenExpiresAt = CacheHelper.getData(key: CacheHelper.tokenExpiresAt);
-    
-    if (cachedAccessToken != null && cachedAccessToken.toString().isNotEmpty) {
-      accessToken = cachedAccessToken.toString();
-    }
-    if (cachedRefreshToken != null && cachedRefreshToken.toString().isNotEmpty) {
-      refreshToken = cachedRefreshToken.toString();
-    }
-    if (cachedTokenType != null && cachedTokenType.toString().isNotEmpty) {
-      tokenType = cachedTokenType.toString();
-    }
-    if (cachedExpiresIn != null && cachedExpiresIn.toString().isNotEmpty) {
-      expiresIn = int.tryParse(cachedExpiresIn.toString());
-    }
-    if (cachedTokenExpiresAt != null && cachedTokenExpiresAt.toString().isNotEmpty) {
-      try {
-        tokenExpiresAt = DateTime.parse(cachedTokenExpiresAt.toString());
-      } catch (e) {
-        tokenExpiresAt = null;
-      }
-    }
-  }
-
-  void setTokens({
-    String? access,
-    String? refresh,
-    String? type,
-    int? expires,
-  }) {
-    if (access != null) {
-      accessToken = access;
-      CacheHelper.saveData(key: CacheHelper.accessToken, value: access);
-    }
-    if (refresh != null) {
-      refreshToken = refresh;
-      CacheHelper.saveData(key: CacheHelper.refreshToken, value: refresh);
-    }
-    if (type != null) {
-      tokenType = type;
-      CacheHelper.saveData(key: CacheHelper.tokenType, value: type);
-    }
-    if (expires != null) {
-      expiresIn = expires;
-      CacheHelper.saveData(key: CacheHelper.expiresIn, value: expires.toString());
-      
-      // Calculate tokenExpiresAt: current time + expiresIn (seconds)
-      tokenExpiresAt = DateTime.now().add(Duration(seconds: expires));
-      CacheHelper.saveData(
-        key: CacheHelper.tokenExpiresAt,
-        value: tokenExpiresAt!.toIso8601String(),
-      );
-    }
-    notifyListeners();
-  }
-
-  void clearTokens() {
-    accessToken = null;
-    refreshToken = null;
-    tokenType = null;
-    expiresIn = null;
-    tokenExpiresAt = null;
-    CacheHelper.saveData(key: CacheHelper.accessToken, value: '');
-    CacheHelper.saveData(key: CacheHelper.refreshToken, value: '');
-    CacheHelper.saveData(key: CacheHelper.tokenType, value: '');
-    CacheHelper.saveData(key: CacheHelper.expiresIn, value: '');
-    CacheHelper.saveData(key: CacheHelper.tokenExpiresAt, value: '');
+    CacheHelper.saveData(
+        key: CacheHelper.userData, value: json.encode(userModel));
     notifyListeners();
   }
 
@@ -294,31 +207,16 @@ class AppProvider with ChangeNotifier {
   }
 
   TextEditingController desc = TextEditingController();
-  TextEditingController ticketDescription = TextEditingController();
 
   saveDesc(String? value) {
-    desc.text = value != null ? value : '';
+    desc.text = value ?? '';
     notifyListeners();
   }
 
-  saveTicketDescription(String? value) {
-    ticketDescription.text = value != null ? value : '';
-    notifyListeners();
-  }
-
-  void clearUser({bool preserveUserDataForBiometric = true}) {
+  void clearUser() {
     userModel = null;
-    // Only clear tokens if we're not preserving user data for biometric login
-    // Tokens are needed for biometric login to work properly
-    if (!preserveUserDataForBiometric) {
-      clearTokens();
-    }
-    // Preserve user data in cache for biometric authentication after logout
-    // Only clear it if explicitly requested (e.g., for security/account deletion)
-    if (!preserveUserDataForBiometric) {
-      CacheHelper.saveData(
-          key: CacheHelper.userData, value: CacheHelper.clearUserData);
-    }
+    CacheHelper.saveData(
+        key: CacheHelper.userData, value: CacheHelper.clearUserData);
     notifyListeners();
   }
 

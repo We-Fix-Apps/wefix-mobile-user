@@ -34,7 +34,7 @@ class _PopularServicesSectionState extends State<PopularServicesSection> {
               widget.services[index].name == "Annual contract"
                   ? Navigator.pushAndRemoveUntil(context, MaterialPageRoute(
                       builder: (context) {
-                        return HomeLayout(
+                        return const HomeLayout(
                           index: 2,
                         );
                       },
@@ -72,7 +72,7 @@ class _PopularServicesSectionState extends State<PopularServicesSection> {
       children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Container(
+          child: SizedBox(
             width: AppSize(context).width * .4,
             height: AppSize(context).height * .15,
             child: ClipRRect(

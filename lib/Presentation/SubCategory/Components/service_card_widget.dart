@@ -133,7 +133,7 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
                                       ),
                                 const SizedBox(width: 10),
                                 appProvider.userModel?.customer.roleId == 2
-                                    ? SizedBox()
+                                    ? const SizedBox()
                                     : (widget.isSubsicribed == false ||
                                             widget.isSubsicribed == null)
                                         ? const SizedBox()
@@ -232,7 +232,7 @@ class _ServiceCardWidgetState extends State<ServiceCardWidget> {
           ),
           if (widget.isSubsicribed == true)
             appProvider.userModel?.customer.roleId == 2
-                ? SizedBox()
+                ? const SizedBox()
                 : Positioned(
                     top: -10,
                     left: -5, // Move to top-left corner

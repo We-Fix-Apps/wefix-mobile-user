@@ -97,9 +97,6 @@ class CustomBotton extends StatelessWidget {
                                   )
                                 : Text(
                                     title,
-                                    textAlign: TextAlign.center,
-                                    overflow: TextOverflow.visible,
-                                    maxLines: 2,
                                     style: TextStyle(
                                       fontSize: textSize ??
                                           AppSize(context).smallText2,

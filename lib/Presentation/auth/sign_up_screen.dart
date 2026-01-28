@@ -116,7 +116,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        actions: [const LanguageButton()],
+        actions: const [LanguageButton()],
       ),
       body: SingleChildScrollView(
         child: SafeArea(
@@ -138,7 +138,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   // Role dropdown
                   DropdownButtonFormField<int>(
-                    value: selectedRole,
+                    initialValue: selectedRole,
                     hint: const Text("Select Role *"),
                     decoration: InputDecoration(
                       filled: true,
@@ -212,8 +212,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           keyboardType: TextInputType.emailAddress,
                           validator: (p0) {
                             if (email.text.isEmpty) {
-                              return AppText(context, isFunction: true)
-                                  .required;
                             } else if (!regExp2.hasMatch(email.text)) {
                               return AppText(context, isFunction: true)
                                   .invalidEmail;
@@ -293,7 +291,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         hintText: "Business Type *",
                       ),
-                      value: selectedBusinessType,
+                      initialValue: selectedBusinessType,
                       items: (businessTypesModel?.businessTypes ?? [])
                           .map((type) => DropdownMenuItem<BusinessType>(
                                 value: type,

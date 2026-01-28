@@ -52,7 +52,7 @@ class EmptyScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             titleBtn == null
-                ? SizedBox()
+                ? const SizedBox()
                 : CustomBotton(
                     title: titleBtn ?? "",
                     onTap: onTap,

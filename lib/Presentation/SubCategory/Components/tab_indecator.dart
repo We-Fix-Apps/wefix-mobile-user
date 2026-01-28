@@ -4,7 +4,7 @@ class RoundedTabIndicator extends Decoration {
   final Color color;
   final double radius;
 
-  RoundedTabIndicator({required this.color, this.radius = 12});
+  const RoundedTabIndicator({required this.color, this.radius = 12});
 
   @override
   BoxPainter createBoxPainter([VoidCallback? onChanged]) {

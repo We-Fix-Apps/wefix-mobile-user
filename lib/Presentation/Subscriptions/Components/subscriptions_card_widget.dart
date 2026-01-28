@@ -192,8 +192,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       FeatureWidget(
                         color: widget.color,
                         feature: AppText(context).correctivevisits,
-                        value:
-                            widget.package?.numberOfRegularVisit == 100 ? AppText(context).unlimited : widget.package?.numberOfRegularVisit.toString() ?? "0",
+                        value: widget.package?.numberOfRegularVisit == 100 ? AppText(context).unlimited : widget.package?.numberOfRegularVisit.toString() ?? "0",
                       ),
                       FeatureWidget(
                         color: widget.color,
@@ -208,8 +207,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       FeatureWidget(
                         color: widget.color,
                         feature: AppText(context).emeregencyService,
-                        value:
-                            widget.package?.numberOfUrgentVisits == 100 ? AppText(context).unlimited : widget.package?.numberOfUrgentVisits.toString() ?? "0",
+                        value: widget.package?.numberOfUrgentVisits == 100 ? AppText(context).unlimited : widget.package?.numberOfUrgentVisits.toString() ?? "0",
                       ),
                       FeatureWidget(
                         color: widget.color,
@@ -219,7 +217,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       FeatureWidget(
                         color: widget.color,
                         feature: AppText(context).interiorDesign,
-                        value: widget.package?.interiorDesign == "0" ? "- \n  \n" : widget.package?.interiorDesign.toString() ?? "-  \n \n",
+                        value: widget.package?.interiorDesign == "0" ? "- - - - -" : widget.package?.interiorDesign.toString() ?? "- - - - -",
                       ),
                     ],
                   ),
@@ -369,18 +367,16 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                               showDialog(
                                 context: context,
                                 builder: (context) {
-                                  return WidgetDialog(
-                                      title: AppText(context, isFunction: true).warning,
-                                      desc: AppText(context, isFunction: true).pleaseCalculateFirst,
-                                      isError: true);
+                                  return WidgetDialog(title: AppText(context, isFunction: true).warning, desc: AppText(context, isFunction: true).pleaseCalculateFirst, isError: true);
                                 },
                               );
                               return;
                             }
 
                             // Close this bottom sheet and open payment
-                            else
+                            else {
                               Navigator.pop(context);
+                            }
                             showPaymentMethod(context);
                           },
                         ),
@@ -423,7 +419,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         _paymentOption("qlic", AppText(context, isFunction: true).cliq, "assets/icon/final_cliq_logo-02_1.svg", set),
                         _paymentOption("wallet", AppText(context, isFunction: true).wallet, "assets/icon/wallet.svg", set),
                         _paymentOption("Paybal", AppText(context, isFunction: true).paypal, "assets/icon/paybal.svg", set),
-                        _paymentOption("later", "${AppText(context, isFunction: true).paylater}", "assets/icon/delay_3360328.svg", set),
+                        _paymentOption("later", AppText(context, isFunction: true).paylater, "assets/icon/delay_3360328.svg", set),
                         const Divider(),
                         const SizedBox(height: 20),
                         Center(
