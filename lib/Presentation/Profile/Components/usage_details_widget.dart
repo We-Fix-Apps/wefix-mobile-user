@@ -6,12 +6,7 @@ class UsageDetailsWidget extends StatefulWidget {
   final int value;
   final dynamic total;
   final Color color;
-  const UsageDetailsWidget(
-      {super.key,
-      required this.title,
-      required this.value,
-      required this.total,
-      required this.color});
+  const UsageDetailsWidget({super.key, required this.title, required this.value, required this.total, required this.color});
 
   @override
   State<UsageDetailsWidget> createState() => _UsageDetailsWidgetState();
@@ -29,8 +24,7 @@ class _UsageDetailsWidgetState extends State<UsageDetailsWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(widget.title),
-              Text(
-                  "${widget.value} / ${widget.total == 100 ? AppText(context).unlimited : widget.total}"),
+              Text(widget.total == 100 ? AppText(context).unlimited : "${widget.value} / ${widget.total}"),
             ],
           ),
           const SizedBox(height: 4),

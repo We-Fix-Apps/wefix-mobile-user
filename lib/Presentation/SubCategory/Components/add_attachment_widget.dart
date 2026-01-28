@@ -92,8 +92,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
               leading: const Icon(Icons.photo_camera),
               title: Text(AppText(context).takeAPictureFromCamera),
               onTap: () async {
-                final picked =
-                    await _imagePicker.pickImage(source: ImageSource.camera);
+                final picked = await _imagePicker.pickImage(source: ImageSource.camera);
                 if (picked != null) {
                   setState(() {
                     imagePath = picked.path;
@@ -112,8 +111,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
               leading: const Icon(Icons.videocam),
               title: Text(AppText(context).recordVideo),
               onTap: () async {
-                final picked =
-                    await _imagePicker.pickVideo(source: ImageSource.camera);
+                final picked = await _imagePicker.pickVideo(source: ImageSource.camera);
                 if (picked != null) {
                   setState(() {
                     imagePath = picked.path;
@@ -136,30 +134,23 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
 
   Future uploadFile({List? files}) async {
     AppProvider appProvider = Provider.of(context, listen: false);
-    setState(() {
-      appProvider.saveDesc(noteController.text);
-    });
 
-    await UpladeFiles.upladeImagesWithPaths(
-            token: '${appProvider.userModel?.token}', filePaths: extractedPaths)
-        .then((value) {
+    await UpladeFiles.upladeImagesWithPaths(token: '${appProvider.userModel?.token}', filePaths: extractedPaths).then((value) {
       log(value.toString());
       if (value != null) {
-        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen()))
-            .then((value) {
+        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
           setState(() {
             loading = false;
           });
         });
-        appProvider.desc.text.toString();
+
         setState(() {
           appProvider.clearAttachments();
           appProvider.saveAttachments(value);
         });
       } else {
         appProvider.clearAttachments();
-        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen()))
-            .then((value) {
+        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
           setState(() {
             appProvider.clearAttachments();
             loading = false;
@@ -178,8 +169,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     }
 
     final dir = await getApplicationDocumentsDirectory();
-    final path =
-        "${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a";
+    final path = "${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a";
 
     await record.start(path: path);
     setState(() {
@@ -216,25 +206,20 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   }
 
   Future handleSubmit() async {
+    AppProvider appProvider = Provider.of(context, listen: false);
     setState(() {
       loading = true;
     });
-    if (selectedFile != null ||
-        audioPath != null ||
-        imagePath != null ||
-        noteController.text.isNotEmpty) {
-      setState(() {
-        selectedFile = null;
-        audioPath = null;
-        imagePath = null;
-        // noteController.clear();
-      });
-
+    if (selectedFile != null || audioPath != null || imagePath != null || noteController.text.isNotEmpty) {
       // uploadedFiles.add({
       //   "file": selectedFile?.path,
       //   "audio": audioPath,
       //   "image": imagePath,
       // });
+      setState(() {
+        appProvider.saveDesc(noteController.text);
+        log(appProvider.desc.text.toString());
+      });
       log(" uploadded fillle : ${uploadedFiles.toString()}");
       extractFilePaths(uploadedFiles);
 
@@ -274,17 +259,10 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   ];
 
   List<Map> content = [
+    {"title": AppText(navigatorKey.currentState!.context).uploadFilefromDevice, "description": AppText(navigatorKey.currentState!.context).youcanuploadfile, "image": "assets/image/file.png"},
     {
-      "title": AppText(navigatorKey.currentState!.context).uploadFilefromDevice,
-      "description":
-          AppText(navigatorKey.currentState!.context).youcanuploadfile,
-      "image": "assets/image/file.png"
-    },
-    {
-      "title":
-          AppText(navigatorKey.currentState!.context).takeAPictureFromCamera,
-      "description":
-          AppText(navigatorKey.currentState!.context).youcantakepicture,
+      "title": AppText(navigatorKey.currentState!.context).takeAPictureFromCamera,
+      "description": AppText(navigatorKey.currentState!.context).youcantakepicture,
       "image": "assets/image/camera.png",
     },
     {
@@ -297,12 +275,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       "description": AppText(navigatorKey.currentState!.context).youcandescripe,
       "image": "assets/image/search.png",
     },
-    {
-      "title": AppText(navigatorKey.currentState!.context).continuesss,
-      "description": AppText(navigatorKey.currentState!.context).afteraddingAll,
-      "image": "assets/image/cont.png",
-      "isTop": true
-    },
+    {"title": AppText(navigatorKey.currentState!.context).continuesss, "description": AppText(navigatorKey.currentState!.context).afteraddingAll, "image": "assets/image/cont.png", "isTop": true},
   ];
   @override
   void initState() {
@@ -313,15 +286,12 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         CustomeTutorialCoachMark.createTutorial(keyButton, content);
         Future.delayed(const Duration(seconds: 1), () {
-          Map showTour =
-              json.decode(CacheHelper.getData(key: CacheHelper.showTour));
-          CustomeTutorialCoachMark.showTutorial(context,
-              isShow: showTour["addAttachment"] ?? true);
+          Map showTour = json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+          CustomeTutorialCoachMark.showTutorial(context, isShow: showTour["addAttachment"] ?? true);
           setState(() {
             showTour["addAttachment"] = false;
           });
-          CacheHelper.saveData(
-              key: CacheHelper.showTour, value: json.encode(showTour));
+          CacheHelper.saveData(key: CacheHelper.showTour, value: json.encode(showTour));
           log(showTour.toString());
         });
       });
@@ -395,11 +365,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
               key: keyButton[2],
               child: _optionTile(
                 icon: isRecording ? Icons.stop : Icons.mic,
-                label: isRecording
-                    ? "${AppText(context).stopRecording} (${AppText(context).time}: ${_seconds}s)"
-                    : (audioPath != null
-                        ? AppText(context).audioRecorded
-                        : AppText(context).recordVoice),
+                label: isRecording ? "${AppText(context).stopRecording} (${AppText(context).time}: ${_seconds}s)" : (audioPath != null ? AppText(context).audioRecorded : AppText(context).recordVoice),
                 color: isRecording ? Colors.red : Colors.green,
                 onTap: isRecording ? stopRecording : startRecording,
               ),
@@ -414,12 +380,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            uploadedFiles.isEmpty
-                ? const SizedBox()
-                : Text(AppText(context).attachments,
-                    style: TextStyle(
-                        fontSize: AppSize(context).smallText1,
-                        fontWeight: FontWeight.bold)),
+            uploadedFiles.isEmpty ? const SizedBox() : Text(AppText(context).attachments, style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold)),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -440,47 +401,26 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                             ? SvgPicture.asset("assets/icon/mp4.svg", width: 40)
                             : file["image"] != null
                                 ? file["image"]?.endsWith("mp4") ?? false
-                                    ? SvgPicture.asset("assets/icon/vid.svg",
-                                        width: 40)
-                                    : SvgPicture.asset("assets/icon/imge.svg",
-                                        width: 40)
-                                : ((file["image"]?.endsWith("png") ?? false) ||
-                                        (file["image"]?.endsWith("jpg") ??
-                                            false))
-                                    ? SvgPicture.asset("assets/icon/imge.svg",
-                                        width: 40)
-                                    : ((file["file"]?.endsWith("png") ??
-                                                false) ||
-                                            (file["file"]?.endsWith("jpg") ??
-                                                false))
-                                        ? SvgPicture.asset(
-                                            "assets/icon/imge.svg",
-                                            width: 40)
-                                        : SvgPicture.asset(
-                                            "assets/icon/file.svg",
-                                            width: 40),
+                                    ? SvgPicture.asset("assets/icon/vid.svg", width: 40)
+                                    : SvgPicture.asset("assets/icon/imge.svg", width: 40)
+                                : ((file["image"]?.endsWith("png") ?? false) || (file["image"]?.endsWith("jpg") ?? false))
+                                    ? SvgPicture.asset("assets/icon/imge.svg", width: 40)
+                                    : ((file["file"]?.endsWith("png") ?? false) || (file["file"]?.endsWith("jpg") ?? false))
+                                        ? SvgPicture.asset("assets/icon/imge.svg", width: 40)
+                                        : SvgPicture.asset("assets/icon/file.svg", width: 40),
                     title: Text(
-                      file["filename"] ??
-                          file["audio"]?.split('/').last ??
-                          file["image"]?.split('/').last ??
-                          "",
+                      file["filename"] ?? file["audio"]?.split('/').last ?? file["image"]?.split('/').last ?? "",
                       maxLines: 1,
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(
-                              file["audio"] != null
-                                  ? Icons.play_arrow
-                                  : Icons.remove_red_eye,
-                              color: AppColors(context).primaryColor),
+                          icon: Icon(file["audio"] != null ? Icons.play_arrow : Icons.remove_red_eye, color: AppColors(context).primaryColor),
                           onPressed: () {
                             final file = uploadedFiles[index];
                             // ignore: prefer_if_null_operators
-                            final path = file["file"] != null
-                                ? file["file"]
-                                : file["audio"] ?? file["image"];
+                            final path = file["file"] != null ? file["file"] : file["audio"] ?? file["image"];
 
                             if (path != null) {
                               if (file["file"] != null) {
@@ -491,14 +431,10 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                                   builder: (_) => AlertDialog(
                                     title: const Text('Preview'),
                                     content: file["image"] != null
-                                        ? (file["image"]!.endsWith("mp4")
-                                            ? VideoPlayerWidget(filePath: path)
-                                            : Image.file(File(path)))
+                                        ? (file["image"]!.endsWith("mp4") ? VideoPlayerWidget(filePath: path) : Image.file(File(path)))
                                         : file["audio"] != null
                                             ? AudioPlayerWidget(filePath: path)
-                                            : Text(AppText(context,
-                                                    isFunction: true)
-                                                .previewnotavailableforthisfiletype),
+                                            : Text(AppText(context, isFunction: true).previewnotavailableforthisfiletype),
                                     actions: [
                                       TextButton(
                                         child: const Text('Close'),
@@ -557,8 +493,7 @@ Widget _optionTile({
           Icon(icon, color: color),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(label,
-                style: const TextStyle(fontSize: 16, color: Colors.black87)),
+            child: Text(label, style: const TextStyle(fontSize: 16, color: Colors.black87)),
           ),
           const Icon(Icons.arrow_forward_ios_rounded, size: 16)
         ],

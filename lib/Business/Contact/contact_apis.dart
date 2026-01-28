@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/end_points.dart';
 import 'package:wefix/Data/Api/http_request.dart';
 import 'package:wefix/Data/model/contact_model.dart';
@@ -33,21 +35,20 @@ class ContactsApis {
   }
 
   static Future contactUsForm({
-    required String name,
-    required String phone,
     required String details,
     required String type,
     required String subject,
-    String? email,
     required BuildContext context,
   }) async {
     try {
+      AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+
       final response = await HttpHelper.postData(
         query: EndPoints.contactUs,
         data: {
-          "Name": name,
-          "MobileNumber": phone,
-          "Email": email,
+          "Name": appProvider.userModel?.customer.name ?? "",
+          "MobileNumber": appProvider.userModel?.customer.mobile ?? "",
+          "Email": appProvider.userModel?.customer.email ?? "",
           "Type": type,
           "Subject": subject,
           "Details": details,

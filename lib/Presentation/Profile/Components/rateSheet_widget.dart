@@ -23,8 +23,7 @@ class MultiRateSheet extends StatefulWidget {
   State<MultiRateSheet> createState() => _MultiRateSheetState();
 }
 
-class _MultiRateSheetState extends State<MultiRateSheet>
-    with SingleTickerProviderStateMixin {
+class _MultiRateSheetState extends State<MultiRateSheet> with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   bool _animateStepOne = false;
@@ -111,8 +110,7 @@ class _MultiRateSheetState extends State<MultiRateSheet>
                     controller: _pageController,
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: (index) {
-                      final answers =
-                          context.read<AppProvider>().selectedAnswers;
+                      final answers = context.read<AppProvider>().selectedAnswers;
                       print(answers);
                       setState(() {
                         _currentPage = index;
@@ -158,9 +156,7 @@ class _MultiRateSheetState extends State<MultiRateSheet>
                     if (_currentPage < 3 && _currentPage != 0)
                       CustomBotton(
                         loading: isLoading,
-                        title: _currentPage == 2
-                            ? AppText(context, isFunction: true).finish
-                            : AppText(context, isFunction: true).next,
+                        title: _currentPage == 2 ? AppText(context, isFunction: true).finish : AppText(context, isFunction: true).next,
                         onTap: () {
                           if (key.currentState!.validate()) {
                             _currentPage == 2
@@ -172,17 +168,11 @@ class _MultiRateSheetState extends State<MultiRateSheet>
 
                             _currentPage == 2 ? addReview() : null;
 
-                            if (_currentPage == 1 &&
-                                (appProvider.selectedAnswers.length !=
-                                    widget.questionsModel?.questions.length)) {
+                            if (_currentPage == 1 && (appProvider.selectedAnswers.length != widget.questionsModel?.questions.length)) {
                               showDialog(
                                 context: context,
-                                builder: (context) => WidgetDialog(
-                                    title: AppText(context, isFunction: true)
-                                        .warning,
-                                    desc: AppText(context, isFunction: true)
-                                        .youhavetoanswerallquestions,
-                                    isError: true),
+                                builder: (context) =>
+                                    WidgetDialog(title: AppText(context, isFunction: true).warning, desc: AppText(context, isFunction: true).youhavetoanswerallquestions, isError: true),
                               );
                             } else {
                               nextPage();
@@ -206,8 +196,8 @@ class _MultiRateSheetState extends State<MultiRateSheet>
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     setState(() => isLoading = true);
     await ReviewsApi.addReview(
+      context: context,
       token: appProvider.userModel?.token ?? "",
-      phone: phone.text,
       desc: desc.text,
       customerQuestion: appProvider.selectedAnswers,
       mainAnswer: selectedSvgPath?.contains("smile") ?? false
@@ -338,10 +328,8 @@ class _MultiRateSheetState extends State<MultiRateSheet>
     );
   }
 
-  Widget stepTwo(BuildContext context,
-      {String? image, Color? iconColor, String? title}) {
-    LanguageProvider languageProvider =
-        Provider.of<LanguageProvider>(context, listen: false);
+  Widget stepTwo(BuildContext context, {String? image, Color? iconColor, String? title}) {
+    LanguageProvider languageProvider = Provider.of<LanguageProvider>(context, listen: false);
 
     return SingleChildScrollView(
       // ✅ Important: wrap everything to avoid overflow in PageView
@@ -380,13 +368,10 @@ class _MultiRateSheetState extends State<MultiRateSheet>
             itemCount: widget.questionsModel?.questions.length ?? 0,
             itemBuilder: (context, index) {
               final question = widget.questionsModel!.questions[index];
-              final selectedRating =
-                  context.watch<AppProvider>().getRating(question.id);
+              final selectedRating = context.watch<AppProvider>().getRating(question.id);
 
               return ListRateTypeWidget(
-                title: languageProvider.lang == "ar"
-                    ? question.titleAr
-                    : question.title,
+                title: languageProvider.lang == "ar" ? question.titleAr : question.title,
                 selectedRating: selectedRating,
                 onRatingSelected: (rating) {
                   context.read<AppProvider>().selectAnswer(
@@ -408,8 +393,7 @@ class _MultiRateSheetState extends State<MultiRateSheet>
       children: [
         Row(
           children: [
-            SvgPicture.asset("assets/icon/smile.svg",
-                color: AppColors.greenColor, width: 40, height: 40),
+            SvgPicture.asset("assets/icon/smile.svg", color: AppColors.greenColor, width: 40, height: 40),
             const SizedBox(width: 5),
             Text(
               AppText(context, isFunction: true).tellusmore,
@@ -432,19 +416,6 @@ class _MultiRateSheetState extends State<MultiRateSheet>
             }
             return null;
           },
-        ),
-        SizedBox(height: AppSize(context).height * 0.02),
-        WidgetTextField(
-          AppText(context, isFunction: true).phone,
-          validator: (p0) {
-            if (p0!.isEmpty) {
-              return AppText(context, isFunction: true)
-                  .pleaseenteryourphonenumber;
-            }
-            return null;
-          },
-          controller: phone,
-          keyboardType: const TextInputType.numberWithOptions(),
         ),
       ],
     );

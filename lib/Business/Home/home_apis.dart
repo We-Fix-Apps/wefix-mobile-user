@@ -32,16 +32,12 @@ class HomeApis {
   }
 
   static SubServiceModel? subServiceModel;
-  static Future<SubServiceModel?> getSubCatService(
-      {required String token, required String id, int? roleId}) async {
+  static Future<SubServiceModel?> getSubCatService({required String token, required String id, int? roleId}) async {
     try {
       final response = await HttpHelper.getData(
-        query:
-            roleId == 1 ? EndPoints.subCategory + id : EndPoints.serviceCompany,
+        query: roleId == 1 ? EndPoints.subCategory + id : EndPoints.serviceCompany,
         token: token,
       );
-      
-
       log('getSubCatService() [ STATUS ] -> ${response.statusCode}');
 
       final body = json.decode(response.body);
@@ -55,6 +51,22 @@ class HomeApis {
     } catch (e) {
       log('getSubCatService() [ ERROR ] -> $e');
       return null;
+    }
+  }
+
+  static Future<bool> beforExpiredSubscription({required String token}) async {
+    try {
+      final response = await HttpHelper.postData(query: EndPoints.notifySubscription, token: token);
+      log('beforExpiredSubscription() [ STATUS ] -> ${response.statusCode}');
+      final body = json.decode(response.body);
+      if (response.statusCode == 200) {
+        return body['status'];
+      } else {
+        return false;
+      }
+    } catch (e) {
+      log('beforExpiredSubscription() [ ERROR ] -> $e');
+      return false;
     }
   }
 }

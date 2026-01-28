@@ -23,36 +23,12 @@ class _FeatureWidgetState extends State<FeatureWidget> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Row(
-        // mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(width: 8),
-          SizedBox(
-            width: AppSize(context).width * 0.45,
-            child: Text(
-              "⭐  ${widget.feature ?? ''}",
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
-          ),
-          Center(
-            child: SizedBox(
-              width: AppSize(context).width * .15,
-              child: Text(
-                widget.value ?? '',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.blackColor1,
-                  fontSize: AppSize(context).smallText2,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Text("⭐  ${widget.feature ?? ''}", overflow: TextOverflow.ellipsis, maxLines: 1, style: TextStyle(color: widget.color ?? AppColors.blackColor1, fontSize: AppSize(context).smallText2)),
+        Expanded(
+            child:
+                Text(widget.value ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.end, style: TextStyle(color: AppColors.blackColor1, fontSize: AppSize(context).smallText4)))
+      ]),
     );
   }
 }

@@ -160,7 +160,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
               color: AppColors(context).primaryColor,
               backgroundColor: AppColors.secoundryColor,
             )
-          : subServiceModel?.service.isEmpty
+          : subServiceModel?.service.isEmpty ?? true
               ? const EmptyScreen()
               : SafeArea(
                 child: SingleChildScrollView(

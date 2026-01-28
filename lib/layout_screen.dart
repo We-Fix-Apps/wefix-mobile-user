@@ -6,7 +6,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/appText/appText.dart';
-import 'package:wefix/Presentation/B2B/home_b2b.dart';
 import 'package:wefix/Presentation/Home/Screens/home_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/contact_us_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
@@ -25,10 +24,8 @@ class _HomeLayoutState extends State<HomeLayout> {
   int currentIndex = 0;
   TabController? tabController;
   late TutorialCoachMark tutorialCoachMark;
-
   GlobalKey keyButton = GlobalKey();
   GlobalKey keyButton1 = GlobalKey();
-
   GlobalKey keyButton2 = GlobalKey();
   GlobalKey keyButton3 = GlobalKey();
   GlobalKey keyButton4 = GlobalKey();
@@ -39,80 +36,33 @@ class _HomeLayoutState extends State<HomeLayout> {
     handelCurrentIndex(widget.index);
     createTutorial();
     Future.delayed(const Duration(seconds: 3), showTutorial);
-
     super.initState();
   }
 
-  List<Widget> screen = [
-    const HomeScreen(),
-    BookingScreen(),
-    const SubscriptionScreen(),
-    const ProfileScreen(),
-    const ContactUsScreen(),
-  ];
+  List<Widget> screen = [const HomeScreen(), const BookingScreen(), const SubscriptionScreen(), const ProfileScreen(), const ContactUsScreen()];
 
   @override
   Widget build(BuildContext context) {
     List<TabItem> items = [
       TabItem(
-          activeIcon: SvgPicture.asset(
-            "assets/icon/home.svg",
-            color: AppColors(context).primaryColor,
-            height: 20,
-          ),
-          icon: SvgPicture.asset(
-            "assets/icon/home.svg",
-            color: AppColors.greyColor2,
-            height: 20,
-          ),
+          activeIcon: SvgPicture.asset("assets/icon/home.svg", color: AppColors(context).primaryColor, height: 20),
+          icon: SvgPicture.asset("assets/icon/home.svg", color: AppColors.greyColor2, height: 20),
           title: AppText(context).home),
       TabItem(
-          activeIcon: SvgPicture.asset(
-            "assets/icon/booking.svg",
-            color: AppColors(context).primaryColor,
-            height: 20,
-          ),
-          icon: SvgPicture.asset(
-            "assets/icon/booking.svg",
-            color: AppColors.greyColor2,
-            height: 20,
-          ),
+          activeIcon: SvgPicture.asset("assets/icon/booking.svg", color: AppColors(context).primaryColor, height: 20),
+          icon: SvgPicture.asset("assets/icon/booking.svg", color: AppColors.greyColor2, height: 20),
           title: AppText(context).bookings),
       TabItem(
-          activeIcon: SvgPicture.asset(
-            "assets/icon/smile.svg",
-            color: AppColors.whiteColor1,
-            height: 20,
-          ),
-          icon: SvgPicture.asset(
-            "assets/icon/smile.svg",
-            color: AppColors.whiteColor1,
-            height: 20,
-          ),
+          activeIcon: SvgPicture.asset("assets/icon/smile.svg", color: AppColors.whiteColor1, height: 20),
+          icon: SvgPicture.asset("assets/icon/smile.svg", color: AppColors.whiteColor1, height: 20),
           title: AppText(context).subscription),
       TabItem(
-          activeIcon: SvgPicture.asset(
-            "assets/icon/user.svg",
-            color: AppColors(context).primaryColor,
-            height: 20,
-          ),
-          icon: SvgPicture.asset(
-            "assets/icon/user.svg",
-            color: AppColors.greyColor2,
-            height: 20,
-          ),
+          activeIcon: SvgPicture.asset("assets/icon/user.svg", color: AppColors(context).primaryColor, height: 20),
+          icon: SvgPicture.asset("assets/icon/user.svg", color: AppColors.greyColor2, height: 20),
           title: AppText(context).profile),
       TabItem(
-          activeIcon: SvgPicture.asset(
-            "assets/icon/supportheadphones.svg",
-            color: AppColors(context).primaryColor,
-            height: 20,
-          ),
-          icon: SvgPicture.asset(
-            "assets/icon/supportheadphones.svg",
-            color: AppColors.greyColor2,
-            height: 20,
-          ),
+          activeIcon: SvgPicture.asset("assets/icon/supportheadphones.svg", color: AppColors(context).primaryColor, height: 20),
+          icon: SvgPicture.asset("assets/icon/supportheadphones.svg", color: AppColors.greyColor2, height: 20),
           title: AppText(context).contactUs),
     ];
 
@@ -130,19 +80,18 @@ class _HomeLayoutState extends State<HomeLayout> {
       child: Scaffold(
         body: screen[currentIndex],
         bottomNavigationBar: ConvexAppBar(
-          backgroundColor: Colors.white,
-          activeColor: AppColors(context).primaryColor,
-          style: TabStyle.fixedCircle,
-          color: Colors.grey,
-          elevation: 1,
-          height: 60,
-          curve: Curves.linearToEaseOut,
-          cornerRadius: 20,
-          controller: tabController,
-          initialActiveIndex: widget.index ?? 0,
-          items: items,
-          onTap: (int i) => changeBottomIndex(i),
-        ),
+            backgroundColor: Colors.white,
+            activeColor: AppColors(context).primaryColor,
+            style: TabStyle.fixedCircle,
+            color: Colors.grey,
+            elevation: 1,
+            height: 60,
+            curve: Curves.linearToEaseOut,
+            cornerRadius: 20,
+            controller: tabController,
+            initialActiveIndex: widget.index ?? 0,
+            items: items,
+            onTap: (int i) => changeBottomIndex(i)),
       ),
     );
   }
@@ -179,8 +128,7 @@ class _HomeLayoutState extends State<HomeLayout> {
       },
       onClickTargetWithTapPosition: (target, tapDetails) {
         print("target: $target");
-        print(
-            "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+        print("clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
       },
       onClickOverlay: (target) {
         print('onClickOverlay: $target');
@@ -209,10 +157,7 @@ class _HomeLayoutState extends State<HomeLayout> {
                 children: <Widget>[
                   Text(
                     "Search for service",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        fontSize: 20.0),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 20.0),
                   ),
                   Padding(
                     padding: EdgeInsets.only(top: 10.0),
@@ -285,10 +230,7 @@ class _HomeLayoutState extends State<HomeLayout> {
               children: <Widget>[
                 Text(
                   "Multiples content",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
                 ),
                 Padding(
                   padding: EdgeInsets.only(top: 10.0),
@@ -308,10 +250,7 @@ class _HomeLayoutState extends State<HomeLayout> {
                 children: <Widget>[
                   Text(
                     "Multiples content",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 20.0),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
                   ),
                   Padding(
                     padding: EdgeInsets.only(top: 10.0),
@@ -338,10 +277,7 @@ class _HomeLayoutState extends State<HomeLayout> {
               children: <Widget>[
                 Text(
                   "Title lorem ipsum",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20.0),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 20.0),
                 ),
                 Padding(
                   padding: EdgeInsets.only(top: 10.0),
@@ -379,10 +315,7 @@ class _HomeLayoutState extends State<HomeLayout> {
                 padding: EdgeInsets.only(bottom: 20.0),
                 child: Text(
                   "Image Load network",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20.0),
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20.0),
                 ),
               ),
               const Text(
@@ -410,10 +343,7 @@ class _HomeLayoutState extends State<HomeLayout> {
                   padding: EdgeInsets.only(bottom: 20.0),
                   child: Text(
                     "Multiples contents",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20.0),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20.0),
                   ),
                 ),
                 Text(
@@ -432,10 +362,7 @@ class _HomeLayoutState extends State<HomeLayout> {
                     padding: EdgeInsets.only(bottom: 20.0),
                     child: Text(
                       "Multiples contents",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20.0),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20.0),
                     ),
                   ),
                   Text(

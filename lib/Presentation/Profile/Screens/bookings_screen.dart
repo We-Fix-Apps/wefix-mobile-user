@@ -75,8 +75,7 @@ class _BookingScreenState extends State<BookingScreen> {
                           Navigator.push(
                               context,
                               rightToLeft(TicketDetailsScreen(
-                                id: ticketModel?.tickets[index].id.toString() ??
-                                    "0",
+                                id: ticketModel?.tickets[index].id.toString() ?? "0",
                               )));
                         },
                         child: BookingCard(
@@ -93,22 +92,17 @@ class _BookingScreenState extends State<BookingScreen> {
                                     bottonText: AppText(context).yes,
                                     onTap: () {
                                       Navigator.pop(context);
-                                      cancelBooking(
-                                              id: ticketModel
-                                                  ?.tickets[index].id)
-                                          .then((value) {
+                                      cancelBooking(id: ticketModel?.tickets[index].id).then((value) {
                                         getBookingHistory();
                                       });
                                     },
-                                    desc:
-                                        "Are you sure you want to cancel the appointment ? ",
+                                    desc: "Are you sure you want to cancel the appointment ? ",
                                     isError: true);
                               },
                             );
                           },
                           ticket: ticketModel?.tickets[index],
-                          status:
-                              ticketModel?.tickets[index].status ?? "Pending",
+                          status: ticketModel?.tickets[index].status ?? "Pending",
                         ),
                       );
                     },
@@ -123,8 +117,7 @@ class _BookingScreenState extends State<BookingScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      BookingApi.getBookingsHistory(token: appProvider.userModel?.token ?? "")
-          .then((value) {
+      BookingApi.getBookingsHistory(token: appProvider.userModel?.token ?? "").then((value) {
         setState(() {
           ticketModel = value;
           loading = false;
@@ -144,9 +137,7 @@ class _BookingScreenState extends State<BookingScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      BookingApi.cancleBooking(
-              token: appProvider.userModel?.token ?? "", id: id)
-          .then((value) {
+      BookingApi.cancleBooking(token: appProvider.userModel?.token ?? "", id: id).then((value) {
         setState(() {
           loading2 = false;
         });
@@ -167,12 +158,7 @@ class BookingCard extends StatefulWidget {
   final Function()? onTapCancle;
   Function? onValue;
   final Ticket? ticket;
-  BookingCard(
-      {super.key, required this.status,
-      this.ticket,
-      this.onValue,
-      this.onTapCancle,
-      required this.loading2});
+  BookingCard({super.key, required this.status, this.ticket, this.onValue, this.onTapCancle, required this.loading2});
 
   @override
   State<BookingCard> createState() => _BookingCardState();
@@ -181,8 +167,7 @@ class BookingCard extends StatefulWidget {
 class _BookingCardState extends State<BookingCard> {
   @override
   Widget build(BuildContext context) {
-    LanguageProvider languageProvider =
-        Provider.of<LanguageProvider>(context, listen: false);
+    LanguageProvider languageProvider = Provider.of<LanguageProvider>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Container(
@@ -200,29 +185,22 @@ class _BookingCardState extends State<BookingCard> {
                 children: [
                   Text(
                     "# ${widget.ticket?.id.toString() ?? "123456"}",
-                    style: const TextStyle(
-                        color: AppColors.blueColor,
-                        fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: AppColors.blueColor, fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: widget.status == "Completed"
                           ? AppColors.greenColor.withOpacity(.2)
                           : widget.status == "Canceled"
                               ? AppColors.redColor.withOpacity(.2)
                               : widget.status == "Pending"
-                                  ? AppColors(context)
-                                      .primaryColor
-                                      .withOpacity(.2)
+                                  ? AppColors(context).primaryColor.withOpacity(.2)
                                   : AppColors.blueColor.withOpacity(.2),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
-                      languageProvider.lang == "ar"
-                          ? widget.ticket?.statusAr ?? ""
-                          : widget.ticket?.status ?? "",
+                      languageProvider.lang == "ar" ? widget.ticket?.statusAr ?? "" : widget.ticket?.status ?? "",
                       style: TextStyle(
                           color: widget.status == "Completed"
                               ? AppColors.greenColor
@@ -231,45 +209,33 @@ class _BookingCardState extends State<BookingCard> {
                                   : widget.status == "Pending"
                                       ? AppColors(context).primaryColor
                                       : AppColors.blueColor,
-                          fontWeight: FontWeight.bold),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11),
                     ),
                   )
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                languageProvider.lang == "ar"
-                    ? widget.ticket?.descriptionAr ??
-                        AppText(context).preventivemaintenancevisit
-                    : widget.ticket?.description ??
-                        AppText(context).preventivemaintenancevisit,
-                style: TextStyle(
-                    fontSize: AppSize(context).mediumText3,
-                    fontWeight: FontWeight.bold),
+                languageProvider.lang == "ar" ? widget.ticket?.descriptionAr ?? AppText(context).preventivemaintenancevisit : widget.ticket?.description ?? AppText(context).preventivemaintenancevisit,
+                style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Text(
-                      '${widget.ticket?.selectedDate.toString().substring(0, 10)} , ${widget.ticket?.selectedDateTime}',
-                      style: TextStyle(
-                          fontSize: AppSize(context).smallText3,
-                          fontWeight: FontWeight.normal)),
+                  Text('${widget.ticket?.selectedDate.toString().substring(0, 10)} , ${widget.ticket?.selectedDateTime}',
+                      style: TextStyle(fontSize: AppSize(context).smallText4, fontWeight: FontWeight.normal, color: AppColors.greyColor2)),
                   const Spacer(),
                   widget.ticket?.ticketTypeId == 4
                       ? const SizedBox()
                       : Text(
                           '${widget.ticket?.totalPrice} ${AppText(context).jod}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: AppSize(context).smallText1),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText2),
                         ),
                 ],
               ),
               const SizedBox(height: 10),
-              widget.status == "Rejected"
-                  ? const SizedBox()
-                  : const Divider(color: AppColors.greyColorback),
+              widget.status == "Rejected" ? const SizedBox() : const Divider(color: AppColors.greyColorback),
               if (widget.status == 'Accepted' || widget.status == 'Completed')
                 Row(
                   children: [
@@ -278,9 +244,7 @@ class _BookingCardState extends State<BookingCard> {
                       child: widget.ticket?.serviceprovideImage != null
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: WidgetCachNetworkImage(
-                                  image:
-                                      widget.ticket?.serviceprovideImage ?? ""),
+                              child: WidgetCachNetworkImage(image: widget.ticket?.serviceprovideImage ?? ""),
                             )
                           : SvgPicture.asset(
                               "assets/icon/smile.svg",
@@ -322,14 +286,12 @@ class _BookingCardState extends State<BookingCard> {
                                     showModalBottomSheet(
                                       context: context,
                                       shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(
-                                            top: Radius.circular(20)),
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                                       ),
                                       isScrollControlled: true,
                                       builder: (context) => RatingModal(
                                         id: widget.ticket?.id ?? 0,
-                                        isRated:
-                                            widget.ticket?.isRated ?? false,
+                                        isRated: widget.ticket?.isRated ?? false,
                                       ),
                                     ).whenComplete(() {
                                       widget.onValue!();

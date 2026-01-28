@@ -8,6 +8,7 @@ class EndPoints {
   static String resetPassword = '';
   static String checkOtp = 'users/SendOtpCustomer';
   static String home = 'Common/Home';
+  static String notifySubscription = 'Customer/NotifySubscription';
   static String subCategory = 'Common/ServiceByCategory/';
   static String transactions = 'Customer/Transactions';
   static String createTransactions = 'Customer/CreateTransactions';

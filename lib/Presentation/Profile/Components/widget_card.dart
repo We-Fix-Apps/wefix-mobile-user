@@ -6,9 +6,10 @@ import 'package:wefix/Data/Functions/app_size.dart';
 class WidgetCard extends StatefulWidget {
   final String title;
   final String? svg;
+  final bool? isDelete;
 
   final Function()? onTap;
-  const WidgetCard({super.key, required this.title, this.onTap, this.svg});
+  const WidgetCard({super.key, required this.title, this.onTap, this.svg, this.isDelete = false});
 
   @override
   State<WidgetCard> createState() => _WidgetCardState();
@@ -39,7 +40,7 @@ class _WidgetCardState extends State<WidgetCard> {
               widget.title,
               style: TextStyle(
                 fontSize: AppSize(context).smallText1,
-                color: AppColors.blackColor1,
+                color: widget.isDelete == true ? AppColors.redColor : AppColors.blackColor1,
                 fontWeight: FontWeight.normal,
               ),
             ),

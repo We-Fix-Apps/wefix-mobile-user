@@ -2,19 +2,19 @@
 
 import 'dart:convert';
 import 'dart:developer';
-import 'package:bot_toast/bot_toast.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:bot_toast/bot_toast.dart';
+import 'package:wefix/Data/model/user_model.dart';
+import 'package:wefix/Data/Functions/app_size.dart';
+import 'package:wefix/Data/Helper/cache_helper.dart';
+import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Functions/cash_strings.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
-import 'package:wefix/Data/Functions/app_size.dart';
-import 'package:wefix/Data/Functions/cash_strings.dart';
-import 'package:wefix/Data/Functions/navigation.dart';
-import 'package:wefix/Data/model/user_model.dart';
-import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
-import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
+import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
 
 class MainManagements {
   // ! Start Home Layout
@@ -23,8 +23,7 @@ class MainManagements {
 
   // * Handel Language
   static void handelLanguage({required BuildContext context}) {
-    LanguageProvider language =
-        Provider.of<LanguageProvider>(context, listen: false);
+    LanguageProvider language = Provider.of<LanguageProvider>(context, listen: false);
     if (language.lang == '' || CacheHelper.getData(key: LANG_CACHE) == null) {
       language.lang = 'en';
 
@@ -39,9 +38,7 @@ class MainManagements {
     UserModel? user;
 
     final String? userData = CacheHelper.getData(key: CacheHelper.userData);
-    if (userData != null &&
-        userData != 'null' &&
-        userData != 'CLEAR_USER_DATA') {
+    if (userData != null && userData != 'null' && userData != 'CLEAR_USER_DATA') {
       final body = json.decode(userData);
       user = UserModel.fromJson(body);
       log(user.token ?? '');
@@ -52,17 +49,13 @@ class MainManagements {
   }
 
   // * Handel Notification
-  static void handelToken(
-      {required BuildContext context, required String token}) {
+  static void handelToken({required BuildContext context, required String token}) {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     appProvider.fcmToken = token;
     log('Fcm Token :- ${appProvider.fcmToken}');
   }
 
-  static void handelNotification(
-      {required Future<void> Function(RemoteMessage) handler,
-      required GlobalKey<NavigatorState> navigatorKey,
-      required BuildContext context}) {
+  static void handelNotification({required Future<void> Function(RemoteMessage) handler, required GlobalKey<NavigatorState> navigatorKey, required BuildContext context}) {
     // Todo : Start Notifications
 
     // * If Application is open , then it will work
@@ -74,8 +67,7 @@ class MainManagements {
         log('Message also contained a notification: ${message.notification}');
         BotToast.showNotification(
             onTap: () {
-              Navigator.push(navigatorKey.currentState!.context,
-                  downToTop(NotificationsScreen()));
+              Navigator.push(navigatorKey.currentState!.context, downToTop(NotificationsScreen()));
             },
             contentPadding: const EdgeInsets.all(8.0),
             align: Alignment.topCenter,
@@ -115,14 +107,12 @@ class MainManagements {
     });
 
     // * If Application is in backGround , then it will work
-    FirebaseMessaging.onMessageOpenedApp
-        .listen((RemoteMessage remoteMessage) async {
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage remoteMessage) async {
       log('onMessageOpenedApp : $remoteMessage');
       if (remoteMessage.notification != null) {
         BotToast.showNotification(
             onTap: () {
-              Navigator.push(navigatorKey.currentState!.context,
-                  downToTop(NotificationsScreen()));
+              Navigator.push(navigatorKey.currentState!.context, downToTop(NotificationsScreen()));
             },
             contentPadding: const EdgeInsets.all(8.0),
             align: Alignment.topCenter,
@@ -161,9 +151,7 @@ class MainManagements {
     });
 
     // * If Application is in Closed or Terminiated
-    FirebaseMessaging.instance
-        .getInitialMessage()
-        .then((RemoteMessage? remoteMessage) {
+    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? remoteMessage) {
       if (remoteMessage?.notification != null) {
         BotToast.showNotification(
             onTap: () {
@@ -172,8 +160,7 @@ class MainManagements {
               //   '/home',
               //   arguments: {'message': json.encode(remoteMessage?.data)},
               // );
-              Navigator.push(navigatorKey.currentState!.context,
-                  downToTop(NotificationsScreen()));
+              Navigator.push(navigatorKey.currentState!.context, downToTop(NotificationsScreen()));
             },
             contentPadding: const EdgeInsets.all(8.0),
             align: Alignment.topCenter,
@@ -213,6 +200,4 @@ class MainManagements {
 
     FirebaseMessaging.onBackgroundMessage(handler);
   }
-
-   
 }

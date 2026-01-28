@@ -5,24 +5,20 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
-
 import 'package:wefix/Business/Contact/contact_apis.dart';
 import 'package:wefix/Business/Reviews/reviews_api.dart';
-
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
-import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/contact_model.dart';
 import 'package:wefix/Data/model/questions_model.dart';
+import 'package:wefix/Presentation/Loading/loading_text.dart';
 import 'package:wefix/Presentation/Profile/Components/rateSheet_widget.dart';
 import 'package:wefix/Presentation/appointment/Components/google_maps_widget.dart';
 import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
-
-import 'package:wefix/Presentation/Profile/Screens/Chat/messages_screen.dart';
 
 class ContactUsScreen extends StatefulWidget {
   const ContactUsScreen({super.key});
@@ -36,27 +32,23 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   bool loading = false;
   bool loading2 = false;
   bool loading3 = false;
-
   ContactModel? infoContactModel;
   QuestionsModel? questionsModel;
 
-  TextEditingController name = TextEditingController();
-  TextEditingController email = TextEditingController();
-  TextEditingController phoneNumber = TextEditingController();
   TextEditingController type = TextEditingController();
   TextEditingController subject = TextEditingController();
   TextEditingController details = TextEditingController();
 
   @override
   void initState() {
-    // TODO: implement initState
-    getContactInfo();
-    getQuestions();
+    Future.wait([getContactInfo(), getQuestions()]);
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    const spacing = SizedBox(height: 16);
+    final text = AppText(context);
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -83,11 +75,11 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
             ),
           ),
         ),
-        title: Text(AppText(context).contactUs),
+        title: Text(text.contactUs),
         centerTitle: true,
         elevation: 1,
       ),
-      body: loading == true
+      body: loading
           ? LinearProgressIndicator(
               color: AppColors(context).primaryColor,
               backgroundColor: AppColors.secoundryColor,
@@ -96,159 +88,241 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 10,
                 children: [
+                  /// Call Us
                   _sectionContainer(
-                    title: AppText(context).emergencyContactus,
+                    title: text.callUs,
                     children: [
-                      _listTile(
-                          infoContactModel?.languages.emegancyPhone
-                                  .toString() ??
-                              "",
-                          const Icon(
-                            Icons.call,
+                      listTile(
+                        text: text.forEmergencies,
+                        lead: const Text(
+                          '911',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
                             color: AppColors.redColor,
                           ),
-                          AppText(context).call,
-                          Colors.red,
-                          "tel:"),
-                      _listTile(
-                          "${infoContactModel?.languages.email}",
-                          Icon(
-                            Icons.mail,
-                            color: AppColors(context).primaryColor,
+                        ),
+                        action: text.call,
+                        onTap: () => _launchUrl(
+                          "tel:${infoContactModel?.languages.emegancyPhone}",
+                        ),
+                      ),
+                      listTile(
+                        text: text.callCenter,
+                        lead: const Text(
+                          '911',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.redColor,
                           ),
-                          AppText(context).send,
-                          Colors.green,
-                          "mailto:"),
-                      _listTile(
-                          infoContactModel?.languages.whatsapp ?? "0798100944",
-                          SvgPicture.asset("assets/icon/whatsapp.svg",
-                              height: 20, width: 20),
-                          AppText(context).send,
-                          Colors.green,
-                          "https://wa.me/${infoContactModel?.languages.whatsapp ?? "+962798100944"}?text=مرحباً بك 👋 يسعدنا تواصلك مع خدمة عملاء وي فكس 😊 خبرنا كيف نقدر نساعدك؟"),
+                        ),
+                        action: text.call,
+                        onTap: () => _launchUrl(
+                          "tel:${infoContactModel?.languages.phone}",
+                        ),
+                      ),
+                      listTile(
+                        text: text.whatsapp,
+                        lead: SvgPicture.asset(
+                          "assets/icon/whatsapp.svg",
+                          height: 30,
+                          width: 30,
+                        ),
+                        action: text.send,
+                        onTap: () => callUsWhatsApp(),
+                      ),
                     ],
                   ),
-                  spacing,
+
+                  /// Ask Question
                   _sectionContainer(
-                    title: AppText(context).askQuestion,
-                    children: [
-                      _optionRow([
-                        _actionItem("assets/icon/email.svg",
-                            AppText(context).email, "Send", () {
-                          _launchUrl(
-                              "mailto:${infoContactModel?.languages.email}");
-                        }),
-                        _actionItem("assets/icon/faq.svg", "FAQ", "Open", () {
-                          _launchUrl("https://wefix.com/faq");
-                        }),
-                        _actionItem("assets/icon/chat.svg",
-                            AppText(context).caht, "Open", () {
-                          // Navigator.push(
-                          //   context,
-                          //   rightToLeft(
-                          //     const CommentsScreenById(
-                          //       chatId: "1",
-                          //       image: "assets/image/icon_logo.png",
-                          //       name: "WeFix Support",
-                          //       contactId: "32",
-                          //       index: 0,
-                          //       reqId: 1,
-                          //     ),
-                          //   ),
-                          // );
-                        }),
-                      ]),
-                    ],
-                  ),
-                  // spacing,
-                  // _sectionContainer(
-                  //   title: AppText(context).caht,
-                  //   children: [
-                  //     Text(AppText(context).welcomePleaseenteryourdetailsbelow),
-                  //     spacing,
-                  //     _textField(AppText(context).fullName, name),
-                  //     _textField(AppText(context).email, email),
-                  //     const SizedBox(height: 8),
-                  //     Text(AppText(context).supportType,
-                  //         style: const TextStyle(fontWeight: FontWeight.w500)),
-                  //     spacing,
-                  //     Wrap(
-                  //       spacing: 10,
-                  //       children: [
-                  //         _chip("Complaint", "Complaint"),
-                  //         _chip("Suggestion", "Suggestion"),
-                  //         _chip("Remark", "Remark"),
-                  //       ],
-                  //     )
-                  //   ],
-                  // ),
-                  spacing,
-                  _sectionContainer(
-                    title: AppText(context).weFixStations,
-                    children: [
-                      WidgewtGoogleMaps(
-                        isFromCheckOut: true,
-                        isHaveRadius: true,
-                        lat: double.parse(
-                            infoContactModel?.languages.latitude ?? "0"),
-                        loang: double.parse(
-                            infoContactModel?.languages.longitude ?? "0"),
-                      )
-                    ],
-                  ),
-                  spacing,
-                  _sectionContainer(
-                    title: AppText(context).socialMedia,
+                    title: text.askQuestion,
                     children: [
                       _optionRow([
                         _actionItem(
-                            "assets/icon/facebook.svg", "Facebook", "Like", () {
-                          _launchUrl(
-                              infoContactModel?.languages.facebook ?? "0");
-                        }),
-                        _actionItem("assets/icon/instagram-svgrepo-com.svg",
-                            "Instagram", "Follow", () {
-                          _launchUrl(
-                              infoContactModel?.languages.instagram ?? "0");
-                        }),
-                        _actionItem("assets/icon/linkedin-svgrepo-com.svg",
-                            "linkedin", "Follow", () {
-                          _launchUrl(
-                              infoContactModel?.languages.twitter ?? "0");
-                        }),
+                          "assets/icon/email.svg",
+                          text.email,
+                          () => _launchUrl(
+                            "mailto:${infoContactModel?.languages.email}",
+                          ),
+                        ),
                         _actionItem(
-                            "assets/icon/youtube.svg", "YouTube", "Subscribe",
-                            () {
-                          _launchUrl(
-                              infoContactModel?.languages.youtube ?? "0");
-                        }),
+                          "assets/icon/faq.svg",
+                          text.faq,
+                          () => _launchUrl("https://wefixjo.com/#faq"),
+                        ),
+                        _actionItem(
+                          "assets/icon/chat.svg",
+                          text.chat,
+                          () => _launchUrl(
+                            "https://wefixjo.com/Contact/Index",
+                          ),
+                        ),
                       ]),
                     ],
                   ),
-                  spacing,
+
+                  /// Social Media
                   _sectionContainer(
-                    title: AppText(context).contactUs,
+                    title: text.socialMedia,
                     children: [
-                      _textField(
-                        AppText(context).fullName,
-                        name,
-                      ),
-                      _textField(AppText(context).phone, phoneNumber),
-                      _textField(AppText(context).email, email),
-                      _dropdownField(AppText(context).type,
-                          ["Suggestion", "Complaint", "Remarks"]),
-                      _textField(AppText(context).subject, subject),
-                      _textField(
-                          AppText(context).details, maxLines: 4, details),
-                      spacing,
-                      CustomBotton(
-                        title: AppText(context).submit,
-                        loading: loading3,
-                        onTap: () {
-                          addContactInfo();
-                        },
-                      ),
+                      const SizedBox(height: 5),
+                      _optionRow([
+                        _actionItem(
+                          "assets/icon/facebook.svg",
+                          text.facebook,
+                          () => _launchUrl(
+                            infoContactModel?.languages.facebook ?? "",
+                          ),
+                        ),
+                        _actionItem(
+                          "assets/icon/instagram-svgrepo-com.svg",
+                          text.instgram,
+                          () => _launchUrl(
+                            infoContactModel?.languages.instagram ?? "",
+                          ),
+                        ),
+                        _actionItem(
+                          "assets/icon/linkedin-svgrepo-com.svg",
+                          text.linkedIn,
+                          () => _launchUrl(
+                            infoContactModel?.languages.twitter ?? "",
+                          ),
+                        ),
+                        _actionItem(
+                          "assets/icon/youtube.svg",
+                          text.youtube,
+                          () => _launchUrl(
+                            infoContactModel?.languages.youtube ?? "",
+                          ),
+                        ),
+                      ]),
+                    ],
+                  ),
+
+                  /// Contact Form
+                  if (appProvider.userModel != null)
+                    _sectionContainer(
+                      title: text.submitFeedback,
+                      children: [
+                        Row(
+                          spacing: 10,
+                          children: [
+                            SvgPicture.asset(
+                              "assets/icon/chat.svg",
+                              height: 30,
+                              width: 30,
+                              color: AppColors.greyColor4,
+                            ),
+                            Expanded(
+                              child: Text(
+                                text.weValueYourTime,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors(context).primaryColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        DropdownButtonFormField<String>(
+                          initialValue: selectedSupportType,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.blackColor1,
+                          ),
+                          isExpanded: true,
+                          dropdownColor: Colors.white,
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          hint: Text(
+                            text.type,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.greyColor2,
+                            ),
+                          ),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: const BorderSide(
+                                color: AppColors.greyColor3,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: const BorderSide(
+                                color: AppColors.greyColor3,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(7),
+                              borderSide: const BorderSide(
+                                color: AppColors.greyColor3,
+                              ),
+                            ),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: "Suggestion",
+                              child: Text(text.suggestion),
+                            ),
+                            DropdownMenuItem(
+                              value: "Complaint",
+                              child: Text(text.complaint),
+                            ),
+                            DropdownMenuItem(
+                              value: "Remarks",
+                              child: Text(text.remarks),
+                            ),
+                          ],
+                          onChanged: (value) => setState(() => selectedSupportType = value),
+                        ),
+                        WidgetTextField(
+                          text.details,
+                          controller: details,
+                          maxLines: 3,
+                          fillColor: AppColors.whiteColor1,
+                        ),
+                        const SizedBox(height: 5),
+                        CustomBotton(
+                          height: 40,
+                          title: text.send,
+                          loading: loading3,
+                          onTap: () => addContactInfo(),
+                        ),
+                      ],
+                    ),
+
+                  /// Location
+                  _sectionContainer(
+                    title: text.wefixLocation,
+                    children: [
+                      if (loading)
+                        LoadingText(
+                          width: AppSize(context).width,
+                          height: 200,
+                        )
+                      else
+                        InkWell(
+                          onTap: () => openGoogleMap(),
+                          child: WidgewtGoogleMaps(
+                            isConntactUs: true,
+                            lat: double.parse(
+                              infoContactModel?.languages.latitude ?? "0",
+                            ),
+                            loang: double.parse(
+                              infoContactModel?.languages.longitude ?? "0",
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -258,13 +332,10 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   }
 
   Future getContactInfo() async {
-    setState(() {
-      loading = true;
-    });
+    setState(() => loading = true);
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      ContactsApis.getContactInfo(token: appProvider.userModel?.token ?? "")
-          .then((value) {
+      ContactsApis.getContactInfo(token: appProvider.userModel?.token ?? "").then((value) {
         setState(() {
           infoContactModel = value;
           loading = false;
@@ -272,9 +343,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
       });
     } catch (e) {
       log(e.toString());
-      setState(() {
-        loading = false;
-      });
+      setState(() => loading = false);
     }
   }
 
@@ -284,8 +353,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      ReviewsApi.getQuestionsReviews(token: appProvider.userModel?.token ?? "")
-          .then((value) {
+      ReviewsApi.getQuestionsReviews(token: appProvider.userModel?.token ?? "").then((value) {
         setState(() {
           questionsModel = value;
           loading = false;
@@ -300,27 +368,13 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
   }
 
   Future addContactInfo() async {
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     setState(() => loading3 = true);
-    await ContactsApis.contactUsForm(
-      phone: phoneNumber.text ?? "",
-      name: name.text,
-      details: details.text,
-      subject: subject.text,
-      type: selectedSupportType ?? "Suggestion",
-      email: email.text,
-      context: context,
-    ).then((value) async {
+    await ContactsApis.contactUsForm(details: details.text, subject: subject.text, type: selectedSupportType ?? "Suggestion", context: context).then((value) async {
       if (value != null) {
         setState(() => loading3 = false);
-        name.clear();
-        phoneNumber.clear();
         details.clear();
-        email.clear();
         subject.clear();
-        email.clear();
         selectedSupportType = null;
-
         showDialog(
           context: context,
           builder: (context) => WidgetDialog(
@@ -343,46 +397,32 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     });
   }
 
-  Widget _listTile(
-      String text, Widget icon, String action, Color color, String? type) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: ListTile(
+  Widget listTile({required String text, required Widget lead, required String action, VoidCallback? onTap}) {
+    return ListTile(
+        dense: true,
         contentPadding: EdgeInsets.zero,
-        leading: icon,
-        title: Text(
-          text,
-          textAlign: TextAlign.start,
-        ),
-        trailing: TextButton(
-          onPressed: () => _launchUrl("${type ?? "tel:"}$text"),
-          child: Text(action,
-              style: TextStyle(color: AppColors(context).primaryColor)),
-        ),
-      ),
-    );
+        leading: lead,
+        title: Text(text, textAlign: TextAlign.start, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.blackColor1)),
+        trailing: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(7),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(border: Border.all(color: AppColors(context).primaryColor), borderRadius: BorderRadius.circular(7)),
+            child: Text(action, style: const TextStyle(color: Colors.black, fontSize: 13)),
+          ),
+        ));
   }
 
-  Widget _actionItem(
-      String icon, String label, String action, Function() onTap) {
+  Widget _actionItem(String icon, String label, Function() onTap) {
     return Expanded(
       child: InkWell(
         onTap: onTap,
         child: Column(
+          spacing: 5,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: SvgPicture.asset(
-                icon,
-                height: AppSize(context).height * .05,
-                width: AppSize(context).height * .05,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(label,
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: AppSize(context).smallText3)),
+            SvgPicture.asset(icon, height: 35, width: 35),
+            Text(label, style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText3)),
           ],
         ),
       ),
@@ -396,56 +436,9 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     );
   }
 
-  Widget _textField(String label, TextEditingController? controller,
-      {int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: WidgetTextField(label, controller: controller),
-    );
-  }
-
-  Widget _dropdownField(String label, List<String> items) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Container(
-        width: AppSize(context).width,
-        height: AppSize(context).height * 0.06,
-        decoration: BoxDecoration(
-          color: AppColors.backgroundColor,
-          borderRadius: BorderRadius.circular(7),
-          border: Border.all(color: AppColors.greyColor3),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Center(
-            child: DropdownButton<String>(
-              isDense: true,
-              isExpanded: true,
-              underline: const SizedBox(),
-              value: selectedSupportType,
-              hint: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text(label),
-              ),
-              items: items
-                  .map((item) =>
-                      DropdownMenuItem(value: item, child: Text(item)))
-                  .toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedSupportType = value;
-                });
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionContainer(
-      {required String title, String? desc, required List<Widget> children}) {
+  Widget _sectionContainer({required String title, required List<Widget> children}) {
     return Container(
+      width: AppSize(context).width,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -457,51 +450,37 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
         children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          if (desc != null) ...[
-            const SizedBox(height: 12),
-            Text(desc),
-          ],
-          const SizedBox(height: 12),
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ...children,
         ],
       ),
     );
   }
 
-  Widget _chip(String label, String value) {
-    final isSelected = selectedSupportType == value;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedSupportType = value;
-        });
-      },
-      child: Chip(
-        side: BorderSide(
-          color: isSelected
-              ? AppColors(context).primaryColor
-              : AppColors.whiteColor1,
-        ),
-        label: Text(label),
-        backgroundColor: AppColors(context).primaryColor.withOpacity(0.1),
-        labelStyle: TextStyle(color: AppColors(context).primaryColor),
-        shape: StadiumBorder(
-          side: BorderSide(color: AppColors(context).primaryColor),
-        ),
-      ),
-    );
-  }
-
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
-
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> callUsWhatsApp() async {
+    final phone = (infoContactModel?.languages.whatsapp ?? "962798100944").replaceAll("+", "");
+    final message = Uri.encodeComponent("مرحباً بك 👋\n"
+        "يسعدنا تواصلك مع خدمة عملاء WeFix 😊\n"
+        "خبرنا كيف نقدر نساعدك؟");
+    final url = "https://wa.me/$phone?text=$message";
+    final uri = Uri.parse(url);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> openGoogleMap() async {
+    final lat = double.parse(infoContactModel?.languages.latitude ?? "0");
+    final lng = double.parse(infoContactModel?.languages.longitude ?? "0");
+    final Uri googleMapsUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
   }
 }

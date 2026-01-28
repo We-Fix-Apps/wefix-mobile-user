@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:ui';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Bookings/bookings_apis.dart';
@@ -15,7 +17,6 @@ import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
-import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Data/model/active_ticket_model.dart';
 import 'package:wefix/Data/model/home_model.dart';
@@ -24,17 +25,14 @@ import 'package:wefix/Presentation/B2B/home_b2b.dart';
 import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Components/empty_screen.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
-import 'package:wefix/Presentation/Components/tour_widget.dart';
 import 'package:wefix/Presentation/Components/widget_bottom_sheet.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Home/Components/popular_section_widget.dart';
 import 'package:wefix/Presentation/Home/Components/services_list_widget.dart';
 import 'package:wefix/Presentation/Home/Components/special_offer_widget.dart';
-import 'package:wefix/Presentation/Home/Components/steps_widget.dart';
 import 'package:wefix/Presentation/Home/components/slider_widget.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
-import 'package:wefix/Presentation/SubCategory/Screens/sub_services_screen.dart';
 import 'package:wefix/Presentation/appointment/Components/border_animated_widget.dart';
 import 'package:wefix/layout_screen.dart';
 import 'package:wefix/main.dart';
@@ -47,10 +45,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
-  late Animation<Offset> _offsetAnimation;
-
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   ActiveTicketModel? ticketModel;
   List<Category> allSearchCategories = [];
   bool startsSearch = false;
@@ -82,8 +77,7 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    isSubsicribed();
-
+    Future.wait([beforExpiredSubscription(), isSubsicribed()]);
     getAllHomeApis().then((value) {
       getActiveTicket();
 
@@ -173,8 +167,7 @@ class _HomeScreenState extends State<HomeScreen>
                       CircleAvatar(
                         backgroundColor: AppColors.backgroundColor,
                         child: ClipRRect(
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(50)),
+                          borderRadius: const BorderRadius.all(Radius.circular(50)),
                           child: SvgPicture.asset(
                             "assets/icon/smile.svg",
                             key: keyButtons[0],
@@ -260,14 +253,8 @@ class _HomeScreenState extends State<HomeScreen>
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: SliderWidget(
-                                      catId: homeModel?.sliders
-                                              .map((e) => e.categoryId ?? 0)
-                                              .toList() ??
-                                          [],
-                                      images: homeModel?.sliders
-                                              .map((e) => e.image ?? "")
-                                              .toList() ??
-                                          [],
+                                      catId: homeModel?.sliders.map((e) => e.categoryId ?? 0).toList() ?? [],
+                                      images: homeModel?.sliders.map((e) => e.image ?? "").toList() ?? [],
                                     ),
                                   ),
                                 ],
@@ -277,82 +264,49 @@ class _HomeScreenState extends State<HomeScreen>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Divider(
-                                        color: AppColors.backgroundColor),
-                                    if (ticketModel?.tickets.isNotEmpty ??
-                                        false)
+                                    const Divider(color: AppColors.backgroundColor),
+                                    if (ticketModel?.tickets.isNotEmpty ?? false)
                                       Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             "🔍 ${AppText(context).progressOverview}",
                                             style: TextStyle(
-                                              fontSize:
-                                                  AppSize(context).smallText1,
+                                              fontSize: AppSize(context).smallText1,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                           const SizedBox(height: 20),
                                           InkWell(
                                             onTap: () {
-                                              Navigator.push(
-                                                  context,
-                                                  rightToLeft(
-                                                      TicketDetailsScreen(
-                                                          id: ticketModel!
-                                                              .tickets[0].id
-                                                              .toString())));
+                                              Navigator.push(context, rightToLeft(TicketDetailsScreen(id: ticketModel!.tickets[0].id.toString())));
                                             },
                                             child: Padding(
                                               padding: const EdgeInsets.all(0),
                                               child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
                                                 children: [
                                                   appProvider.lang == "en"
                                                       ? Column(
                                                           children: [
-                                                            ticketModel!
-                                                                        .tickets[
-                                                                            0]
-                                                                        .process
-                                                                        .toString()
-                                                                        .toLowerCase() ==
-                                                                    "request registered"
+                                                            ticketModel!.tickets[0].process.toString().toLowerCase() == "request registered"
                                                                 ? Image.asset(
                                                                     "assets/image/1en.png",
-                                                                    width: AppSize(context)
-                                                                            .width *
-                                                                        .9,
+                                                                    width: AppSize(context).width * .9,
                                                                   )
-                                                                : ticketModel!
-                                                                            .tickets[
-                                                                                0]
-                                                                            .process
-                                                                            .toString()
-                                                                            .toLowerCase() ==
-                                                                        "visit scheduled"
-                                                                    ? Image
-                                                                        .asset(
+                                                                : ticketModel!.tickets[0].process.toString().toLowerCase() == "visit scheduled"
+                                                                    ? Image.asset(
                                                                         "assets/image/2en.png",
-                                                                        width: AppSize(context).width *
-                                                                            .9,
+                                                                        width: AppSize(context).width * .9,
                                                                       )
-                                                                    : ticketModel!.tickets[0].process.toString().toLowerCase() ==
-                                                                            "ready to visit"
-                                                                        ? Image
-                                                                            .asset(
+                                                                    : ticketModel!.tickets[0].process.toString().toLowerCase() == "ready to visit"
+                                                                        ? Image.asset(
                                                                             "assets/image/3en.png",
-                                                                            width:
-                                                                                AppSize(context).width * .9,
+                                                                            width: AppSize(context).width * .9,
                                                                           )
-                                                                        : ticketModel!.tickets[0].process.toString().toLowerCase() ==
-                                                                                "awaiting rating"
+                                                                        : ticketModel!.tickets[0].process.toString().toLowerCase() == "awaiting rating"
                                                                             ? Image.asset(
                                                                                 "assets/image/4en.png",
                                                                                 width: AppSize(context).width * .9,
@@ -367,42 +321,22 @@ class _HomeScreenState extends State<HomeScreen>
                                                         )
                                                       : Column(
                                                           children: [
-                                                            ticketModel!
-                                                                        .tickets[
-                                                                            0]
-                                                                        .process
-                                                                        .toString()
-                                                                        .toLowerCase() ==
-                                                                    "request registered"
+                                                            ticketModel!.tickets[0].process.toString().toLowerCase() == "request registered"
                                                                 ? Image.asset(
                                                                     "assets/image/1-01-01.png",
-                                                                    width: AppSize(context)
-                                                                            .width *
-                                                                        .9,
+                                                                    width: AppSize(context).width * .9,
                                                                   )
-                                                                : ticketModel!
-                                                                            .tickets[
-                                                                                0]
-                                                                            .process
-                                                                            .toString()
-                                                                            .toLowerCase() ==
-                                                                        "visit scheduled"
-                                                                    ? Image
-                                                                        .asset(
+                                                                : ticketModel!.tickets[0].process.toString().toLowerCase() == "visit scheduled"
+                                                                    ? Image.asset(
                                                                         "assets/image/2-01-01.png",
-                                                                        width: AppSize(context).width *
-                                                                            .9,
+                                                                        width: AppSize(context).width * .9,
                                                                       )
-                                                                    : ticketModel!.tickets[0].process.toString().toLowerCase() ==
-                                                                            "ready to visit"
-                                                                        ? Image
-                                                                            .asset(
+                                                                    : ticketModel!.tickets[0].process.toString().toLowerCase() == "ready to visit"
+                                                                        ? Image.asset(
                                                                             "assets/image/3-01-01.png",
-                                                                            width:
-                                                                                AppSize(context).width * .9,
+                                                                            width: AppSize(context).width * .9,
                                                                           )
-                                                                        : ticketModel!.tickets[0].process.toString().toLowerCase() ==
-                                                                                "awaiting rating"
+                                                                        : ticketModel!.tickets[0].process.toString().toLowerCase() == "awaiting rating"
                                                                             ? Image.asset(
                                                                                 "assets/image/4-01-01.png",
                                                                                 width: AppSize(context).width * .9,
@@ -430,137 +364,74 @@ class _HomeScreenState extends State<HomeScreen>
                                         ? const SizedBox()
                                         : Center(
                                             child: SizedBox(
-                                              height:
-                                                  AppSize(context).height * .16,
+                                              height: AppSize(context).height * .16,
                                               width: AppSize(context).width,
                                               child: ListView.separated(
-                                                separatorBuilder:
-                                                    (context, index) =>
-                                                        const SizedBox(
+                                                separatorBuilder: (context, index) => const SizedBox(
                                                   width: 10,
                                                 ),
-                                                itemCount: ticketModel
-                                                        ?.tickets.length ??
-                                                    0,
+                                                itemCount: ticketModel?.tickets.length ?? 0,
                                                 shrinkWrap: true,
-                                                scrollDirection:
-                                                    Axis.horizontal,
+                                                scrollDirection: Axis.horizontal,
                                                 itemBuilder: (context, index) {
                                                   return AnimatedBorderContainer(
                                                     child: Container(
-                                                      width: AppSize(context)
-                                                              .width *
-                                                          .93,
-                                                      height: AppSize(context)
-                                                              .height *
-                                                          .2,
+                                                      width: AppSize(context).width * .93,
+                                                      height: AppSize(context).height * .2,
                                                       decoration: BoxDecoration(
-                                                        color: AppColors
-                                                            .whiteColor1,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
+                                                        color: AppColors.whiteColor1,
+                                                        borderRadius: BorderRadius.circular(10),
                                                       ),
                                                       child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(0.0),
+                                                        padding: const EdgeInsets.all(0.0),
                                                         child: Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .center,
+                                                          mainAxisAlignment: MainAxisAlignment.center,
                                                           children: [
                                                             ClipRRect(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10),
-                                                              child:
-                                                                  WidgetCachNetworkImage(
-                                                                width: AppSize(
-                                                                            context)
-                                                                        .width *
-                                                                    .3,
-                                                                height: AppSize(
-                                                                            context)
-                                                                        .height *
-                                                                    .15,
-                                                                image: ticketModel
-                                                                        ?.tickets[
-                                                                            index]
-                                                                        .qrCodePath ??
-                                                                    "",
+                                                              borderRadius: BorderRadius.circular(10),
+                                                              child: WidgetCachNetworkImage(
+                                                                width: AppSize(context).width * .3,
+                                                                height: AppSize(context).height * .15,
+                                                                image: ticketModel?.tickets[index].qrCodePath ?? "",
                                                               ),
                                                             ),
-                                                            const SizedBox(
-                                                                width: 10),
+                                                            const SizedBox(width: 10),
                                                             Expanded(
                                                               child: Column(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .center,
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
+                                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                                crossAxisAlignment: CrossAxisAlignment.start,
                                                                 children: [
                                                                   Text(
-                                                                    languageProvider.lang ==
-                                                                            "ar"
-                                                                        ? ticketModel?.tickets[index].descriptionAr ??
-                                                                            ""
-                                                                        : ticketModel?.tickets[index].description ??
-                                                                            "",
+                                                                    languageProvider.lang == "ar" ? ticketModel?.tickets[index].descriptionAr ?? "" : ticketModel?.tickets[index].description ?? "",
                                                                     maxLines: 3,
-                                                                    overflow:
-                                                                        TextOverflow
-                                                                            .ellipsis,
-                                                                    style:
-                                                                        TextStyle(
-                                                                      fontSize:
-                                                                          AppSize(context)
-                                                                              .smallText1,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                    style: TextStyle(
+                                                                      fontSize: AppSize(context).smallText1,
+                                                                      fontWeight: FontWeight.bold,
                                                                     ),
                                                                   ),
-                                                                  const SizedBox(
-                                                                      height:
-                                                                          10),
+                                                                  const SizedBox(height: 10),
                                                                   Row(
                                                                     children: [
-                                                                      const Text(
-                                                                          "🕑 "),
+                                                                      const Text("🕑 "),
                                                                       Text(
-                                                                        ticketModel?.tickets[index].selectedDateTime ??
-                                                                            "",
-                                                                        style:
-                                                                            TextStyle(
-                                                                          fontSize:
-                                                                              AppSize(context).smallText2,
-                                                                          fontWeight:
-                                                                              FontWeight.bold,
+                                                                        ticketModel?.tickets[index].selectedDateTime ?? "",
+                                                                        style: TextStyle(
+                                                                          fontSize: AppSize(context).smallText2,
+                                                                          fontWeight: FontWeight.bold,
                                                                         ),
                                                                       ),
                                                                     ],
                                                                   ),
-                                                                  const SizedBox(
-                                                                      height:
-                                                                          5),
+                                                                  const SizedBox(height: 5),
                                                                   Row(
                                                                     children: [
-                                                                      const Text(
-                                                                          "🗓 "),
+                                                                      const Text("🗓 "),
                                                                       Text(
-                                                                        ticketModel?.tickets[index].selectedDate.toString().substring(0,
-                                                                                10) ??
-                                                                            "",
-                                                                        style:
-                                                                            TextStyle(
-                                                                          fontSize:
-                                                                              AppSize(context).smallText2,
-                                                                          fontWeight:
-                                                                              FontWeight.bold,
+                                                                        ticketModel?.tickets[index].selectedDate.toString().substring(0, 10) ?? "",
+                                                                        style: TextStyle(
+                                                                          fontSize: AppSize(context).smallText2,
+                                                                          fontWeight: FontWeight.bold,
                                                                         ),
                                                                       ),
                                                                     ],
@@ -577,8 +448,7 @@ class _HomeScreenState extends State<HomeScreen>
                                               ),
                                             ),
                                           ),
-                                    SizedBox(
-                                        height: AppSize(context).height * .02),
+                                    SizedBox(height: AppSize(context).height * .02),
                                     Text(
                                       "🛠️ ${AppText(context).popularServices}",
                                       style: TextStyle(
@@ -590,10 +460,8 @@ class _HomeScreenState extends State<HomeScreen>
                                     OffersSection(
                                       services: homeModel?.servicePopular ?? [],
                                     ),
-                                    const Divider(
-                                        color: AppColors.backgroundColor),
-                                    SizedBox(
-                                        height: AppSize(context).height * .01),
+                                    const Divider(color: AppColors.backgroundColor),
+                                    SizedBox(height: AppSize(context).height * .01),
                                     Text(
                                       "🎉 ${AppText(context).specialOffer}",
                                       style: TextStyle(
@@ -605,12 +473,10 @@ class _HomeScreenState extends State<HomeScreen>
                                     InkWell(
                                       onTap: () {},
                                       child: PopularServicesSection(
-                                        services:
-                                            homeModel?.serviceOffers ?? [],
+                                        services: homeModel?.serviceOffers ?? [],
                                       ),
                                     ),
-                                    SizedBox(
-                                        height: AppSize(context).height * .2),
+                                    SizedBox(height: AppSize(context).height * .2),
                                   ],
                                 ),
                               ),
@@ -630,13 +496,8 @@ class _HomeScreenState extends State<HomeScreen>
                               ),
                             ),
                             const SizedBox(height: 20),
-                            WidgetTextField(
-                                AppText(context).searchforservice,
-                                key: keyButtons[1],
-                                fillColor:
-                                    AppColors.greyColorback.withOpacity(.5),
-                                haveBorder: false,
-                                radius: 15, onChanged: (value) {
+                            WidgetTextField(AppText(context).searchforservice, key: keyButtons[1], fillColor: AppColors.greyColorback.withOpacity(.5), haveBorder: false, radius: 15,
+                                onChanged: (value) {
                               setState(() {
                                 allSearchCategories.clear();
                                 startsSearch = true;
@@ -644,48 +505,20 @@ class _HomeScreenState extends State<HomeScreen>
 
                               final searchValue = value.toLowerCase();
 
-                              for (var category
-                                  in homeModel?.categories ?? []) {
+                              for (var category in homeModel?.categories ?? []) {
                                 final isCategoryTitleMatch =
-                                    languageProvider.lang == "ar"
-                                        ? category.titleAr
-                                                ?.toLowerCase()
-                                                .contains(searchValue) ??
-                                            false
-                                        : category.titleEn
-                                                ?.toLowerCase()
-                                                .contains(searchValue) ??
-                                            false;
+                                    languageProvider.lang == "ar" ? category.titleAr?.toLowerCase().contains(searchValue) ?? false : category.titleEn?.toLowerCase().contains(searchValue) ?? false;
 
                                 bool isMatchInSubCategoryOrService = false;
 
                                 // ✅ Check subcategories if they exist
-                                if (category.subCategory != null &&
-                                    category.subCategory!.isNotEmpty) {
+                                if (category.subCategory != null && category.subCategory!.isNotEmpty) {
                                   for (var subCat in category.subCategory!) {
                                     final isSubTitleMatch =
-                                        languageProvider.lang == "ar"
-                                            ? subCat.titleAr
-                                                    ?.toLowerCase()
-                                                    .contains(searchValue) ??
-                                                false
-                                            : subCat.titleEn
-                                                    ?.toLowerCase()
-                                                    .contains(searchValue) ??
-                                                false;
+                                        languageProvider.lang == "ar" ? subCat.titleAr?.toLowerCase().contains(searchValue) ?? false : subCat.titleEn?.toLowerCase().contains(searchValue) ?? false;
 
-                                    final isServiceMatch = (subCat.service
-                                                as List<Service>?)
-                                            ?.any((srv) {
-                                          return languageProvider.lang == "ar"
-                                              ? srv.nameAr
-                                                      .toLowerCase()
-                                                      .contains(searchValue) ??
-                                                  false
-                                              : srv.name
-                                                      .toLowerCase()
-                                                      .contains(searchValue) ??
-                                                  false;
+                                    final isServiceMatch = (subCat.service as List<Service>?)?.any((srv) {
+                                          return languageProvider.lang == "ar" ? srv.nameAr.toLowerCase().contains(searchValue) ?? false : srv.name.toLowerCase().contains(searchValue) ?? false;
                                         }) ??
                                         false;
 
@@ -697,20 +530,9 @@ class _HomeScreenState extends State<HomeScreen>
                                 }
 
                                 // ✅ Fallback: check services directly inside category (if any)
-                                if (!isMatchInSubCategoryOrService &&
-                                    category.service != null) {
-                                  final isDirectServiceMatch = (category.service
-                                              as List<Service>?)
-                                          ?.any((srv) {
-                                        return languageProvider.lang == "ar"
-                                            ? srv.nameAr
-                                                    .toLowerCase()
-                                                    .contains(searchValue) ??
-                                                false
-                                            : srv.name
-                                                    .toLowerCase()
-                                                    .contains(searchValue) ??
-                                                false;
+                                if (!isMatchInSubCategoryOrService && category.service != null) {
+                                  final isDirectServiceMatch = (category.service as List<Service>?)?.any((srv) {
+                                        return languageProvider.lang == "ar" ? srv.nameAr.toLowerCase().contains(searchValue) ?? false : srv.name.toLowerCase().contains(searchValue) ?? false;
                                       }) ??
                                       false;
 
@@ -719,8 +541,7 @@ class _HomeScreenState extends State<HomeScreen>
                                   }
                                 }
 
-                                if (isCategoryTitleMatch ||
-                                    isMatchInSubCategoryOrService) {
+                                if (isCategoryTitleMatch || isMatchInSubCategoryOrService) {
                                   setState(() {
                                     allSearchCategories.add(category);
                                   });
@@ -728,11 +549,7 @@ class _HomeScreenState extends State<HomeScreen>
                               }
                             }),
                             SizedBox(height: AppSize(context).height * .01),
-                            ServicesWidget(
-                                roleId: homeModel?.roleId ?? 0,
-                                categories: startsSearch == false
-                                    ? homeModel?.categories ?? []
-                                    : allSearchCategories),
+                            ServicesWidget(roleId: homeModel?.roleId ?? 0, categories: startsSearch == false ? homeModel?.categories ?? [] : allSearchCategories),
                           ],
                         )
                       ],
@@ -748,9 +565,7 @@ class _HomeScreenState extends State<HomeScreen>
       loading5 = true;
     });
 
-    await ProfileApis.isSubsicribe(
-            token: '${appProvider.userModel?.token}', isCompany: true)
-        .then((value) {
+    await ProfileApis.isSubsicribe(token: '${appProvider.userModel?.token}', isCompany: true).then((value) {
       if (value != null) {
         setState(() {
           subsicripeModel = value;
@@ -776,8 +591,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      BookingApi.getActiveTicket(token: appProvider.userModel?.token ?? "")
-          .then((value) {
+      BookingApi.getActiveTicket(token: appProvider.userModel?.token ?? "").then((value) {
         setState(() {
           ticketModel = value;
           loading2 = false;
@@ -798,8 +612,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      HomeApis.allHomeApis(token: appProvider.userModel?.token ?? "")
-          .then((value) {
+      HomeApis.allHomeApis(token: appProvider.userModel?.token ?? "").then((value) {
         setState(() {
           homeModel = value;
           loading = false;
@@ -811,5 +624,53 @@ class _HomeScreenState extends State<HomeScreen>
         loading = false;
       });
     }
+  }
+
+  Future beforExpiredSubscription({isfromPlaceOreder = true}) async {
+    AppProvider appProvider = Provider.of(context, listen: false);
+    await HomeApis.beforExpiredSubscription(token: '${appProvider.userModel?.token}').then((value) {
+      if (value == true) _notifyLoginSuccess();
+    });
+  }
+
+  static const _lastNotificationDateKey = 'lastNotificationDate';
+
+  /// Call this whenever you want to notify the user
+  static Future<void> _notifyLoginSuccess() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final today = DateTime.now();
+    final lastShownString = prefs.getString(_lastNotificationDateKey);
+    DateTime? lastShown;
+
+    if (lastShownString != null) {
+      lastShown = DateTime.tryParse(lastShownString);
+    }
+
+    // If already shown today, return
+    if (lastShown != null && lastShown.year == today.year && lastShown.month == today.month && lastShown.day == today.day) {
+      return;
+    }
+
+    // Check notification permission
+    final isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!isAllowed) {
+      await AwesomeNotifications().requestPermissionToSendNotifications();
+      return;
+    }
+
+    // Create notification
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        channelKey: 'basic_channel',
+        title: 'تنبيه انتهاء الباقة',
+        body: 'باقتك قاربت على الانتهاء ⏳ يرجى تجديدها لتجنب انقطاع الخدمة.',
+        notificationLayout: NotificationLayout.Default,
+      ),
+    );
+
+    // Save today's date
+    await prefs.setString(_lastNotificationDateKey, today.toIso8601String());
   }
 }

@@ -1,8 +1,6 @@
 import 'dart:developer';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
@@ -34,13 +32,13 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
 
   @override
   void initState() {
+    super.initState();
     getBookingDetails();
   }
 
   @override
   Widget build(BuildContext context) {
-    LanguageProvider languageProvider =
-        Provider.of<LanguageProvider>(context, listen: false);
+    LanguageProvider languageProvider = Provider.of<LanguageProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -60,48 +58,45 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
         elevation: 0.5,
       ),
       bottomNavigationBar: bookingDetailsModel?.objTickets.status == "Completed"
-          ? Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: CustomBotton(
-                        title: "View Invoice",
-                        onTap: () {
-                          _launchUrl(
-                              bookingDetailsModel?.objTickets.reportLink ?? "");
-                        }),
-                  ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  bookingDetailsModel?.objTickets.isRated == true
-                      ? const SizedBox()
-                      : CustomBotton(
-                          width: AppSize(context).width * 0.2,
-                          title: AppText(context).rate,
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: CustomBotton(
+                          title: "View Invoice",
                           onTap: () {
-                            showModalBottomSheet(
-                              context: context,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(20)),
-                              ),
-                              isScrollControlled: true,
-                              builder: (context) => RatingModal(
-                                id: bookingDetailsModel?.objTickets.id ?? 0,
-                                isRated:
-                                    bookingDetailsModel?.objTickets.isRated ??
-                                        false,
-                              ),
-                            ).whenComplete(() => getBookingDetails());
-                          })
-                ],
+                            _launchUrl(bookingDetailsModel?.objTickets.reportLink ?? "");
+                          }),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    bookingDetailsModel?.objTickets.isRated == true
+                        ? const SizedBox()
+                        : CustomBotton(
+                            width: AppSize(context).width * 0.2,
+                            title: AppText(context).rate,
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                ),
+                                isScrollControlled: true,
+                                builder: (context) => RatingModal(
+                                  id: bookingDetailsModel?.objTickets.id ?? 0,
+                                  isRated: bookingDetailsModel?.objTickets.isRated ?? false,
+                                ),
+                              ).whenComplete(() => getBookingDetails());
+                            })
+                  ],
+                ),
               ),
             )
           : const SizedBox(),
-      floatingActionButton: bookingDetailsModel?.objTickets.status ==
-              "Completed"
+      floatingActionButton: bookingDetailsModel?.objTickets.status == "Completed"
           ? const SizedBox()
           : Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -112,10 +107,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                     Navigator.push(
                       context,
                       downToTop(
-                        CommentsScreenById(
-                            ticketId: bookingDetailsModel?.objTickets.id ?? 0,
-                            toUserId:
-                                bookingDetailsModel?.objTickets.userId ?? 0),
+                        CommentsScreenById(ticketId: bookingDetailsModel?.objTickets.id ?? 0, toUserId: bookingDetailsModel?.objTickets.userId ?? 0),
                       ),
                     );
                   },
@@ -145,28 +137,17 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                   const SizedBox(
                     height: 10,
                   ),
-                  Text('🛠️ ${AppText(context).maintenanceTicketDetails}',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: AppSize(context).smallText1)),
+                  Text('🛠️ ${AppText(context).maintenanceTicketDetails}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText1)),
                   SizedBox(height: AppSize(context).smallText1),
                   Padding(
                     padding: const EdgeInsets.all(8),
                     child: Column(
                       children: [
-                        _buildRow(
-                            AppText(context).title, AppText(context).status,
+                        _buildRow(AppText(context).title, AppText(context).status,
                             rightValue: bookingDetailsModel?.objTickets.status,
-                            leftValue: bookingDetailsModel?.objTickets.type ==
-                                    "preventive"
-                                ? AppText(context).preventivemaintenancevisit
-                                : bookingDetailsModel?.objTickets.title),
-                        _buildRow(
-                            AppText(context).type, AppText(context).createdDate,
-                            leftValue: bookingDetailsModel?.objTickets.type,
-                            rightValue: bookingDetailsModel?.objTickets.date
-                                .toString()
-                                .substring(0, 10)),
+                            leftValue: bookingDetailsModel?.objTickets.type == "preventive" ? AppText(context).preventivemaintenancevisit : bookingDetailsModel?.objTickets.title),
+                        _buildRow(AppText(context).type, AppText(context).createdDate,
+                            leftValue: bookingDetailsModel?.objTickets.type, rightValue: bookingDetailsModel?.objTickets.date.toString().substring(0, 10)),
                         bookingDetailsModel?.objTickets.type == "preventive"
                             ? const SizedBox()
                             : bookingDetailsModel?.objTickets.totalPrice == null
@@ -174,8 +155,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                                 : _buildRow(
                                     AppText(context).price,
                                     "",
-                                    leftValue:
-                                        "${bookingDetailsModel?.objTickets.totalPrice} ${AppText(context).jod}",
+                                    leftValue: "${bookingDetailsModel?.objTickets.totalPrice} ${AppText(context).jod}",
                                   ),
                       ],
                     ),
@@ -185,51 +165,38 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                       ? const SizedBox()
                       : _buildSection(
                           '👷‍♂️ ${AppText(context).services}',
-                          bookingDetailsModel
-                                      ?.objTickets.servcieTickets.isEmpty ==
-                                  true
+                          bookingDetailsModel?.objTickets.servcieTickets.isEmpty == true
                               ? const SizedBox()
                               : ListView.builder(
-                                  itemCount: bookingDetailsModel
-                                      ?.objTickets.servcieTickets.length,
+                                  itemCount: bookingDetailsModel?.objTickets.servcieTickets.length,
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemBuilder: (context, index) {
                                     return Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                             "${languageProvider.lang == "ar" ? bookingDetailsModel?.objTickets.servcieTickets[index].nameAr : bookingDetailsModel?.objTickets.servcieTickets[index].name} ${bookingDetailsModel?.objTickets.servcieTickets[index].quantity != null ? " x ${bookingDetailsModel?.objTickets.servcieTickets[index].quantity}" : ""}"),
-                                        Text(
-                                            "${bookingDetailsModel?.objTickets.servcieTickets[index].price} ${AppText(context).jod}"),
+                                        Text("${bookingDetailsModel?.objTickets.servcieTickets[index].price} ${AppText(context).jod}"),
                                       ],
                                     );
                                   },
                                 )),
-                  bookingDetailsModel?.objTickets.advantagesTickets.isEmpty ==
-                          true
-                      ? const SizedBox()
-                      : _buildSection(
-                          '🛠️ ${AppText(context).technicianGender}',
-                          bookingDetailsModel
-                                      ?.objTickets.advantagesTickets.isEmpty ==
-                                  true
-                              ? const SizedBox()
-                              : ListView.builder(
-                                  itemCount: bookingDetailsModel
-                                      ?.objTickets.advantagesTickets.length,
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemBuilder: (context, index) {
-                                    return Text(
-                                        "${languageProvider.lang == "ar" ? bookingDetailsModel?.objTickets.advantagesTickets[index].name : bookingDetailsModel?.objTickets.advantagesTickets[index].nameAr} ${bookingDetailsModel?.objTickets.advantagesTickets[index].price} ${AppText(context).jod} ");
-                                  },
-                                )),
-                  _buildSection(
-                      '📝 ${AppText(context).issueDescription}',
-                      Text(bookingDetailsModel?.objTickets.description ?? "",
-                          style: const TextStyle(color: Colors.grey))),
+                  if (bookingDetailsModel?.objTickets.advantagesTickets.isNotEmpty == true)
+                    _buildSection(
+                        '🛠️ ${AppText(context).technicianGender}',
+                        (bookingDetailsModel?.objTickets.advantagesTickets.isNotEmpty == true)
+                            ? const SizedBox()
+                            : ListView.builder(
+                                itemCount: bookingDetailsModel?.objTickets.advantagesTickets.length,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemBuilder: (context, index) {
+                                  return Text(
+                                      "${languageProvider.lang == "ar" ? bookingDetailsModel?.objTickets.advantagesTickets[index].name : bookingDetailsModel?.objTickets.advantagesTickets[index].nameAr} ${bookingDetailsModel?.objTickets.advantagesTickets[index].price} ${AppText(context).jod} ");
+                                },
+                              )),
+                  _buildSection('📝 ${AppText(context).issueDescription}', Text(bookingDetailsModel?.objTickets.description ?? "", style: const TextStyle(color: Colors.grey))),
                   _buildSection(
                       '🛠️ ${AppText(context).serviceProviderActions}',
                       Column(
@@ -237,172 +204,87 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("🕑 ${AppText(context).estimatedTime} : ",
-                                  style: TextStyle(
-                                      color: AppColors.blackColor1,
-                                      fontSize: AppSize(context).smallText2)),
-                              Text(
-                                  "${bookingDetailsModel?.objTickets.esitmatedTime} ${AppText(context).hours}",
-                                  style: TextStyle(
-                                      color: AppColors.blackColor1,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: AppSize(context).smallText2)),
+                              Text("🕑 ${AppText(context).estimatedTime} : ", style: TextStyle(color: AppColors.blackColor1, fontSize: AppSize(context).smallText2)),
+                              Text("${bookingDetailsModel?.objTickets.esitmatedTime} ${AppText(context).hours}",
+                                  style: TextStyle(color: AppColors.blackColor1, fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText2)),
                             ],
                           ),
                           const SizedBox(height: 5),
-                          bookingDetailsModel?.objTickets.type.toLowerCase() ==
-                                  "preventive"
-                              ? const SizedBox()
-                              : Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                        "🔩 ${AppText(context).partsrequired} : ",
-                                        style: TextStyle(
-                                            color: AppColors.blackColor1,
-                                            fontSize:
-                                                AppSize(context).smallText2)),
-                                    Text(
-                                        bookingDetailsModel?.objTickets
-                                                    .isWithMaterial ==
-                                                true
-                                            ? AppText(context).yes
-                                            : AppText(context).no,
-                                        style: TextStyle(
-                                            color: AppColors.blackColor1,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize:
-                                                AppSize(context).smallText2)),
-                                  ],
-                                ),
+                          if (bookingDetailsModel?.objTickets.type.toLowerCase() != "preventive")
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text("🔩 ${AppText(context).partsrequired} : ", style: TextStyle(color: AppColors.blackColor1, fontSize: AppSize(context).smallText2)),
+                                Text(bookingDetailsModel?.objTickets.isWithMaterial == true ? AppText(context).yes : AppText(context).no,
+                                    style: TextStyle(color: AppColors.blackColor1, fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText2)),
+                              ],
+                            ),
                           const SizedBox(height: 5),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("👷‍♀️ ${AppText(context).isWithFemale} : ",
-                                  style: TextStyle(
-                                      color: AppColors.blackColor1,
-                                      fontSize: AppSize(context).smallText2)),
-                              Text(
-                                  bookingDetailsModel
-                                              ?.objTickets.isWithFemale ==
-                                          true
-                                      ? AppText(context).yes
-                                      : AppText(context).no,
-                                  style: TextStyle(
-                                      color: AppColors.blackColor1,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: AppSize(context).smallText2)),
+                              Text("👷‍♀️ ${AppText(context).isWithFemale} : ", style: TextStyle(color: AppColors.blackColor1, fontSize: AppSize(context).smallText2)),
+                              Text(bookingDetailsModel?.objTickets.isWithFemale == true ? AppText(context).yes : AppText(context).no,
+                                  style: TextStyle(color: AppColors.blackColor1, fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText2)),
                             ],
                           ),
                         ],
                       )),
-                  const Divider(
-                    color: AppColors.backgroundColor,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("📎 ${AppText(context).attachments}",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: AppSize(context).smallText1)),
+                  if (bookingDetailsModel?.objTickets.ticketAttatchments.isNotEmpty == true) ...[
+                    const Divider(color: AppColors.backgroundColor),
+                    const SizedBox(height: 8),
+                    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                      Text("📎 ${AppText(context).attachments}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText1)),
                       InkWell(
-                        onTap: () => showAttachmentBottomSheet(context),
-                        child: Text(
-                          AppText(context).viewAll,
-                          style: TextStyle(
-                              color: AppColors.secoundryColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: AppSize(context).smallText2),
-                        ),
-                      ),
+                          onTap: () => showAttachmentBottomSheet(context),
+                          child: Text(AppText(context).viewAll, style: TextStyle(color: AppColors.secoundryColor, fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText2)))
+                    ]),
+                  ],
+                  if (bookingDetailsModel?.objTickets.type != "previntive")
+                    if (bookingDetailsModel?.objTickets.ticketImages.isNotEmpty == true) ...[
+                      const Divider(color: AppColors.backgroundColor, height: 30),
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        Text("📎 ${AppText(context).proAtt}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText1)),
+                        InkWell(
+                            onTap: () => showAttachmentTicketBottomSheet(context),
+                            child: Text(AppText(context).viewAll, style: TextStyle(color: AppColors.secoundryColor, fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText2)))
+                      ])
                     ],
-                  ),
-                  const Divider(
-                    color: AppColors.backgroundColor,
-                    height: 30,
-                  ),
-                  bookingDetailsModel?.objTickets.type == "previntive"
-                      ? const SizedBox()
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text("📎 ${AppText(context).proAtt}",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: AppSize(context).smallText1)),
-                            InkWell(
-                              onTap: () =>
-                                  showAttachmentTicketBottomSheet(context),
-                              child: Text(
-                                AppText(context).viewAll,
-                                style: TextStyle(
-                                    color: AppColors.secoundryColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: AppSize(context).smallText2),
-                              ),
-                            ),
-                          ],
-                        ),
-                  bookingDetailsModel?.objTickets.ticketTools.isEmpty == true
-                      ? const SizedBox()
-                      : _buildSection(
-                          '🔨 ${AppText(context).requiredTools}',
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children:
-                                bookingDetailsModel?.objTickets.ticketTools
-                                        .map((tool) => Chip(
-                                              label: Text(tool["title"] ?? ""),
-                                              backgroundColor:
-                                                  AppColors(context)
-                                                      .primaryColor
-                                                      .withOpacity(.3),
-                                            ))
-                                        .toList() ??
-                                    [],
-                          )),
-                  bookingDetailsModel?.objTickets.ticketMaterials.isEmpty ==
-                          true
-                      ? const SizedBox()
-                      : _buildSection(
-                          '🧰 ${AppText(context).ticketM}',
-                          Wrap(
-                            spacing: 3,
-                            runSpacing: 3,
-                            children: bookingDetailsModel
-                                    ?.objTickets.ticketMaterials
-                                    .map((tool) => Chip(
-                                          label: Text(
-                                              "${tool["title"]}  x ${tool["quantity"]}" ??
-                                                  ""),
-                                          backgroundColor: tool["status"] ==
-                                                  "Pending"
-                                              ? AppColors(context)
-                                                  .primaryColor
-                                                  .withOpacity(.3)
-                                              : tool["status"] == "Rejected"
-                                                  ? Colors.red.withOpacity(.3)
-                                                  : Colors.green
-                                                      .withOpacity(.3),
-                                        ))
-                                    .toList() ??
-                                [],
-                          )),
-                  bookingDetailsModel?.objTickets.ticketMaterials.isEmpty ==
-                          true
-                      ? const SizedBox()
-                      : const Divider(
-                          color: AppColors.backgroundColor,
-                        ),
-                  bookingDetailsModel?.objTickets.type.toLowerCase() ==
-                          "preventive"
-                      ? _buildCompletionChecklist()
-                      : const SizedBox(),
+                  if (bookingDetailsModel?.objTickets.ticketTools.isNotEmpty == true)
+                    _buildSection(
+                        '🔨 ${AppText(context).requiredTools}',
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: bookingDetailsModel?.objTickets.ticketTools
+                                  .map((tool) => Chip(
+                                        label: Text(tool["title"] ?? ""),
+                                        backgroundColor: AppColors(context).primaryColor.withOpacity(.3),
+                                      ))
+                                  .toList() ??
+                              [],
+                        )),
+                  if (bookingDetailsModel?.objTickets.ticketMaterials.isNotEmpty == true)
+                    _buildSection(
+                        '🧰 ${AppText(context).ticketM}',
+                        Wrap(
+                          spacing: 3,
+                          runSpacing: 3,
+                          children: bookingDetailsModel?.objTickets.ticketMaterials
+                                  .map((tool) => Chip(
+                                        label: Text("${tool["title"]}  x ${tool["quantity"]}" ?? ""),
+                                        backgroundColor: tool["status"] == "Pending"
+                                            ? AppColors(context).primaryColor.withOpacity(.3)
+                                            : tool["status"] == "Rejected"
+                                                ? Colors.red.withOpacity(.3)
+                                                : Colors.green.withOpacity(.3),
+                                      ))
+                                  .toList() ??
+                              [],
+                        )),
+                  if (bookingDetailsModel?.objTickets.ticketMaterials.isNotEmpty == true) const Divider(color: AppColors.backgroundColor),
+                  if (bookingDetailsModel?.objTickets.type.toLowerCase() == "preventive") _buildCompletionChecklist(),
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
@@ -428,25 +310,17 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(AppText(context, isFunction: true).attachmentPreview,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(AppText(context, isFunction: true).attachmentPreview, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) {
                     return AttachmentsWidget(
-                      image: bookingDetailsModel
-                          ?.objTickets.ticketAttatchments[index]["filePath"]
-                          .toString()
-                          .split("-")
-                          .last,
-                      url: bookingDetailsModel
-                          ?.objTickets.ticketAttatchments[index]["filePath"],
+                      image: bookingDetailsModel?.objTickets.ticketAttatchments[index]["filePath"].toString().split("-").last,
+                      url: bookingDetailsModel?.objTickets.ticketAttatchments[index]["filePath"],
                     );
                   },
-                  itemCount:
-                      bookingDetailsModel?.objTickets.ticketAttatchments.length,
+                  itemCount: bookingDetailsModel?.objTickets.ticketAttatchments.length,
                   shrinkWrap: true),
               const SizedBox(height: 10),
             ],
@@ -471,25 +345,17 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(AppText(context, isFunction: true).attachmentPreview,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(AppText(context, isFunction: true).attachmentPreview, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
                 ListView.builder(
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (context, index) {
                       return AttachmentsWidget(
-                        image: bookingDetailsModel
-                            ?.objTickets.ticketImages[index]
-                            .toString()
-                            .split("-")
-                            .last,
-                        url:
-                            bookingDetailsModel?.objTickets.ticketImages[index],
+                        image: bookingDetailsModel?.objTickets.ticketImages[index].toString().split("-").last,
+                        url: bookingDetailsModel?.objTickets.ticketImages[index],
                       );
                     },
-                    itemCount:
-                        bookingDetailsModel?.objTickets.ticketImages.length,
+                    itemCount: bookingDetailsModel?.objTickets.ticketImages.length,
                     shrinkWrap: true),
                 const SizedBox(height: 10),
               ],
@@ -500,8 +366,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     );
   }
 
-  Widget _buildRow(String left, String right,
-      {String? leftValue, String? rightValue}) {
+  Widget _buildRow(String left, String right, {String? leftValue, String? rightValue}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -510,21 +375,13 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
           Row(
             children: [
               SizedBox(
-                child: Text("$left : ",
-                    style: TextStyle(
-                        color: AppColors.greyColor5,
-                        fontSize: AppSize(context).smallText2)),
+                child: Text("$left : ", style: TextStyle(color: AppColors.greyColor5, fontSize: AppSize(context).smallText2)),
               ),
               if (leftValue != null) ...[
                 const SizedBox(width: 4),
                 SizedBox(
                   width: AppSize(context).width * 0.4,
-                  child: Text(leftValue,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: AppSize(context).smallText2)),
+                  child: Text(leftValue, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w600, fontSize: AppSize(context).smallText2)),
                 ),
               ],
             ],
@@ -534,57 +391,15 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
               : Row(
                   children: [
                     SizedBox(
-                      child: Text("$right  ${":"} ",
-                          style: TextStyle(
-                              color: AppColors.greyColor5,
-                              fontSize: AppSize(context).smallText2)),
+                      child: Text("$right  ${":"} ", style: TextStyle(color: AppColors.greyColor5, fontSize: AppSize(context).smallText2)),
                     ),
                     ...[
-                    const SizedBox(width: 4),
-                    Text(rightValue,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: AppSize(context).smallText2)),
-                  ],
+                      const SizedBox(width: 4),
+                      Text(rightValue, style: TextStyle(fontWeight: FontWeight.w600, fontSize: AppSize(context).smallText2)),
+                    ],
                   ],
                 ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCustomerDetails() {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundColor: AppColors.whiteColor1,
-        child: bookingDetailsModel?.objTickets.customerImage == null
-            ? SvgPicture.asset(
-                "assets/icon/smile.svg",
-                color: AppColors(context).primaryColor,
-              )
-            : ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: CachedNetworkImage(
-                    imageUrl:
-                        bookingDetailsModel?.objTickets.customerImage ?? ""),
-              ),
-      ),
-      title: Text(bookingDetailsModel?.objTickets.customerName ?? "",
-          style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: AppSize(context).smallText1)),
-      trailing: const SizedBox(
-        width: 100, // ✅ Fixed here (gives constraints)
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(Icons.chat, color: AppColors.secoundryColor),
-            Icon(Icons.settings, color: AppColors.secoundryColor),
-            Icon(Icons.phone, color: AppColors.secoundryColor),
-          ],
-        ),
       ),
     );
   }
@@ -598,9 +413,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             title,
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: AppSize(context).smallText1),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText1),
           ),
         ),
         content,
@@ -615,40 +428,29 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
         children: [
           Row(
             children: [
-              Text('✅ ${AppText(context).completionChecklist}',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: AppSize(context).smallText1)),
+              Text('✅ ${AppText(context).completionChecklist}', style: TextStyle(fontWeight: FontWeight.w600, fontSize: AppSize(context).smallText1)),
             ],
           ),
           const SizedBox(height: 10),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount:
-                bookingDetailsModel?.objTickets.maintenanceTickets.length ?? 0,
+            itemCount: bookingDetailsModel?.objTickets.maintenanceTickets.length ?? 0,
             separatorBuilder: (context, index) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               return ListTile(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                      color: AppColors(context).primaryColor.withOpacity(0.3),
-                      width: 1),
+                  side: BorderSide(color: AppColors(context).primaryColor.withOpacity(0.3), width: 1),
                 ),
                 contentPadding: EdgeInsets.zero,
                 leading: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Icon(Icons.diamond,
-                      color: AppColors(context).primaryColor),
+                  child: Icon(Icons.diamond, color: AppColors(context).primaryColor),
                 ),
                 title: Text(
-                  bookingDetailsModel?.objTickets.maintenanceTickets[index]
-                          ["name"] ??
-                      "",
-                  style: TextStyle(
-                      fontSize: AppSize(context).smallText2,
-                      color: AppColors.blackColor1),
+                  bookingDetailsModel?.objTickets.maintenanceTickets[index]["name"] ?? "",
+                  style: TextStyle(fontSize: AppSize(context).smallText2, color: AppColors.blackColor1),
                 ),
               );
             },
@@ -664,9 +466,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      BookingApi.getBookingDetails(
-              token: appProvider.userModel?.token ?? "", id: widget.id)
-          .then((value) {
+      BookingApi.getBookingDetails(token: appProvider.userModel?.token ?? "", id: widget.id).then((value) {
         setState(() {
           bookingDetailsModel = value;
           loading = false;

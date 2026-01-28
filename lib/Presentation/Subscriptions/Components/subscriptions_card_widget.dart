@@ -192,8 +192,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       FeatureWidget(
                         color: widget.color,
                         feature: AppText(context).correctivevisits,
-                        value:
-                            widget.package?.numberOfRegularVisit == 100 ? AppText(context).unlimited : widget.package?.numberOfRegularVisit.toString() ?? "0",
+                        value: widget.package?.numberOfRegularVisit == 100 ? AppText(context).unlimited : widget.package?.numberOfRegularVisit.toString() ?? "0",
                       ),
                       FeatureWidget(
                         color: widget.color,
@@ -208,8 +207,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       FeatureWidget(
                         color: widget.color,
                         feature: AppText(context).emeregencyService,
-                        value:
-                            widget.package?.numberOfUrgentVisits == 100 ? AppText(context).unlimited : widget.package?.numberOfUrgentVisits.toString() ?? "0",
+                        value: widget.package?.numberOfUrgentVisits == 100 ? AppText(context).unlimited : widget.package?.numberOfUrgentVisits.toString() ?? "0",
                       ),
                       FeatureWidget(
                         color: widget.color,
@@ -219,7 +217,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       FeatureWidget(
                         color: widget.color,
                         feature: AppText(context).interiorDesign,
-                        value: widget.package?.interiorDesign == "0" ? "- \n  \n" : widget.package?.interiorDesign.toString() ?? "-  \n \n",
+                        value: widget.package?.interiorDesign == "0" ? "- - - - -" : widget.package?.interiorDesign.toString() ?? "- - - - -",
                       ),
                     ],
                   ),
@@ -369,10 +367,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                               showDialog(
                                 context: context,
                                 builder: (context) {
-                                  return WidgetDialog(
-                                      title: AppText(context, isFunction: true).warning,
-                                      desc: AppText(context, isFunction: true).pleaseCalculateFirst,
-                                      isError: true);
+                                  return WidgetDialog(title: AppText(context, isFunction: true).warning, desc: AppText(context, isFunction: true).pleaseCalculateFirst, isError: true);
                                 },
                               );
                               return;
