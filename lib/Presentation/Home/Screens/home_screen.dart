@@ -29,8 +29,9 @@ import 'package:wefix/Presentation/Components/widget_bottom_sheet.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/Home/Components/popular_section_widget.dart';
 import 'package:wefix/Presentation/Home/Components/services_list_widget.dart';
+import 'package:wefix/Presentation/Home/Components/slider_widget.dart';
 import 'package:wefix/Presentation/Home/Components/special_offer_widget.dart';
-import 'package:wefix/Presentation/Home/components/slider_widget.dart';
+import 'package:wefix/Presentation/Home/Components/steps_widget.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
 import 'package:wefix/Presentation/appointment/Components/border_animated_widget.dart';
@@ -51,6 +52,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool startsSearch = false;
 
   late TutorialCoachMark tutorialCoachMark;
+  
+  // GlobalKey to access B2BHome state for refreshing tickets
+  final GlobalKey<State<B2BHome>> _b2BHomeKey = GlobalKey<State<B2BHome>>();
+  
+  // Public method to refresh B2BHome tickets (called from layout_screen)
+  void refreshB2BHomeTickets() {
+    final state = _b2BHomeKey.currentState;
+    if (state != null && state.mounted) {
+      try {
+        // Call refreshTickets method using dynamic to access private _B2BHomeState
+        (state as dynamic).refreshTickets();
+      } catch (e) {
+        // Method doesn't exist or state is not B2BHome, ignore
+        debugPrint('Error refreshing B2BHome tickets: $e');
+      }
+    }
+  }
 
   final List<GlobalKey<State<StatefulWidget>>> keyButtons = [
     GlobalKey<State<StatefulWidget>>(),
@@ -121,7 +139,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     LanguageProvider languageProvider = Provider.of<LanguageProvider>(context);
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
 
-    return appProvider.userModel?.customer.roleId == 2
+    // Check if user is B2B user (MMS users: Admin 18, Team Leader 20, Technician 21, Sub-Technician 22)
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    
+    return isB2BUser
         ? loading5 == true
             ? Center(
                 child: CircularProgressIndicator(
@@ -145,6 +175,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     },
                   )
                 : B2BHome(
+                    key: _b2BHomeKey,
                     subsicripeModel: subsicripeModel,
                   )
         : Scaffold(
@@ -176,42 +207,45 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       const SizedBox(width: 5),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: AppSize(context).width * .3,
-                            child: Text(
-                              "${AppText(context).hello} ${appProvider.userModel?.customer.name ?? "Guest"} 🖐",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: AppSize(context).smallText2,
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              fit: FlexFit.loose,
+                              child: Text(
+                                "${AppText(context).hello} ${appProvider.userModel?.customer.name ?? "Guest"} 🖐",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: AppSize(context).smallText2,
+                                  height: 1.2,
+                                ),
                               ),
                             ),
-                          ),
-                          Text(
-                            DateFormat('MMM d, yyyy').format(DateTime.now()),
-                            style: TextStyle(
-                              fontSize: AppSize(context).smallText1,
+                            Flexible(
+                              fit: FlexFit.loose,
+                              child: Text(
+                                DateFormat('MMM d, yyyy').format(DateTime.now()),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: AppSize(context).smallText1,
+                                  height: 1.2,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       )
                     ],
                   ),
                 ),
               ),
               actions: [
-                const LanguageButton(),
-                const SizedBox(
-                  width: 5,
-                ),
-                SvgPicture.asset(
-                  "assets/icon/line.svg",
-                ),
                 InkWell(
                   onTap: () {
                     Navigator.push(context, rightToLeft(NotificationsScreen()));
@@ -225,6 +259,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
+                const SizedBox(
+                  width: 5,
+                ),
+                const LanguageButton(),
               ],
             ),
             body: (loading) == true
@@ -436,6 +474,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                                                       ),
                                                                     ],
                                                                   ),
+                                                                  if (ticketModel?.tickets[index].serviceprovide != null)
+                                                                    Padding(
+                                                                      padding: const EdgeInsets.only(top: 5),
+                                                                      child: Row(
+                                                                        children: [
+                                                                          const Text("👤 "),
+                                                                          Text(
+                                                                            "Technician: ${ticketModel?.tickets[index].serviceprovide ?? ""}",
+                                                                            style: TextStyle(
+                                                                              fontSize: AppSize(context).smallText2,
+                                                                              fontWeight: FontWeight.w500,
+                                                                              color: Colors.grey[700],
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
                                                                 ],
                                                               ),
                                                             )
@@ -561,6 +616,40 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Future isSubsicribed({isfromPlaceOreder = true}) async {
     AppProvider appProvider = Provider.of(context, listen: false);
 
+    // Skip for guest users (no token)
+    final isGuest = appProvider.userModel == null || 
+                   appProvider.userModel?.token == null || 
+                   appProvider.userModel!.token.isEmpty;
+    
+    if (isGuest) {
+      setState(() {
+        loading5 = false;
+      });
+      return;
+    }
+
+    // Skip isSubsicribe if user logged in via backend-mms (has accessToken)
+    // This endpoint is only for backend-oms users
+    // Check if user is B2B user (MMS users: Admin 18, Team Leader 20, Technician 21, Sub-Technician 22)
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    
+    if (appProvider.accessToken != null && isB2BUser) {
+      // User is logged in via backend-mms, skip backend-oms subscription check
+      setState(() {
+        loading5 = false;
+      });
+      return;
+    }
+
     setState(() {
       loading5 = true;
     });
@@ -586,10 +675,39 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future getActiveTicket() async {
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    
+    // Skip for guest users (no token)
+    final isGuest = appProvider.userModel == null || 
+                   appProvider.userModel?.token == null || 
+                   appProvider.userModel!.token.isEmpty;
+    
+    if (isGuest) {
+      return;
+    }
+    
+    // Skip for B2B users (MMS users) - they use MMS API endpoints, not OMS
+    // B2B users should use getCompanyTicketsFromMMS() in B2B home screen
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    
+    if (isB2BUser) {
+      // B2B users use MMS API, skip this OMS endpoint call
+      return;
+    }
+    
+    if (!mounted) return;
     setState(() {
       loading2 = true;
     });
-    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
       BookingApi.getActiveTicket(token: appProvider.userModel?.token ?? "").then((value) {
         setState(() {
@@ -599,6 +717,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       });
     } catch (e) {
       log(e.toString());
+      if (!mounted) return;
       setState(() {
         loading2 = false;
       });
@@ -606,11 +725,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future getAllHomeApis() async {
+    if (!mounted) return;
     await Permission.notification.request();
+    if (!mounted) return;
     setState(() {
       loading = true;
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    
+    // For guest users, pass null token instead of empty string
+    final token = appProvider.userModel?.token;
+    final isGuest = token == null || token.isEmpty;
+    
     try {
       HomeApis.allHomeApis(token: appProvider.userModel?.token ?? "").then((value) {
         setState(() {
@@ -620,6 +746,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       });
     } catch (e) {
       log(e.toString());
+      if (!mounted) return;
       setState(() {
         loading = false;
       });

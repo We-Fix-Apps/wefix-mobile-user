@@ -78,7 +78,7 @@
   "FamilyNumber": "Family Number",
 
   "verify": "verify",
-  "verifyYourMobailNumber": "Verify Your Mobail Number",
+  "verifyYourMobailNumber": "Verify Your Mobile Number",
   "wesentcodetothenumber": "We sent code to the number",
   "dontreceivecode": "Dont receive code ?",
   "resend": "Resend",
@@ -210,7 +210,7 @@
 ,
 "customerDetails" : "Customer Details"
  ,
- "issueDescription" : "Issue Description"
+ "issueDescription" : "Problem Description"
  , 
  "serviceProviderActions" : "Service Provider Actions"
 
@@ -232,7 +232,14 @@
 
 
 , 
-"Youhavetochooseproparety" : "You have to choose proparety"
+"Youhavetochooseproparety" : "You have to choose proparety",
+"companyPersonnel" : "Company Personnel",
+"regularUser" : "Regular User",
+"invalidEmail" : "Invalid email address",
+"emailRequired" : "Email is required",
+"passwordRequired" : "Password is required",
+"loginFailed" : "Login failed",
+"invalidCredentials" : "Invalid login credentials"
 
 
 

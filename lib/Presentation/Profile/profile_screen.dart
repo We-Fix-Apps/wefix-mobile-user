@@ -1,15 +1,18 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Profile/Components/web_view_screen.dart';
-import 'package:wefix/Presentation/Profile/Screens/contract_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
+import 'package:wefix/Presentation/Profile/Screens/contract_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/proparity_screen.dart';
 import 'package:wefix/Presentation/auth/login_screen.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
@@ -19,6 +22,7 @@ import 'package:wefix/Presentation/Profile/Screens/profile_info_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/EditUser/edit_mobile_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/EditUser/change_password_screen.dart';
 import 'package:wefix/Presentation/wallet/screens/wallet_screen.dart';
+import 'package:wefix/l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);

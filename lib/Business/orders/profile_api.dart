@@ -1,8 +1,16 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:wefix/Business/end_points.dart';
 import 'package:wefix/Data/Api/http_request.dart';
 import 'package:wefix/Data/model/holiday_model.dart';
+import 'package:wefix/main.dart' show navigatorKey;
+import 'package:wefix/Business/AppProvider/app_provider.dart';
+import 'package:wefix/Presentation/auth/login_screen.dart';
+import 'package:wefix/Data/Functions/navigation.dart';
 
 import 'package:wefix/Data/model/profile_model.dart';
 import 'package:wefix/Data/model/realstate_model.dart';
@@ -10,6 +18,23 @@ import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Data/model/time_appointment_model.dart';
 
 class ProfileApis {
+  // Force logout when server is down (502 Bad Gateway)
+  static void _forceLogoutOnServerDown() {
+    try {
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        final appProvider = Provider.of<AppProvider>(context, listen: false);
+        appProvider.clearUser();
+        Navigator.of(context).pushAndRemoveUntil(
+          rightToLeft(const LoginScreen()),
+          (route) => true,
+        );
+        log('Force logout: Server is down (502 Bad Gateway)');
+      }
+    } catch (e) {
+      log('Error during force logout: $e');
+    }
+  }
   static Future getAddress({required String token}) async {
     try {
       final response = await HttpHelper.getData(
@@ -79,13 +104,17 @@ class ProfileApis {
 
       log('isSubsicribe() [ STATUS ] -> ${response.statusCode}');
 
-      final body = json.decode(response.body);
-
       if (response.statusCode == 200) {
+        // Check if response body is not empty before decoding
+        if (response.body.isNotEmpty) {
+          final body = json.decode(response.body);
         subsicripeModel = SubsicripeModel.fromJson(body);
         return subsicripeModel;
+        } else {
+          return null;
+        }
       } else {
-        return false;
+        return null;
       }
     } catch (e) {
       log('isSubsicribe() [ ERROR ] -> $e');
@@ -370,21 +399,50 @@ class ProfileApis {
   static ProfileModel? profileModel;
   static Future<ProfileModel?> getProfileData({
     required String token,
+    bool? isCompany,
   }) async {
     try {
-      final response = await HttpHelper.getData(
-        query: EndPoints.getProfile,
-        token: token,
-      );
+      // Use backend-mms endpoint only if user is company personnel (roleId == 2)
+      final bool useMMS = isCompany == true;
+      
+      final url = useMMS 
+          ? Uri.parse('${EndPoints.mmsBaseUrl}${EndPoints.getProfile}')
+          : Uri.parse('${EndPoints.baseUrl}${EndPoints.getProfile}');
+      
+      var headers = {
+        'Content-Type': 'application/json',
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer $token',
+      };
+      
+      final response = await http.get(url, headers: headers);
 
-      log('getProfileData() [ STATUS ] -> ${response.statusCode}');
-
-      final body = json.decode(response.body);
-
+      // Check status code before parsing JSON
       if (response.statusCode == 200) {
+        // Check if response body is not empty
+        if (response.body.isEmpty || response.body.trim().isEmpty) {
+          log('getProfileData() [ WARNING ] -> Empty response body');
+          return null;
+        }
+        
+        try {
+          final body = json.decode(response.body);
         profileModel = ProfileModel.fromJson(body);
         return profileModel;
+        } catch (parseError) {
+          log('getProfileData() [ PARSE ERROR ] -> $parseError');
+          return null;
+        }
       } else {
+        // For non-200 status codes, don't try to parse JSON
+        log('getProfileData() [ ERROR ] -> Status ${response.statusCode}, body: ${response.body.isNotEmpty ? response.body.substring(0, response.body.length > 100 ? 100 : response.body.length) : "empty"}');
+        
+        // Force logout if server is down (502 Bad Gateway)
+        if (response.statusCode == 502) {
+          _forceLogoutOnServerDown();
+        }
+        
         return null;
       }
     } catch (e) {
@@ -416,6 +474,61 @@ class ProfileApis {
       final body = json.decode(response.body);
     } catch (e) {
       log('editProfile() [ ERROR ] -> $e');
+      return null;
+    }
+  }
+
+  // Update profile using backend-mms (with file upload support)
+  static Future<ProfileModel?> updateProfileMMS({
+    required String token,
+    required String firstName,
+    required String lastName,
+    required String email,
+    File? imageFile,
+    String? existingImageUrl,
+  }) async {
+    try {
+      final url = Uri.parse('${EndPoints.mmsBaseUrl}${EndPoints.updateProfile}');
+      
+      var request = http.MultipartRequest('PUT', url);
+      
+      // Add headers
+      request.headers['Authorization'] = 'Bearer $token';
+      
+      // Add text fields
+      request.fields['email'] = email;
+      request.fields['firstname'] = firstName;
+      request.fields['lastname'] = lastName;
+      
+      // Add image file if provided
+      if (imageFile != null && await imageFile.exists()) {
+        request.files.add(
+          await http.MultipartFile.fromPath('profileImage', imageFile.path),
+        );
+      } else if (existingImageUrl != null && existingImageUrl.isNotEmpty) {
+        // If no new image but existing image URL, send it as a field
+        request.fields['profileImage'] = existingImageUrl;
+      }
+      
+      // Send request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      log('updateProfileMMS() [ STATUS ] -> ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true && body['profile'] != null) {
+          profileModel = ProfileModel.fromJson(body);
+          return profileModel;
+        }
+      } else {
+        log('updateProfileMMS() [ ERROR ] -> Status ${response.statusCode}, body: ${response.body}');
+      }
+      
+      return null;
+    } catch (e) {
+      log('updateProfileMMS() [ ERROR ] -> $e');
       return null;
     }
   }

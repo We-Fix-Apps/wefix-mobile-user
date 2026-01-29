@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/B2b/b2b_api.dart';
@@ -25,6 +26,8 @@ import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/main.dart';
 import '../../../Business/orders/profile_api.dart';
+import 'package:wefix/l10n/app_localizations.dart';
+
 
 
 class AppoitmentDetailsScreen extends StatefulWidget {
@@ -102,7 +105,6 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
 
   @override
   void initState() {
-    getRealState();
     getBranches();
     getAdv();
 
@@ -166,7 +168,7 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
         actions: const [
           LanguageButton(),
         ],
-        title: Text(AppText(context).appointmentDetails),
+        title: Text(AppLocalizations.of(context)!.ticketSummary),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -187,10 +189,23 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
                         DateTimeWidget(
                           dateKey: keyButton[0],
                           featureKey: keyButton[1],
-                          date: appProvider.appoitmentInfo["date"]
-                              .toString()
-                              .substring(0, 10),
-                          time: appProvider.appoitmentInfo["time"].toString(),
+                          date: (() {
+                            final dateValue = appProvider.appoitmentInfo["date"];
+                            if (dateValue == null) return '';
+                            if (dateValue is DateTime) {
+                              return DateFormat('yyyy-MM-dd').format(dateValue);
+                            }
+                            final dateStr = dateValue.toString();
+                            // Try to parse as DateTime first
+                            try {
+                              final parsedDate = DateTime.parse(dateStr);
+                              return DateFormat('yyyy-MM-dd').format(parsedDate);
+                            } catch (e) {
+                              // If parsing fails, return first 10 characters if available
+                              return dateStr.length >= 10 ? dateStr.substring(0, 10) : dateStr;
+                            }
+                          })(),
+                          time: appProvider.appoitmentInfo["time"]?.toString() ?? '',
                         ),
                         appProvider.userModel?.customer.roleId == 2
                             ? const SizedBox()
@@ -549,11 +564,13 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
 
   Future getBranches() async {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    if (!mounted) return;
     setState(() {
       loading = true;
     });
     B2bApi.getBranches(token: appProvider.userModel?.token ?? '').then((value) {
-      if (value != null) {
+      if (!mounted) return;
+      if (value != null && value is BranchesModel) {
         setState(() {
           loading = false;
           branchesModel = value;
@@ -561,8 +578,15 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
       } else {
         setState(() {
           loading = false;
+          branchesModel = null;
         });
       }
+    }).catchError((error) {
+      if (!mounted) return;
+      setState(() {
+        loading = false;
+        branchesModel = null;
+      });
     });
   }
 
@@ -599,34 +623,6 @@ class _AppoitmentDetailsScreenState extends State<AppoitmentDetailsScreen>
         );
       },
     );
-  }
-
-  Future getRealState() async {
-    AppProvider appProvider = Provider.of(context, listen: false);
-
-    if (mounted) {
-      setState(() {
-        loading = true;
-      });
-    }
-    await ProfileApis.getRealState(
-      token: '${appProvider.userModel?.token}',
-    ).then((value) {
-      if (value != null) {
-        if (mounted) {
-          setState(() {
-            loading = false;
-            realEstatesModel = value;
-          });
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            loading = false;
-          });
-        }
-      }
-    });
   }
 
   Future getAdv() async {

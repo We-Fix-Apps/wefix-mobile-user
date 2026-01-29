@@ -16,7 +16,30 @@ class AppText {
   String get langCode => languages ?? 'en';
 
   String getTranslation(String key) {
-    return languageProvider.allLanguage.where((element) => element.key == langCode).toList().first.languages?.firstWhere((element) => element.wordKey == key).value ?? '';
+    
+    try {
+      final languageList = languageProvider.allLanguage
+            .where((element) => element.key == langCode)
+          .toList();
+      
+      if (languageList.isEmpty) return '';
+      
+      final languages = languageList.first.languages;
+      if (languages == null || languages.isEmpty) return '';
+      
+      try {
+        final translation = languages.firstWhere(
+          (element) => element.wordKey == key,
+        );
+        return translation.value ?? '';
+      } catch (e) {
+        // Translation key not found, return empty string
+        return '';
+      }
+    } catch (e) {
+      // Return empty string if any error occurs
+      return '';
+    }
   }
 
   String get submitFeedback => getTranslation('submitFeedback');
@@ -241,6 +264,14 @@ class AppText {
   String get weFixStations => getTranslation('weFixStations');
   String get supportType => getTranslation('supportType');
   String get bookings => getTranslation('bookings');
+  String get tickets {
+    final translation = getTranslation('tickets');
+    // Fallback if translation not found in backend
+    if (translation.isEmpty) {
+      return langCode == 'ar' ? 'تذاكر' : 'Tickets';
+    }
+    return translation;
+  }
   String get callforemergency => getTranslation('callforemergency');
   String get call => getTranslation('call');
   String get welcomePleaseenteryourdetailsbelow => getTranslation('welcomePleaseenteryourdetailsbelow');
@@ -268,6 +299,16 @@ class AppText {
   String get yourtransactionhasbeenfailed => getTranslation('yourtransactionhasbeenfailed');
   String get yourtransactionhasbeensuccessfullycompleted => getTranslation('yourtransactionhasbeensuccessfullycompleted');
   String get estimatedTimeToArrivalminutes => getTranslation('estimatedTimeToArrivalminutes');
+  String get subscribenowandsave50JODDonmissoutonthisspecialoffer =>
+      getTranslation('subscribenowandsave50JODDonmissoutonthisspecialoffer');
+  String get yourtransactionhasbeenfailed =>
+      getTranslation('yourtransactionhasbeenfailed');
+  String get yourtransactionhasbeensuccessfullycompleted =>
+      getTranslation('yourtransactionhasbeensuccessfullycompleted');
+  String get estimatedTimeToArrivalminutes =>
+      getTranslation('estimatedTimeToArrivalminutes');
+  String get responseTime => getTranslation('responseTime');
+  String get minutes => getTranslation('minutes');
   String get chooseTechniciaGender => getTranslation('chooseTechniciaGender');
   String get sincethematerialcostexceeds100JODanupfrontpaymentof50requiredWetouchwithyoutoconfirmthematerialprice =>
       getTranslation('sincethematerialcostexceeds100JODanupfrontpaymentof50requiredWetouchwithyoutoconfirmthematerialprice');
@@ -580,4 +621,8 @@ class AppText {
   String get totalAfterDiscount => getTranslation('totalafterdiscount');
   String get orderSentSuccessfully => getTranslation('orderSentSuuc');
   String get weArePless => getTranslation('weArePless');
+  String get serviceUnavailable => getTranslation('serviceUnavailable');
+  String get accountDoesNotExist => getTranslation('accountDoesNotExist');
+  String get accountInactive => getTranslation('accountInactive');
+  String get pleaseLoginWithMobileNumber => getTranslation('pleaseLoginWithMobileNumber');
 }

@@ -11,7 +11,9 @@ import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
+import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Business/upload_files_list.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
@@ -24,6 +26,7 @@ import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:video_player/video_player.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:open_file/open_file.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:wefix/main.dart';
 
 import '../../../Data/Helper/cache_helper.dart';
@@ -52,7 +55,9 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   Timer? _timer;
   int _seconds = 0;
 
+  // Permissions are now requested on app launch, so this is just a safety check
   Future<void> _requestPermissionsOnce() async {
+    // Check and request if needed (should already be granted from app launch)
     await [
       Permission.microphone,
       Permission.storage,
@@ -77,66 +82,150 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     }
   }
 
-  // Pick from camera
+  // Pick from camera - acts like SquaredImageUploader with support for both photo and video
   Future<void> pickFromCamera() async {
-    final status = await Permission.camera.request();
+    if (!mounted) return;
 
-    // ignore: use_build_context_synchronously
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    var isArabic = languageProvider.lang == 'ar';
+    
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera),
-              title: Text(AppText(context).takeAPictureFromCamera),
-              onTap: () async {
-                final picked = await _imagePicker.pickImage(source: ImageSource.camera);
-                if (picked != null) {
-                  setState(() {
-                    imagePath = picked.path;
-                    uploadedFiles.add({
-                      "file": null,
-                      "audio": null,
-                      "image": picked.path,
-                    });
-                    // noteController.clear();
-                  });
-                }
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.videocam),
-              title: Text(AppText(context).recordVideo),
-              onTap: () async {
-                final picked = await _imagePicker.pickVideo(source: ImageSource.camera);
-                if (picked != null) {
-                  setState(() {
-                    imagePath = picked.path;
-                    uploadedFiles.add({
-                      "file": null,
-                      "audio": null,
-                      "image": picked.path,
-                    });
-                    noteController.clear();
-                  });
-                }
-                // Navigator.pop(context);
-              },
-            ),
-          ],
+        return Directionality(
+          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: Text(AppText(context).takeAPictureFromCamera),
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (!mounted) return;
+                  
+                  // For iOS, add small delay to ensure modal is fully closed
+                  if (Platform.isIOS) {
+                    await Future.delayed(const Duration(milliseconds: 300));
+                    if (!mounted) return;
+                  }
+                  
+                  // Capture images like SquaredImageUploader
+                  await _captureImageFromCamera();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.videocam),
+                title: Text(AppText(context).recordVideo),
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (!mounted) return;
+                  
+                  // For iOS, add small delay to ensure modal is fully closed
+                  if (Platform.isIOS) {
+                    await Future.delayed(const Duration(milliseconds: 300));
+                    if (!mounted) return;
+                  }
+                  
+                  // Capture video
+                  await _captureVideoFromCamera();
+                },
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
+  // Capture image from camera - single photo capture (no continuous loop)
+  Future<void> _captureImageFromCamera() async {
+    // For iOS, add small delay to ensure any modal is fully closed
+    if (Platform.isIOS) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+    }
+
+    final XFile? image = await _imagePicker.pickImage(source: ImageSource.camera);
+    if (image != null) {
+      final File imageFile = File(image.path);
+      
+      // Compress image like SquaredImageUploader
+      final compressedData = await FlutterImageCompress.compressWithFile(
+        image.path,
+        minWidth: 1024,
+        minHeight: 1024,
+        quality: 70,
+      );
+
+      File tempFile;
+      if (compressedData != null) {
+        final tempDir = await getTemporaryDirectory();
+        tempFile = File(
+            '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_temp_img.jpg');
+        await tempFile.writeAsBytes(compressedData);
+      } else {
+        tempFile = imageFile; // Use the original if compression is null
+      }
+
+      if (mounted) {
+        setState(() {
+          imagePath = tempFile.path;
+          uploadedFiles.add({
+            "file": null,
+            "audio": null,
+            "image": tempFile.path,
+          });
+        });
+      }
+    }
+  }
+
+  // Capture video from camera
+  Future<void> _captureVideoFromCamera() async {
+    if (!mounted) return;
+    
+    // For iOS, add small delay to ensure any modal is fully closed
+    if (Platform.isIOS) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+    }
+
+    final XFile? video = await _imagePicker.pickVideo(source: ImageSource.camera);
+    if (video != null && mounted) {
+      setState(() {
+        imagePath = video.path;
+        uploadedFiles.add({
+          "file": null,
+          "audio": null,
+          "image": video.path,
+        });
+      });
+    }
+  }
+
   Future uploadFile({List? files}) async {
     AppProvider appProvider = Provider.of(context, listen: false);
 
-    await UpladeFiles.upladeImagesWithPaths(token: '${appProvider.userModel?.token}', filePaths: extractedPaths).then((value) {
-      log(value.toString());
+    // Check if this is being used from ticket creation (has 'fromTicketCreation' flag)
+    final isFromTicketCreation = widget.data?['fromTicketCreation'] == true;
+    
+    if (isFromTicketCreation) {
+      // For ticket creation, just return the uploaded files without navigating
+      setState(() {
+        loading = false;
+      });
+      Navigator.pop(context, {
+        'uploadedFiles': uploadedFiles,
+        'note': noteController.text,
+      });
+      return;
+    }
+
+    // Original flow for appointment creation
+    await UpladeFiles.upladeImagesWithPaths(
+            token: '${appProvider.userModel?.token}', filePaths: extractedPaths)
+        .then((value) {
       if (value != null) {
         Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
           setState(() {
@@ -216,14 +305,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       //   "audio": audioPath,
       //   "image": imagePath,
       // });
-      setState(() {
-        appProvider.saveDesc(noteController.text);
-        log(appProvider.desc.text.toString());
-      });
-      log(" uploadded fillle : ${uploadedFiles.toString()}");
       extractFilePaths(uploadedFiles);
-
-      log("Extracted paths: $extractedPaths");
     }
   }
 
@@ -245,7 +327,6 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       }
     }
 
-    log(extractedPaths.toString());
 
     return extractedPaths;
   }
@@ -279,24 +360,40 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   ];
   @override
   void initState() {
-    Permission.camera.request();
+    // Initialize uploadedFiles from data if provided (for ticket creation)
+    if (widget.data != null && widget.data!['uploadedFiles'] != null) {
+      uploadedFiles = List<Map<String, String?>>.from(widget.data!['uploadedFiles'] as List);
+    }
+    
     _requestPermissionsOnce();
 
     try {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         CustomeTutorialCoachMark.createTutorial(keyButton, content);
         Future.delayed(const Duration(seconds: 1), () {
-          Map showTour = json.decode(CacheHelper.getData(key: CacheHelper.showTour));
-          CustomeTutorialCoachMark.showTutorial(context, isShow: showTour["addAttachment"] ?? true);
-          setState(() {
-            showTour["addAttachment"] = false;
-          });
-          CacheHelper.saveData(key: CacheHelper.showTour, value: json.encode(showTour));
-          log(showTour.toString());
+          if (!mounted) return;
+          try {
+            final tourData = CacheHelper.getData(key: CacheHelper.showTour);
+            Map showTour;
+            if (tourData == null || tourData is! String) {
+              showTour = {};
+            } else {
+              showTour = json.decode(tourData as String);
+            }
+            if (mounted) {
+              CustomeTutorialCoachMark.showTutorial(context,
+                  isShow: showTour["addAttachment"] ?? true);
+              setState(() {
+                showTour["addAttachment"] = false;
+              });
+              CacheHelper.saveData(
+                  key: CacheHelper.showTour, value: json.encode(showTour));
+            }
+          } catch (e) {
+          }
         });
       });
     } catch (e) {
-      log(e.toString());
     }
 
     super.initState();
@@ -307,6 +404,52 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     noteController.clear();
     _timer?.cancel();
     super.dispose();
+  }
+
+  // Helper function to determine if a file is a video
+  bool _isVideoFile(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.mp4') ||
+        lowerPath.endsWith('.mov') ||
+        lowerPath.endsWith('.avi') ||
+        lowerPath.endsWith('.mkv') ||
+        lowerPath.endsWith('.m4v') ||
+        lowerPath.endsWith('.webm');
+  }
+
+  // Helper function to determine if a file is an image
+  bool _isImageFile(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.jpg') ||
+        lowerPath.endsWith('.jpeg') ||
+        lowerPath.endsWith('.png') ||
+        lowerPath.endsWith('.gif') ||
+        lowerPath.endsWith('.bmp') ||
+        lowerPath.endsWith('.webp');
+  }
+
+  // Helper function to get the appropriate icon for a file
+  Widget _getFileIcon(Map<String, String?> file) {
+    // Check audio files first
+    if (file["audio"] != null) {
+      return SvgPicture.asset("assets/icon/mp4.svg", width: 40);
+    }
+    
+    // Check video files
+    final filePath = file["file"] ?? file["image"];
+    if (_isVideoFile(filePath)) {
+      return SvgPicture.asset("assets/icon/vid.svg", width: 40);
+    }
+    
+    // Check image files
+    if (_isImageFile(filePath)) {
+      return SvgPicture.asset("assets/icon/imge.svg", width: 40);
+    }
+    
+    // Default to file icon for other types
+    return SvgPicture.asset("assets/icon/file.svg", width: 40);
   }
 
   @override
@@ -371,16 +514,51 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Container(
-              key: keyButton[3],
-              child: WidgetTextField(
-                AppText(context).describeyourproblem,
-                maxLines: 4,
-                controller: noteController,
-              ),
+            // Hide "describe your problem" field for company users (roleId: 18, 20, 26)
+            Builder(
+              builder: (context) {
+                final appProvider = Provider.of<AppProvider>(context, listen: false);
+                final roleId = appProvider.userModel?.customer.roleId;
+                int? roleIdInt;
+                
+                if (roleId != null) {
+                  if (roleId is int) {
+                    roleIdInt = roleId;
+                  } else if (roleId is String) {
+                    roleIdInt = int.tryParse(roleId);
+                  } else {
+                    roleIdInt = int.tryParse(roleId.toString());
+                  }
+                }
+                
+                // Company roles: 18 (Company Admin), 20 (Team Leader), 26 (Super User)
+                final isCompany = roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 26;
+                
+                if (isCompany) {
+                  return const SizedBox.shrink();
+                }
+                
+                return Column(
+                  children: [
+                    Container(
+                      key: keyButton[3],
+                      child: WidgetTextField(
+                        AppText(context).describeyourproblem,
+                        maxLines: 4,
+                        controller: noteController,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                );
+              },
             ),
-            const SizedBox(height: 20),
-            uploadedFiles.isEmpty ? const SizedBox() : Text(AppText(context).attachments, style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold)),
+            uploadedFiles.isEmpty
+                ? const SizedBox()
+                : Text(AppText(context).attachments,
+                    style: TextStyle(
+                        fontSize: AppSize(context).smallText1,
+                        fontWeight: FontWeight.bold)),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -395,19 +573,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                       borderRadius: BorderRadius.circular(12),
                       side: const BorderSide(color: AppColors.greyColor1),
                     ),
-                    leading: file["file"]?.endsWith("mp4") ?? false
-                        ? SvgPicture.asset("assets/icon/vid.svg", width: 40)
-                        : file["audio"] != null
-                            ? SvgPicture.asset("assets/icon/mp4.svg", width: 40)
-                            : file["image"] != null
-                                ? file["image"]?.endsWith("mp4") ?? false
-                                    ? SvgPicture.asset("assets/icon/vid.svg", width: 40)
-                                    : SvgPicture.asset("assets/icon/imge.svg", width: 40)
-                                : ((file["image"]?.endsWith("png") ?? false) || (file["image"]?.endsWith("jpg") ?? false))
-                                    ? SvgPicture.asset("assets/icon/imge.svg", width: 40)
-                                    : ((file["file"]?.endsWith("png") ?? false) || (file["file"]?.endsWith("jpg") ?? false))
-                                        ? SvgPicture.asset("assets/icon/imge.svg", width: 40)
-                                        : SvgPicture.asset("assets/icon/file.svg", width: 40),
+                    leading: _getFileIcon(file),
                     title: Text(
                       file["filename"] ?? file["audio"]?.split('/').last ?? file["image"]?.split('/').last ?? "",
                       maxLines: 1,
@@ -469,7 +635,6 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
 
   void openMyFile(String filePath) async {
     final result = await OpenFile.open(filePath);
-    print("File open result: ${result.message}");
   }
 }
 
@@ -512,31 +677,80 @@ class VideoPlayerWidget extends StatefulWidget {
 }
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(File(widget.filePath))
-      ..initialize().then((_) {
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    if (_isDisposed) return;
+    
+    _controller = VideoPlayerController.file(File(widget.filePath));
+    
+    try {
+      await _controller!.initialize();
+      // Only update state if still mounted and not disposed
+      if (mounted && !_isDisposed && _controller != null) {
         setState(() {});
-      });
+      }
+    } catch (error) {
+      // Handle initialization error
+      if (mounted && !_isDisposed) {
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return _controller.value.isInitialized
+    if (_controller == null || _isDisposed) {
+      return const CircularProgressIndicator();
+    }
+    
+    // Double check before using controller
+    final controller = _controller;
+    if (controller == null || _isDisposed) {
+      return const CircularProgressIndicator();
+    }
+    
+    return controller.value.isInitialized
         ? AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
+            aspectRatio: controller.value.aspectRatio,
+            child: VideoPlayer(controller),
           )
         : const CircularProgressIndicator();
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
+    
+    // Store reference and clear immediately
+    final controller = _controller;
+    _controller = null;
+    
+    // Dispose asynchronously to avoid blocking
+    if (controller != null) {
+      Future.microtask(() async {
+        try {
+          // Wait a bit for any pending operations
+          await Future.delayed(const Duration(milliseconds: 50));
+          
+          if (controller.value.isInitialized) {
+            await controller.pause();
+          }
+          
+          controller.dispose();
+        } catch (e) {
+          // Silently catch disposal errors
+        }
+      });
+    }
+    
     super.dispose();
-    _controller.dispose();
   }
 }
 

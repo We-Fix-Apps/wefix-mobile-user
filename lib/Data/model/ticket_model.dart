@@ -51,11 +51,23 @@ class Ticket {
   int? customerPackageId;
   double totalPrice;
   dynamic serviceprovide;
+  String? serviceprovideName; // Technician name (Arabic)
+  String? serviceprovideNameEnglish; // Technician name (English)
   String? serviceprovideImage;
   String? description;
   String? descriptionAr;
   String? icon;
+  String? mainServiceTitle;
+  String? mainServiceNameArabic;
+  String? ticketTitle;
   bool? cancelButton;
+  String? ticketCodeId;
+  int? delegatedToCompanyId;
+  String? delegatedToCompanyTitle;
+  int? companyId; // Original company that created the ticket
+  String? companyTitle; // Original company name that delegated the ticket (title/fallback)
+  String? companyNameArabic; // Company name in Arabic
+  String? companyNameEnglish; // Company name in English
 
   Ticket({
     required this.id,
@@ -64,10 +76,20 @@ class Ticket {
     required this.ticketTypeId,
     this.rating,
     this.icon,
+    this.mainServiceTitle,
+    this.mainServiceNameArabic,
+    this.ticketTitle,
     this.cancelButton,
     this.isRated,
     this.type,
     this.serviceprovideImage,
+    this.ticketCodeId,
+    this.delegatedToCompanyId,
+    this.delegatedToCompanyTitle,
+    this.companyId,
+    this.companyTitle,
+    this.companyNameArabic,
+    this.companyNameEnglish,
     required this.promoCode,
     required this.requestedDate,
     required this.selectedDate,
@@ -86,6 +108,8 @@ class Ticket {
     required this.customerPackageId,
     required this.totalPrice,
     required this.serviceprovide,
+    this.serviceprovideName,
+    this.serviceprovideNameEnglish,
     required this.description,
     required this.descriptionAr,
   });
@@ -102,6 +126,16 @@ class Ticket {
         promoCode: json["promoCode"],
         rating: json["rating"],
         icon: json["icon"],
+        mainServiceTitle: json["mainServiceTitle"],
+        mainServiceNameArabic: json["mainServiceNameArabic"],
+        ticketTitle: json["ticketTitle"],
+        ticketCodeId: json["ticketCodeId"],
+        delegatedToCompanyId: json["delegatedToCompanyId"],
+        delegatedToCompanyTitle: json["delegatedToCompanyTitle"],
+        companyId: json["companyId"],
+        companyTitle: json["company"]?["title"] ?? null,
+        companyNameArabic: json["companyNameArabic"],
+        companyNameEnglish: json["companyNameEnglish"],
         requestedDate: DateTime.parse(json["requestedDate"]),
         selectedDate: DateTime.parse(json["selectedDate"]),
         selectedDateTime: json["selectedDateTime"],
@@ -119,6 +153,8 @@ class Ticket {
         customerPackageId: json["customerPackageId"],
         totalPrice: (json["totalPrice"] as num).toDouble(),
         serviceprovide: json["serviceprovide"],
+        serviceprovideName: json["serviceprovideName"],
+        serviceprovideNameEnglish: json["serviceprovideNameEnglish"],
         description: json["description"],
         descriptionAr: json["descriptionAr"],
       );
@@ -136,8 +172,19 @@ class Ticket {
         "timeTo": timeTo,
         "type": type,
         "icon": icon,
+        "mainServiceTitle": mainServiceTitle,
+        "mainServiceNameArabic": mainServiceNameArabic,
+        "ticketTitle": ticketTitle,
+        "ticketCodeId": ticketCodeId,
+        "delegatedToCompanyId": delegatedToCompanyId,
+        "delegatedToCompanyTitle": delegatedToCompanyTitle,
+        "companyId": companyId,
+        "companyTitle": companyTitle,
+        "companyNameArabic": companyNameArabic,
+        "companyNameEnglish": companyNameEnglish,
         "teamNo": teamNo,
         "isRated": isRated,
+        "cancelButton": cancelButton,
         "status": status,
         "statusAr": statusAr,
         "location": location,
@@ -150,6 +197,8 @@ class Ticket {
         "customerPackageId": customerPackageId,
         "totalPrice": totalPrice,
         "serviceprovide": serviceprovide,
+        "serviceprovideName": serviceprovideName,
+        "serviceprovideNameEnglish": serviceprovideNameEnglish,
         "description": description,
         "descriptionAr": descriptionAr,
       };

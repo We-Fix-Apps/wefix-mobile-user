@@ -11,10 +11,14 @@ import 'package:wefix/Business/language/language_api.dart';
 
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Data/Functions/token_utils.dart';
+import 'package:wefix/Data/Helper/cache_helper.dart';
 
 import 'package:wefix/Data/model/user_model.dart';
-import 'package:wefix/Presentation/Auth/login_screen.dart';
+import 'package:wefix/Presentation/auth/login_screen.dart';
 import 'package:wefix/layout_screen.dart';
+import 'package:wefix/Data/services/version_check_service.dart';
+import 'package:wefix/Presentation/VersionCheck/version_check_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   final UserModel? userModel;
@@ -26,35 +30,71 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   bool _isVideoInitialized = false;
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
 
-    _controller =
-        VideoPlayerController.asset("assets/video/wefix_logo_motion.mp4")
-          ..initialize().then((_) {
-            setState(() {
-              _isVideoInitialized = true;
-            });
-            _controller.play();
-          });
+    _initializeVideo();
 
     // Skip the video after 3 seconds
     Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
-        navigatorToFirstPage();
+        checkVersionAndNavigate();
       }
     });
 
     getAppLanguage();
   }
 
+  Future<void> _initializeVideo() async {
+    if (_isDisposed) return;
+    
+    _controller = VideoPlayerController.asset("assets/video/wefix_logo_motion.mp4");
+    
+    try {
+      await _controller!.initialize();
+      if (mounted && !_isDisposed && _controller != null) {
+        setState(() {
+          _isVideoInitialized = true;
+        });
+        _controller!.play();
+      }
+    } catch (error) {
+      if (mounted && !_isDisposed) {
+      }
+    }
+  }
+
   @override
   void dispose() {
-    _controller.dispose();
+    _isDisposed = true;
+    
+    // Store reference and clear immediately
+    final controller = _controller;
+    _controller = null;
+    
+    // Dispose asynchronously to avoid blocking
+    if (controller != null) {
+      Future.microtask(() async {
+        try {
+          // Wait a bit for any pending operations
+          await Future.delayed(const Duration(milliseconds: 50));
+          
+          if (controller.value.isInitialized) {
+            await controller.pause();
+          }
+          
+          controller.dispose();
+        } catch (e) {
+          // Silently catch disposal errors
+        }
+      });
+    }
+    
     super.dispose();
   }
 
@@ -62,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: _isVideoInitialized
+        child: _isVideoInitialized && _controller != null && !_isDisposed
             ? Center(
                 child: SizedBox(
                   width: double.infinity,
@@ -70,9 +110,9 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: FittedBox(
                     fit: BoxFit.cover,
                     child: SizedBox(
-                      width: _controller.value.size.width,
-                      height: _controller.value.size.height,
-                      child: VideoPlayer(_controller),
+                      width: _controller!.value.size.width,
+                      height: _controller!.value.size.height,
+                      child: VideoPlayer(_controller!),
                     ),
                   ),
                 ),
@@ -82,10 +122,63 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 
+  checkVersionAndNavigate() async {
+    // Check for app update
+    final needsUpdate = await VersionCheckService.checkForUpdate();
+    if (needsUpdate && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const VersionCheckScreen(),
+        ),
+      );
+      return;
+    }
+    
+    // If no update needed, proceed with normal navigation
+    navigatorToFirstPage();
+  }
+
   navigatorToFirstPage() async {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    
+    // Check if user manually logged out
+    final isLoggedOut = CacheHelper.getData(key: CacheHelper.isLoggedOut);
+    
+    // If user logged out manually, always go to login screen (even if user data exists for biometric)
+    if (isLoggedOut == true) {
+      getAppLanguage().whenComplete(() {
+        return Navigator.pushReplacement(
+          context,
+          downToTop(const LoginScreen()),
+        );
+      });
+      return;
+    }
+    
     if (widget.userModel != null) {
       appProvider.addUser(user: widget.userModel);
+      // Load tokens from cache when restoring user data
+      appProvider.loadTokensFromCache();
+      
+      // Check if token is expired after loading from cache
+      // Only check for MMS users (company personnel with roleId == 2)
+      if (appProvider.userModel?.customer.roleId == 2) {
+        final tokenExpiresAt = appProvider.tokenExpiresAt;
+        if (tokenExpiresAt != null && !isTokenValid(tokenExpiresAt)) {
+          // Token is expired - force logout
+          appProvider.clearUser();
+          appProvider.clearTokens();
+          getAppLanguage().whenComplete(() {
+            return Navigator.pushReplacement(
+              context,
+              downToTop(const LoginScreen()),
+            );
+          });
+          return;
+        }
+      }
+      
       getAppLanguage().whenComplete(() {
         return Navigator.pushReplacement(
           context,
@@ -109,7 +202,6 @@ class _SplashScreenState extends State<SplashScreen> {
       await LanguageApis.getAppLang(lang: 'ar').then((value) {
         if (value.isNotEmpty) {
           List<String> allGlobal = [];
-          log('Success Get Lang Apis');
           languageProvider.addLang(value);
           for (var element in languageProvider.allLanguage) {
             if (!allGlobal.contains(element.key)) {
@@ -120,7 +212,6 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       });
     } catch (e) {
-      log(e.toString());
     }
   }
 
@@ -134,7 +225,6 @@ class _SplashScreenState extends State<SplashScreen> {
         navigatorToFirstPage();
       });
     } catch (e) {
-      log('getColors Error -> $e');
       if (mounted) setState(() {});
     }
   }

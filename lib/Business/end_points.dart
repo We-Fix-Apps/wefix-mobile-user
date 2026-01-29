@@ -99,8 +99,9 @@ class EndPoints {
   static String address = 'Customer/Address';
   static String addAddress = 'Customer/CreateAddress';
   static String getShippingInfo = 'Order/GetShippingInfo';
-  static String getProfile = 'user/profile';
+  static String getProfile = 'user/profile'; // backend-mms endpoint
   static String editProfile = 'user/UpdateProfile';
+  static String updateProfile = 'user/profile'; // backend-mms endpoint
   static String changedPassword = 'user/changepassword';
   static String changedPhone = 'user/editphone';
   static String deleteAccount = 'user/deleteAccount';
@@ -125,4 +126,28 @@ class EndPoints {
   static String getAllBranch = 'customer/GetAllBranch';
   static String isSubscribeCompany = 'customer/IsSubscribeCompany';
   static String serviceCompany = 'customer/ServiceCompany';
+
+  // * MMS API (Backend MMS)
+  static String mmsBaseUrl = 'https://wefix-backend-mms-prod.ngrok.app/api/v1/'; // Update with your backend URL
+  static String mmsLogin = 'user/login'; // Deprecated - use mmsRequestOTP and mmsVerifyOTP
+  static String mmsRequestOTP = 'user/request-otp'; // Request OTP for Business Services login
+  static String mmsVerifyOTP = 'user/verify-otp'; // Verify OTP for Business Services login
+  static String mmsLogout = 'user/logout';
+  static String mmsRefreshToken = 'user/refresh-token';
+  static String mmsRegister = 'user/register';
+  static String mmsTickets = 'tickets';
+  static String mmsTicketStatistics = 'tickets/statistics';
+  static String mmsTicketDetails = 'tickets/'; // Append ticket ID
+  static String mmsCreateTicket = 'tickets';
+  static String mmsUpdateTicket = 'tickets/'; // Append ticket ID
+  static String mmsCompanyContracts = 'company-data/contracts';
+  static String mmsCompanyBranches = 'company-data/branches';
+  static String mmsCompanyZones = 'company-data/zones';
+  static String mmsMainServices = 'company-data/main-services';
+  static String mmsSubServices = 'company-data/sub-services';
+  static String mmsCompanyTeamLeaders = 'company-data/team-leaders';
+  static String mmsCompanyTechnicians = 'company-data/technicians';
+  static String mmsTicketTypes = 'company-data/ticket-types';
+  static String mmsTicketStatuses = 'company-data/ticket-statuses';
+  static String mmsUploadFiles = 'files/upload-multiple'; // New - Upload multiple files
 }

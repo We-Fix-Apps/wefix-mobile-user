@@ -4,14 +4,18 @@ import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:provider/provider.dart';
+import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/appText/appText.dart';
+import 'package:wefix/Presentation/B2B/ticket/create_update_ticket_screen_v2.dart';
 import 'package:wefix/Presentation/Home/Screens/home_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/contact_us_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
 import 'package:wefix/Presentation/Profile/profile_screen.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Presentation/Subscriptions/Screens/Subscriptions_screen.dart';
+import 'package:wefix/Presentation/B2B/tickets_screen.dart';
 
 class HomeLayout extends StatefulWidget {
   final int? index;
@@ -30,6 +34,9 @@ class _HomeLayoutState extends State<HomeLayout> {
   GlobalKey keyButton3 = GlobalKey();
   GlobalKey keyButton4 = GlobalKey();
   GlobalKey keyButton5 = GlobalKey();
+  
+  // GlobalKey to access HomeScreen state
+  final GlobalKey<State<HomeScreen>> _homeScreenKey = GlobalKey<State<HomeScreen>>();
 
   @override
   void initState() {
@@ -39,22 +46,72 @@ class _HomeLayoutState extends State<HomeLayout> {
     super.initState();
   }
 
-  List<Widget> screen = [const HomeScreen(), const BookingScreen(), const SubscriptionScreen(), const ProfileScreen(), const ContactUsScreen()];
+  List<Widget> getScreens(bool isB2bAccount) => [
+    HomeScreen(key: _homeScreenKey),
+    isB2bAccount ? TicketsScreen() : BookingScreen(),
+    const SubscriptionScreen(),
+    const ProfileScreen(),
+    const ContactUsScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    // Check if user is a B2B account (Admin 18, Team Leader 20, or Super User 26)
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    
+    final isB2bAccount = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 26);
+    
+    // Use b2b_icon.svg for B2B accounts, otherwise use a different icon
+    final String centerIconPath = isB2bAccount 
+        ? "assets/icon/b2b_icon.svg" 
+        : "assets/icon/smile.svg";
+    
     List<TabItem> items = [
       TabItem(
-          activeIcon: SvgPicture.asset("assets/icon/home.svg", color: AppColors(context).primaryColor, height: 20),
-          icon: SvgPicture.asset("assets/icon/home.svg", color: AppColors.greyColor2, height: 20),
+          activeIcon: SvgPicture.asset(
+            "assets/icon/home.svg",
+            color: AppColors.greyColor2,
+            height: 20,
+          ),
+          icon: SvgPicture.asset(
+            "assets/icon/home.svg",
+            color: AppColors.greyColor2,
+            height: 20,
+          ),
           title: AppText(context).home),
       TabItem(
-          activeIcon: SvgPicture.asset("assets/icon/booking.svg", color: AppColors(context).primaryColor, height: 20),
-          icon: SvgPicture.asset("assets/icon/booking.svg", color: AppColors.greyColor2, height: 20),
-          title: AppText(context).bookings),
+          activeIcon: SvgPicture.asset(
+            "assets/icon/booking.svg",
+            color: AppColors.greyColor2,
+            height: 20,
+          ),
+          icon: SvgPicture.asset(
+            "assets/icon/booking.svg",
+            color: AppColors.greyColor2,
+            height: 20,
+          ),
+          title: isB2bAccount ? AppText(context).tickets : AppText(context).bookings),
       TabItem(
-          activeIcon: SvgPicture.asset("assets/icon/smile.svg", color: AppColors.whiteColor1, height: 20),
-          icon: SvgPicture.asset("assets/icon/smile.svg", color: AppColors.whiteColor1, height: 20),
+          activeIcon: SvgPicture.asset(
+            centerIconPath,
+            color: AppColors.whiteColor1,
+            height: 20,
+          ),
+          icon: SvgPicture.asset(
+            centerIconPath,
+            color: AppColors.whiteColor1,
+            height: 20,
+          ),
           title: AppText(context).subscription),
       TabItem(
           activeIcon: SvgPicture.asset("assets/icon/user.svg", color: AppColors(context).primaryColor, height: 20),
@@ -78,25 +135,69 @@ class _HomeLayoutState extends State<HomeLayout> {
         return true;
       },
       child: Scaffold(
-        body: screen[currentIndex],
+        body: getScreens(isB2bAccount)[currentIndex],
         bottomNavigationBar: ConvexAppBar(
-            backgroundColor: Colors.white,
-            activeColor: AppColors(context).primaryColor,
-            style: TabStyle.fixedCircle,
-            color: Colors.grey,
-            elevation: 1,
-            height: 60,
-            curve: Curves.linearToEaseOut,
-            cornerRadius: 20,
-            controller: tabController,
-            initialActiveIndex: widget.index ?? 0,
-            items: items,
-            onTap: (int i) => changeBottomIndex(i)),
+          backgroundColor: Colors.white,
+          activeColor: AppColors(context).primaryColor,
+          style: TabStyle.fixedCircle,
+          color: Colors.grey,
+          elevation: 1,
+          height: 60,
+          curve: Curves.linearToEaseOut,
+          cornerRadius: 20,
+          controller: tabController,
+          initialActiveIndex: widget.index ?? 2,
+          items: items,
+          onTap: (int i) => changeBottomIndex(i),
+        ),
       ),
     );
   }
 
   void changeBottomIndex(int index) {
+    // For company users, make the third button (index 2) navigate to create ticket screen
+    if (index == 2) {
+      final appProvider = Provider.of<AppProvider>(context, listen: false);
+      final currentUserRoleId = appProvider.userModel?.customer.roleId;
+      
+      // Parse roleId to integer
+      int? roleIdInt;
+      if (currentUserRoleId is int) {
+        roleIdInt = currentUserRoleId;
+      } else if (currentUserRoleId is String) {
+        roleIdInt = int.tryParse(currentUserRoleId);
+      } else if (currentUserRoleId != null) {
+        roleIdInt = int.tryParse(currentUserRoleId.toString());
+      }
+      
+      // Check if user is a company user (Admin 18, Team Leader 20, or Super User 26)
+      final isCompanyUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 26);
+      
+      if (isCompanyUser) {
+        // Navigate to create ticket screen for company users
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CreateUpdateTicketScreenV2(),
+          ),
+        ).then((success) {
+          // If ticket was created successfully, refresh the tickets list in B2BHome
+          if (success == true && context.mounted) {
+            // Access HomeScreen state and refresh B2BHome tickets
+            final homeScreenState = _homeScreenKey.currentState;
+            if (homeScreenState != null && homeScreenState.mounted) {
+              try {
+                (homeScreenState as dynamic).refreshB2BHomeTickets();
+              } catch (e) {
+                // Method doesn't exist, ignore
+              }
+            }
+          }
+        });
+        return; // Don't change the current index
+      }
+    }
+    
     setState(() {
       currentIndex = index;
     });
@@ -109,12 +210,23 @@ class _HomeLayoutState extends State<HomeLayout> {
   }
 
   void showTutorial() {
+    try {
     tutorialCoachMark.show(context: context);
+    } catch (e) {
+      // Silently fail if tutorial wasn't created or has no targets
+    }
   }
 
   void createTutorial() {
+    final targets = _createTargets();
+    
+    // Only create tutorial if there are valid targets
+    if (targets.isEmpty) {
+      return;
+    }
+    
     tutorialCoachMark = TutorialCoachMark(
-      targets: _createTargets(),
+      targets: targets,
       colorShadow: Colors.red,
       textSkip: "SKIP",
       paddingFocus: 10,

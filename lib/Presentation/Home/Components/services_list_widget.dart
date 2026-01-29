@@ -14,13 +14,7 @@ class ServicesWidget extends StatefulWidget {
   final List<Category> categories;
   final int roleId;
   final GlobalKey? key1;
-
-  const ServicesWidget({
-    super.key,
-    required this.categories,
-    this.key1,
-    required this.roleId,
-  });
+  const ServicesWidget({super.key, required this.categories, this.key1, required this.roleId});
 
   @override
   State<ServicesWidget> createState() => _ServicesWidgetState();

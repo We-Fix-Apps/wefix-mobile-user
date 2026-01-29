@@ -950,6 +950,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       "SelectedDate": appProvider.appoitmentInfo["date"].toString().substring(0, 10),
       "SelectedDateTime": appProvider.appoitmentInfo["time"],
       "Description": appProvider.desc.text,
+      "TicketDescription": appProvider.ticketDescription.text,
       "Location":
           "${appProvider.places![0].country} ,${appProvider.places![0].locality}, ${appProvider.places![0].name}, ${appProvider.places![0].subAdministrativeArea} ,${appProvider.places![0].subLocality}",
       "Latitude": appProvider.currentLocation?.latitude.toString() ?? "",

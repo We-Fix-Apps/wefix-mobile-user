@@ -22,14 +22,22 @@ class HomeModel {
   });
 
   factory HomeModel.fromJson(Map<String, dynamic> json) => HomeModel(
-        sliders: List<SliderModel>.from(
+        sliders: json["sliders"] == null
+            ? []
+            : List<SliderModel>.from(
             json["sliders"].map((x) => SliderModel.fromJson(x))),
-            roleId : json["roleId"],
-        categories: List<Category>.from(
+        roleId: json["roleId"],
+        categories: json["categories"] == null
+            ? []
+            : List<Category>.from(
             json["categories"].map((x) => Category.fromJson(x))),
-        serviceOffers: List<Service>.from(
+        serviceOffers: json["serviceOffers"] == null
+            ? []
+            : List<Service>.from(
             json["serviceOffers"].map((x) => Service.fromJson(x))),
-        servicePopular: List<Service>.from(
+        servicePopular: json["servicePopular"] == null
+            ? []
+            : List<Service>.from(
             json["servicePopular"].map((x) => Service.fromJson(x))),
         tickets:
             json["tickets"] != null ? Tickets.fromJson(json["tickets"]) : null,
@@ -121,8 +129,9 @@ class Category {
             ? []
             : List<Category>.from(
                 json["subCategory"]!.map((x) => Category.fromJson(x))),
-        service:
-            List<Service>.from(json["service"].map((x) => Service.fromJson(x))),
+        service: json["service"] == null
+            ? []
+            : List<Service>.from(json["service"].map((x) => Service.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
