@@ -88,7 +88,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
 
     final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
     var isArabic = languageProvider.lang == 'ar';
-    
+
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -103,13 +103,13 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                 onTap: () async {
                   Navigator.pop(context);
                   if (!mounted) return;
-                  
+
                   // For iOS, add small delay to ensure modal is fully closed
                   if (Platform.isIOS) {
                     await Future.delayed(const Duration(milliseconds: 300));
                     if (!mounted) return;
                   }
-                  
+
                   // Capture images like SquaredImageUploader
                   await _captureImageFromCamera();
                 },
@@ -120,13 +120,13 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                 onTap: () async {
                   Navigator.pop(context);
                   if (!mounted) return;
-                  
+
                   // For iOS, add small delay to ensure modal is fully closed
                   if (Platform.isIOS) {
                     await Future.delayed(const Duration(milliseconds: 300));
                     if (!mounted) return;
                   }
-                  
+
                   // Capture video
                   await _captureVideoFromCamera();
                 },
@@ -149,7 +149,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     final XFile? image = await _imagePicker.pickImage(source: ImageSource.camera);
     if (image != null) {
       final File imageFile = File(image.path);
-      
+
       // Compress image like SquaredImageUploader
       final compressedData = await FlutterImageCompress.compressWithFile(
         image.path,
@@ -161,8 +161,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       File tempFile;
       if (compressedData != null) {
         final tempDir = await getTemporaryDirectory();
-        tempFile = File(
-            '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_temp_img.jpg');
+        tempFile = File('${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_temp_img.jpg');
         await tempFile.writeAsBytes(compressedData);
       } else {
         tempFile = imageFile; // Use the original if compression is null
@@ -184,7 +183,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   // Capture video from camera
   Future<void> _captureVideoFromCamera() async {
     if (!mounted) return;
-    
+
     // For iOS, add small delay to ensure any modal is fully closed
     if (Platform.isIOS) {
       await Future.delayed(const Duration(milliseconds: 300));
@@ -207,25 +206,8 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   Future uploadFile({List? files}) async {
     AppProvider appProvider = Provider.of(context, listen: false);
 
-    // Check if this is being used from ticket creation (has 'fromTicketCreation' flag)
-    final isFromTicketCreation = widget.data?['fromTicketCreation'] == true;
-    
-    if (isFromTicketCreation) {
-      // For ticket creation, just return the uploaded files without navigating
-      setState(() {
-        loading = false;
-      });
-      Navigator.pop(context, {
-        'uploadedFiles': uploadedFiles,
-        'note': noteController.text,
-      });
-      return;
-    }
-
-    // Original flow for appointment creation
-    await UpladeFiles.upladeImagesWithPaths(
-            token: '${appProvider.userModel?.token}', filePaths: extractedPaths)
-        .then((value) {
+    await UpladeFiles.upladeImagesWithPaths(token: '${appProvider.userModel?.token}', filePaths: extractedPaths).then((value) {
+      log(value.toString());
       if (value != null) {
         Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
           setState(() {
@@ -233,6 +215,30 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
           });
         });
 
+        setState(() {
+          appProvider.clearAttachments();
+          appProvider.saveAttachments(value);
+        });
+      } else {
+        appProvider.clearAttachments();
+        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
+          setState(() {
+            appProvider.clearAttachments();
+            loading = false;
+          });
+        });
+      }
+    });
+
+    // Original flow for appointment creation
+    await UpladeFiles.upladeImagesWithPaths(token: '${appProvider.userModel?.token}', filePaths: extractedPaths).then((value) {
+      if (value != null) {
+        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
+          setState(() {
+            loading = false;
+          });
+        });
+        appProvider.desc.text.toString();
         setState(() {
           appProvider.clearAttachments();
           appProvider.saveAttachments(value);
@@ -305,7 +311,14 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       //   "audio": audioPath,
       //   "image": imagePath,
       // });
+      setState(() {
+        appProvider.saveDesc(noteController.text);
+        log(appProvider.desc.text.toString());
+      });
+      log(" uploadded fillle : ${uploadedFiles.toString()}");
       extractFilePaths(uploadedFiles);
+
+      log("Extracted paths: $extractedPaths");
     }
   }
 
@@ -327,7 +340,6 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       }
     }
 
-
     return extractedPaths;
   }
 
@@ -340,7 +352,11 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   ];
 
   List<Map> content = [
-    {"title": AppText(navigatorKey.currentState!.context).uploadFilefromDevice, "description": AppText(navigatorKey.currentState!.context).youcanuploadfile, "image": "assets/image/file.png"},
+    {
+      "title": AppText(navigatorKey.currentState!.context).uploadFilefromDevice,
+      "description": AppText(navigatorKey.currentState!.context).youcanuploadfile,
+      "image": "assets/image/file.png"
+    },
     {
       "title": AppText(navigatorKey.currentState!.context).takeAPictureFromCamera,
       "description": AppText(navigatorKey.currentState!.context).youcantakepicture,
@@ -356,7 +372,12 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       "description": AppText(navigatorKey.currentState!.context).youcandescripe,
       "image": "assets/image/search.png",
     },
-    {"title": AppText(navigatorKey.currentState!.context).continuesss, "description": AppText(navigatorKey.currentState!.context).afteraddingAll, "image": "assets/image/cont.png", "isTop": true},
+    {
+      "title": AppText(navigatorKey.currentState!.context).continuesss,
+      "description": AppText(navigatorKey.currentState!.context).afteraddingAll,
+      "image": "assets/image/cont.png",
+      "isTop": true
+    },
   ];
   @override
   void initState() {
@@ -364,9 +385,8 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     if (widget.data != null && widget.data!['uploadedFiles'] != null) {
       uploadedFiles = List<Map<String, String?>>.from(widget.data!['uploadedFiles'] as List);
     }
-    
-    _requestPermissionsOnce();
 
+    _requestPermissionsOnce();
     try {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         CustomeTutorialCoachMark.createTutorial(keyButton, content);
@@ -381,20 +401,16 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
               showTour = json.decode(tourData as String);
             }
             if (mounted) {
-              CustomeTutorialCoachMark.showTutorial(context,
-                  isShow: showTour["addAttachment"] ?? true);
+              CustomeTutorialCoachMark.showTutorial(context, isShow: showTour["addAttachment"] ?? true);
               setState(() {
                 showTour["addAttachment"] = false;
               });
-              CacheHelper.saveData(
-                  key: CacheHelper.showTour, value: json.encode(showTour));
+              CacheHelper.saveData(key: CacheHelper.showTour, value: json.encode(showTour));
             }
-          } catch (e) {
-          }
+          } catch (e) {}
         });
       });
-    } catch (e) {
-    }
+    } catch (e) {}
 
     super.initState();
   }
@@ -436,18 +452,18 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     if (file["audio"] != null) {
       return SvgPicture.asset("assets/icon/mp4.svg", width: 40);
     }
-    
+
     // Check video files
     final filePath = file["file"] ?? file["image"];
     if (_isVideoFile(filePath)) {
       return SvgPicture.asset("assets/icon/vid.svg", width: 40);
     }
-    
+
     // Check image files
     if (_isImageFile(filePath)) {
       return SvgPicture.asset("assets/icon/imge.svg", width: 40);
     }
-    
+
     // Default to file icon for other types
     return SvgPicture.asset("assets/icon/file.svg", width: 40);
   }
@@ -508,7 +524,9 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
               key: keyButton[2],
               child: _optionTile(
                 icon: isRecording ? Icons.stop : Icons.mic,
-                label: isRecording ? "${AppText(context).stopRecording} (${AppText(context).time}: ${_seconds}s)" : (audioPath != null ? AppText(context).audioRecorded : AppText(context).recordVoice),
+                label: isRecording
+                    ? "${AppText(context).stopRecording} (${AppText(context).time}: ${_seconds}s)"
+                    : (audioPath != null ? AppText(context).audioRecorded : AppText(context).recordVoice),
                 color: isRecording ? Colors.red : Colors.green,
                 onTap: isRecording ? stopRecording : startRecording,
               ),
@@ -520,7 +538,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                 final appProvider = Provider.of<AppProvider>(context, listen: false);
                 final roleId = appProvider.userModel?.customer.roleId;
                 int? roleIdInt;
-                
+
                 if (roleId != null) {
                   if (roleId is int) {
                     roleIdInt = roleId;
@@ -530,14 +548,14 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                     roleIdInt = int.tryParse(roleId.toString());
                   }
                 }
-                
+
                 // Company roles: 18 (Company Admin), 20 (Team Leader), 26 (Super User)
                 final isCompany = roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 26;
-                
+
                 if (isCompany) {
                   return const SizedBox.shrink();
                 }
-                
+
                 return Column(
                   children: [
                     Container(
@@ -553,12 +571,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                 );
               },
             ),
-            uploadedFiles.isEmpty
-                ? const SizedBox()
-                : Text(AppText(context).attachments,
-                    style: TextStyle(
-                        fontSize: AppSize(context).smallText1,
-                        fontWeight: FontWeight.bold)),
+            uploadedFiles.isEmpty ? const SizedBox() : Text(AppText(context).attachments, style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold)),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -688,9 +701,9 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
   Future<void> _initializeVideo() async {
     if (_isDisposed) return;
-    
+
     _controller = VideoPlayerController.file(File(widget.filePath));
-    
+
     try {
       await _controller!.initialize();
       // Only update state if still mounted and not disposed
@@ -699,8 +712,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
       }
     } catch (error) {
       // Handle initialization error
-      if (mounted && !_isDisposed) {
-      }
+      if (mounted && !_isDisposed) {}
     }
   }
 
@@ -709,13 +721,13 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     if (_controller == null || _isDisposed) {
       return const CircularProgressIndicator();
     }
-    
+
     // Double check before using controller
     final controller = _controller;
     if (controller == null || _isDisposed) {
       return const CircularProgressIndicator();
     }
-    
+
     return controller.value.isInitialized
         ? AspectRatio(
             aspectRatio: controller.value.aspectRatio,
@@ -727,29 +739,29 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   @override
   void dispose() {
     _isDisposed = true;
-    
+
     // Store reference and clear immediately
     final controller = _controller;
     _controller = null;
-    
+
     // Dispose asynchronously to avoid blocking
     if (controller != null) {
       Future.microtask(() async {
         try {
           // Wait a bit for any pending operations
           await Future.delayed(const Duration(milliseconds: 50));
-          
+
           if (controller.value.isInitialized) {
             await controller.pause();
           }
-          
+
           controller.dispose();
         } catch (e) {
           // Silently catch disposal errors
         }
       });
     }
-    
+
     super.dispose();
   }
 }

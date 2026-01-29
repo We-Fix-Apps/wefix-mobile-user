@@ -299,14 +299,6 @@ class AppText {
   String get yourtransactionhasbeenfailed => getTranslation('yourtransactionhasbeenfailed');
   String get yourtransactionhasbeensuccessfullycompleted => getTranslation('yourtransactionhasbeensuccessfullycompleted');
   String get estimatedTimeToArrivalminutes => getTranslation('estimatedTimeToArrivalminutes');
-  String get subscribenowandsave50JODDonmissoutonthisspecialoffer =>
-      getTranslation('subscribenowandsave50JODDonmissoutonthisspecialoffer');
-  String get yourtransactionhasbeenfailed =>
-      getTranslation('yourtransactionhasbeenfailed');
-  String get yourtransactionhasbeensuccessfullycompleted =>
-      getTranslation('yourtransactionhasbeensuccessfullycompleted');
-  String get estimatedTimeToArrivalminutes =>
-      getTranslation('estimatedTimeToArrivalminutes');
   String get responseTime => getTranslation('responseTime');
   String get minutes => getTranslation('minutes');
   String get chooseTechniciaGender => getTranslation('chooseTechniciaGender');

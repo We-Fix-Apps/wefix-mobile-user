@@ -193,7 +193,7 @@ class _BranchCard extends StatefulWidget {
     this.representativeName,
     this.representativeEmail,
     required this.onEdit,
-    required this.onDelete, this.image,
+    required this.onDelete,
   });
 
   @override
