@@ -205,47 +205,44 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
 
   Future uploadFile({List? files}) async {
     AppProvider appProvider = Provider.of(context, listen: false);
-
-    await UpladeFiles.upladeImagesWithPaths(token: '${appProvider.userModel?.token}', filePaths: extractedPaths).then((value) {
-      log(value.toString());
-      if (value != null) {
-        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
-          setState(() {
-            loading = false;
-          });
-        });
-
-        setState(() {
-          appProvider.clearAttachments();
-          appProvider.saveAttachments(value);
-        });
-      } else {
-        appProvider.clearAttachments();
-        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
-          setState(() {
-            appProvider.clearAttachments();
-            loading = false;
-          });
-        });
-      }
+    setState(() {
+      appProvider.saveDesc(noteController.text);
     });
 
+    // Check if this is being used from ticket creation (has 'fromTicketCreation' flag)
+    final isFromTicketCreation = widget.data?['fromTicketCreation'] == true;
+    
+    if (isFromTicketCreation) {
+      // For ticket creation, just return the uploaded files without navigating
+      setState(() {
+        loading = false;
+      });
+      Navigator.pop(context, {
+        'uploadedFiles': uploadedFiles,
+        'note': noteController.text,
+      });
+      return;
+    }
+
     // Original flow for appointment creation
-    await UpladeFiles.upladeImagesWithPaths(token: '${appProvider.userModel?.token}', filePaths: extractedPaths).then((value) {
+    await UpladeFiles.upladeImagesWithPaths(
+            token: '${appProvider.userModel?.token}', filePaths: extractedPaths)
+        .then((value) {
       if (value != null) {
-        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
+        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen()))
+            .then((value) {
           setState(() {
             loading = false;
           });
         });
-        appProvider.desc.text.toString();
         setState(() {
           appProvider.clearAttachments();
           appProvider.saveAttachments(value);
         });
       } else {
         appProvider.clearAttachments();
-        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen())).then((value) {
+        Navigator.push(context, rightToLeft(const AppoitmentDetailsScreen()))
+            .then((value) {
           setState(() {
             appProvider.clearAttachments();
             loading = false;
@@ -301,24 +298,26 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   }
 
   Future handleSubmit() async {
-    AppProvider appProvider = Provider.of(context, listen: false);
     setState(() {
       loading = true;
     });
-    if (selectedFile != null || audioPath != null || imagePath != null || noteController.text.isNotEmpty) {
+    if (selectedFile != null ||
+        audioPath != null ||
+        imagePath != null ||
+        noteController.text.isNotEmpty) {
+      setState(() {
+        selectedFile = null;
+        audioPath = null;
+        imagePath = null;
+        // noteController.clear();
+      });
+
       // uploadedFiles.add({
       //   "file": selectedFile?.path,
       //   "audio": audioPath,
       //   "image": imagePath,
       // });
-      setState(() {
-        appProvider.saveDesc(noteController.text);
-        log(appProvider.desc.text.toString());
-      });
-      log(" uploadded fillle : ${uploadedFiles.toString()}");
       extractFilePaths(uploadedFiles);
-
-      log("Extracted paths: $extractedPaths");
     }
   }
 
