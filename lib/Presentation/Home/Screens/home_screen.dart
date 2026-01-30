@@ -95,9 +95,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    Future.wait([beforExpiredSubscription(), isSubsicribed()]);
-    getAllHomeApis().then((value) {
-      getActiveTicket();
+    
+    // Check if user is B2B - only call old APIs for B2C users
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final currentUserRoleId = appProvider.userModel?.customer.roleId;
+    int? roleIdInt;
+    if (currentUserRoleId is int) {
+      roleIdInt = currentUserRoleId;
+    } else if (currentUserRoleId is String) {
+      roleIdInt = int.tryParse(currentUserRoleId);
+    } else if (currentUserRoleId != null) {
+      roleIdInt = int.tryParse(currentUserRoleId.toString());
+    }
+    final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
+    
+    // Only call subscription check for all users
+    isSubsicribed();
+    
+    // Only call old ASP.NET APIs for B2C users
+    if (!isB2BUser) {
+      Future.wait([beforExpiredSubscription()]);
+      getAllHomeApis().then((value) {
+        getActiveTicket();
 
       // try {
       //   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -118,7 +137,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       // } catch (e) {
       //   log(e.toString());
       // }
-    });
+      });
+    }
 
     // Slide from bottom to top (down to up)
   }

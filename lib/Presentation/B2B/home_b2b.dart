@@ -100,7 +100,7 @@ class _B2BHomeState extends State<B2BHome> {
                                 ),
                               )
                             : SizedBox(
-                                height: constraints.maxHeight * 0.62, // Increased height for tickets section
+                                height: constraints.maxHeight * 0.56, // Increased height to accommodate ticket cards
                                 child: _LastTicketsSection(
                                   ticketModel: ticketModel,
                                 ),
@@ -762,7 +762,6 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
@@ -807,8 +806,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
               child: Text(AppLocalizations.of(context)!.viewAll, style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w500)),
             ),
           ],
-        ),
-        const SizedBox(height: 6),
+        ),   
         Expanded(
           child: Stack(
             children: [
@@ -850,7 +848,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                           );
                         },
                         child: Container(
-                          height:  constraints.maxHeight * 0.28,
+                          height:  constraints.maxHeight * 0.32,
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -1067,7 +1065,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                   ),
                                 ),
                                 // Status badge and Main Service on the right
-                                Expanded(
+                                Flexible(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     mainAxisSize: MainAxisSize.min,
@@ -1111,7 +1109,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                       // Main Service with Icon on the same line
                                       if (widget.ticketModel?.tickets[ticketIndex].icon != null || 
                                           widget.ticketModel?.tickets[ticketIndex].mainServiceTitle != null) ...[
-                                        const SizedBox(height: 6),
+                                        const SizedBox(height: 4),
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -1178,7 +1176,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                         ),
                                         // Delegated label (green) - show if ticket is delegated, below main service icon
                                         if (widget.ticketModel?.tickets[ticketIndex].delegatedToCompanyId != null) ...[
-                                          const SizedBox(height: 4),
+                                          const SizedBox(height: 2),
                                           Container(
                                             constraints: const BoxConstraints(maxWidth: 120),
                                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -1254,7 +1252,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
             if (totalPages <= 1) return const SizedBox.shrink();
             
                     return Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.only(top: 4),
                       child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
