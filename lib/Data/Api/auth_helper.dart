@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Data/Functions/token_refresh.dart';
+import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/main.dart' show navigatorKey;
 import 'package:wefix/Presentation/auth/login_screen.dart';
 
@@ -147,8 +148,10 @@ class AuthHelper {
       // Schedule logout after current frame is built to avoid setState during build
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         try {
-          // Clear all user data and tokens
-          appProvider.clearUser();
+          // Set logout flag in cache to prevent auto-navigation on app restart
+          await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
+          // Clear user data but preserve for biometric login
+          appProvider.clearUser(preserveUserDataForBiometric: true);
           appProvider.clearTokens();
 
           // Navigate to login screen using context or navigatorKey

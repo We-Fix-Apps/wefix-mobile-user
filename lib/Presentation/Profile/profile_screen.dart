@@ -83,8 +83,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               WidgetCard(
                   title: appProvider.userModel?.token == null ? AppText(context).login : AppText(context).logout,
                   onTap: () {
-                    setState(() => appProvider.clearUser());
-                    Navigator.pushAndRemoveUntil(context, rightToLeft(const LoginScreen()), (route) => true);
+                    // Set logout flag in cache to prevent auto-navigation on app restart
+                    CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
+                    // Clear user data but preserve for biometric login
+                    setState(() => appProvider.clearUser(preserveUserDataForBiometric: true));
+                    appProvider.clearTokens();
+                    // Navigate to login screen and remove all previous routes
+                    Navigator.pushAndRemoveUntil(context, rightToLeft(const LoginScreen()), (route) => false);
                   }),
               if (appProvider.userModel?.token != null) ...[
                 const SizedBox(height: 10),
@@ -100,7 +105,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             desc: 'Your Account deleted Successfully',
                             isError: false,
                             onTap: () {
-                              setState(() => appProvider.clearUser());
+                              // Set logout flag in cache
+                              CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
+                              // Clear user data but preserve for biometric login
+                              setState(() => appProvider.clearUser(preserveUserDataForBiometric: true));
+                              appProvider.clearTokens();
+                              // Navigate to login screen and remove all previous routes
                               Navigator.pushAndRemoveUntil(context, downToTop(const LoginScreen()), (route) => false);
                             },
                           );
