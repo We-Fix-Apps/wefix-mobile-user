@@ -1202,4 +1202,64 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get pleaseLoginWithMobileNumber =>
       'الرجاء الدخول عن طريق رقم الموبايل';
+
+  @override
+  String get materialsManagement => 'إدارة المواد';
+
+  @override
+  String get addMaterial => 'إضافة مادة';
+
+  @override
+  String get noMaterialsAddedYet => 'لا توجد مواد بعد';
+
+  @override
+  String get tapAddMaterialButton =>
+      'انقر على زر \'إضافة مادة\' لإضافة المواد الأولى';
+
+  @override
+  String get confirmDelete => 'تأكيد الحذف';
+
+  @override
+  String get areYouSureDeleteMaterial => 'هل أنت متأكد من حذف هذه المادة؟';
+
+  @override
+  String get cancel => 'إلغاء';
+
+  @override
+  String get materialDeletedSuccessfully => 'تم حذف المادة بنجاح';
+
+  @override
+  String get errorLoadingMaterials => 'خطأ في تحميل المواد';
+
+  @override
+  String get materialsSummary => 'ملخص المواد';
+
+  @override
+  String get totalItems => 'عدد المواد';
+
+  @override
+  String get totalAmount => 'الإجمالي الكلي';
+
+  @override
+  String get quantity => 'الكمية';
+
+  @override
+  String get amount => 'السعر';
+
+  @override
+  String filesAttached(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ملفات مرفقة',
+      one: 'ملف واحد مرفق',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get materialsNote => 'ملاحظة المواد';
+
+  @override
+  String get materialsNotePlaceholder => 'أضف ملاحظات حول المواد...';
 }

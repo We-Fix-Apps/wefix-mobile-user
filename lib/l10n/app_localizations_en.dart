@@ -1208,4 +1208,65 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pleaseLoginWithMobileNumber =>
       'Please login using your mobile number';
+
+  @override
+  String get materialsManagement => 'Materials Management';
+
+  @override
+  String get addMaterial => 'Add Material';
+
+  @override
+  String get noMaterialsAddedYet => 'No Materials Added Yet';
+
+  @override
+  String get tapAddMaterialButton =>
+      'Tap \'Add Material\' button to add your first material';
+
+  @override
+  String get confirmDelete => 'Confirm Delete';
+
+  @override
+  String get areYouSureDeleteMaterial =>
+      'Are you sure you want to delete this material?';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get materialDeletedSuccessfully => 'Material deleted successfully';
+
+  @override
+  String get errorLoadingMaterials => 'Error loading materials';
+
+  @override
+  String get materialsSummary => 'Materials Summary';
+
+  @override
+  String get totalItems => 'Total Items';
+
+  @override
+  String get totalAmount => 'Total Amount';
+
+  @override
+  String get quantity => 'Quantity';
+
+  @override
+  String get amount => 'Amount';
+
+  @override
+  String filesAttached(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count files attached',
+      one: '1 file attached',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get materialsNote => 'Materials Note';
+
+  @override
+  String get materialsNotePlaceholder => 'Add notes about materials...';
 }

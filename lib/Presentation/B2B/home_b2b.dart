@@ -100,7 +100,7 @@ class _B2BHomeState extends State<B2BHome> {
                                 ),
                               )
                             : SizedBox(
-                                height: constraints.maxHeight * 0.56, // Increased height to accommodate ticket cards
+                                height: constraints.maxHeight * 0.58, // Increased height to accommodate ticket cards
                                 child: _LastTicketsSection(
                                   ticketModel: ticketModel,
                                 ),
@@ -848,7 +848,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                           );
                         },
                         child: Container(
-                          height:  constraints.maxHeight * 0.32,
+                          height:  constraints.maxHeight * 0.34,
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -868,6 +868,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                               children: [
                                 // Avatar on the left
                                 Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     _isValidImage(widget.ticketModel?.tickets[ticketIndex].serviceprovideImage)
                                         ? ClipOval(
@@ -946,7 +947,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                           fontSize: 13,
                                         ),
                                       ),
-                                      const SizedBox(height: 6),
+                                      const SizedBox(height: 4),
                                       // Date and Time inline with more spacing
                                       Builder(
                                         builder: (context) {
@@ -1004,7 +1005,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                       if (widget.ticketModel?.tickets[ticketIndex].serviceprovide != null ||
                                           widget.ticketModel?.tickets[ticketIndex].serviceprovideName != null ||
                                           widget.ticketModel?.tickets[ticketIndex].serviceprovideNameEnglish != null) ...[
-                                        const SizedBox(height: 8),
+                                        const SizedBox(height: 4),
                                         // Assignee/Technician name - localized with Consumer for dynamic updates
                                         Consumer<LanguageProvider>(
                                           builder: (context, languageProvider, child) {
@@ -1039,7 +1040,7 @@ class _LastTicketsSectionState extends State<_LastTicketsSection> {
                                               mainAxisSize: MainAxisSize.min,
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                const SizedBox(height: 8),
+                                                const SizedBox(height: 4),
                                                 Container(
                                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                                   decoration: BoxDecoration(

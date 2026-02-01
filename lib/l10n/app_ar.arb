@@ -403,5 +403,30 @@
     "delegatedToWefix": "مفوض إلى Wefix",
     "delegatedToWefixBy": "مفوض إلى Wefix من قبل",
     "notAssigned": "غير معين",
-    "pleaseLoginWithMobileNumber": "الرجاء الدخول عن طريق رقم الموبايل"
+    "pleaseLoginWithMobileNumber": "الرجاء الدخول عن طريق رقم الموبايل",
+    "materialsManagement": "إدارة المواد",
+    "addMaterial": "إضافة مادة",
+    "noMaterialsAddedYet": "لا توجد مواد بعد",
+    "tapAddMaterialButton": "انقر على زر 'إضافة مادة' لإضافة المواد الأولى",
+    "confirmDelete": "تأكيد الحذف",
+    "areYouSureDeleteMaterial": "هل أنت متأكد من حذف هذه المادة؟",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "materialDeletedSuccessfully": "تم حذف المادة بنجاح",
+    "errorLoadingMaterials": "خطأ في تحميل المواد",
+    "materialsSummary": "ملخص المواد",
+    "totalItems": "عدد المواد",
+    "totalAmount": "الإجمالي الكلي",
+    "quantity": "الكمية",
+    "amount": "السعر",
+    "filesAttached": "{count, plural, =1 {ملف واحد مرفق} other {{count} ملفات مرفقة}}",
+    "@filesAttached": {
+      "placeholders": {
+        "count": {
+          "type": "int"
+        }
+      }
+    },
+    "materialsNote": "ملاحظة المواد",
+    "materialsNotePlaceholder": "أضف ملاحظات حول المواد..."
 }

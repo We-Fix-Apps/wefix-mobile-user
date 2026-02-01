@@ -28,6 +28,7 @@ import 'package:wefix/Presentation/Profile/Components/rating_widget.dart';
 import 'package:wefix/Presentation/Profile/Screens/Chat/messages_screen.dart';
 import '../../appointment/Components/attachments_widget.dart';
 import '../../B2B/ticket/create_update_ticket_screen_v2.dart';
+import '../../B2B/materials/materials_management_screen.dart';
 import 'package:wefix/l10n/app_localizations.dart';
 import '../../../layout_screen.dart';
 
@@ -43,6 +44,8 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
   bool? loading = false;
   BookingDetailsModel? bookingDetailsModel;
   Map<String, dynamic>? fullTicketData; // Full ticket data from MMS API
+  int materialsCount = 0; // Materials count fetched from API
+  int? contractBusinessModelLookupId; // Contract business model lookup ID (24 = B2B, 25 = White Label)
 
   @override
   void initState() {
@@ -843,6 +846,103 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                                         fontSize: AppSize(context).smallText2)),
                               ],
                             ),
+                            const SizedBox(height: 5),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text("🧰 ${languageProvider.lang == "ar" ? "مع مواد" : "Having Materials"} : ",
+                                    style: TextStyle(
+                                        color: AppColors.blackColor1,
+                                        fontSize: AppSize(context).smallText2)),
+                                Text(
+                                    _getHavingMaterials(),
+                                    style: TextStyle(
+                                        color: AppColors.blackColor1,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: AppSize(context).smallText2)),
+                              ],
+                            ),
+                            // Show "# of Materials" only if withMaterial is true
+                            if (_getHavingMaterialsBool()) ...[
+                              const SizedBox(height: 5),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("📦 ${languageProvider.lang == "ar" ? "عدد المواد" : "# of Materials"} : ",
+                                      style: TextStyle(
+                                          color: AppColors.blackColor1,
+                                          fontSize: AppSize(context).smallText2)),
+                                  Text(
+                                      _getMaterialsCount().toString(),
+                                      style: TextStyle(
+                                          color: AppColors.blackColor1,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: AppSize(context).smallText2)),
+                                ],
+                              ),
+                            ],
+                            // Materials Section Action Button (only if withMaterial is true)
+                            if (_getHavingMaterialsBool()) ...[
+                              const SizedBox(height: 10),
+                              InkWell(
+                                onTap: () async {
+                                  // Determine if contract is B2B based on businessModelLookupId
+                                  // B2B contracts have businessModelLookupId = 24, White Label = 25
+                                  const B2B_BUSINESS_MODEL_ID = 24;
+                                  
+                                  // If contractBusinessModelLookupId is not loaded yet, fetch it now
+                                  if (contractBusinessModelLookupId == null && fullTicketData != null) {
+                                    await _loadContractBusinessModel();
+                                  }
+                                  
+                                  // Admin/Team Leader from B2B companies cannot manage materials
+                                  // Only White Label users (businessModelLookupId = 25) can manage materials
+                                  // Default to false (restrictive) if businessModelLookupId is not available
+                                  final canManageMaterials = contractBusinessModelLookupId != null && 
+                                                             contractBusinessModelLookupId != B2B_BUSINESS_MODEL_ID;
+                                  
+                                  Navigator.push(
+                                    context,
+                                    rightToLeft(
+                                      MaterialsManagementScreen(
+                                        ticketId: widget.id,
+                                        canManage: canManageMaterials,
+                                      ),
+                                    ),
+                                  ).then((_) {
+                                    // Refresh ticket details and materials count when returning from materials screen
+                                    getBookingDetails();
+                                    _loadMaterialsCount();
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secoundryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: AppColors.secoundryColor),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        languageProvider.lang == "ar" ? "قسم المواد" : "Materials Section",
+                                        style: TextStyle(
+                                          color: AppColors.secoundryColor,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: AppSize(context).smallText2,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        color: AppColors.secoundryColor,
+                                        size: 16,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         )),
                   ],
@@ -1663,6 +1763,19 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
           loading = false;
         });
                 }
+                // Fetch contract businessModelLookupId to determine if B2B
+                _loadContractBusinessModel();
+                // Fetch materials count only if withMaterial is true
+                if (body['data']['withMaterial'] == true) {
+                  _loadMaterialsCount();
+                } else {
+                  // If withMaterial is false, set materials count to 0
+                  if (mounted) {
+                    setState(() {
+                      materialsCount = 0;
+                    });
+                  }
+                }
               } else {
                 if (mounted) {
                   setState(() {
@@ -1739,6 +1852,8 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
             loading = false;
           });
         }
+        // Fetch materials count for OMS users too
+        _loadMaterialsCount();
       }
       
       // Safety check: ensure loading is always set to false
@@ -2440,6 +2555,99 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     }
     
     return (havingFemale == true) ? AppText(context).yes : AppText(context).no;
+  }
+
+  String _getHavingMaterials() {
+    // Try to get from fullTicketData first (B2B), then from bookingDetailsModel
+    bool? withMaterial;
+    
+    if (fullTicketData != null && fullTicketData!['withMaterial'] != null) {
+      withMaterial = fullTicketData!['withMaterial'] as bool?;
+    } else if (bookingDetailsModel?.objTickets.isWithMaterial != null) {
+      withMaterial = bookingDetailsModel!.objTickets.isWithMaterial;
+    }
+    
+    return (withMaterial == true) ? AppText(context).yes : AppText(context).no;
+  }
+
+  bool _getHavingMaterialsBool() {
+    // Try to get from fullTicketData first (B2B), then from bookingDetailsModel
+    bool? withMaterial;
+    
+    if (fullTicketData != null && fullTicketData!['withMaterial'] != null) {
+      withMaterial = fullTicketData!['withMaterial'] as bool?;
+    } else if (bookingDetailsModel?.objTickets.isWithMaterial != null) {
+      withMaterial = bookingDetailsModel!.objTickets.isWithMaterial;
+    }
+    
+    return withMaterial == true;
+  }
+
+  Future<void> _loadContractBusinessModel() async {
+    try {
+      if (fullTicketData == null || fullTicketData!['contractId'] == null) {
+        return;
+      }
+
+      final appProvider = Provider.of<AppProvider>(context, listen: false);
+      final contracts = await BookingApi.getCompanyContracts(
+        token: appProvider.accessToken ?? appProvider.userModel?.token ?? "",
+        context: context,
+        ticketId: int.tryParse(widget.id),
+      );
+
+      if (mounted && contracts != null && contracts.isNotEmpty) {
+        // Find the contract that matches the ticket's contractId
+        final ticketContractId = fullTicketData!['contractId'] as int?;
+        final matchingContract = contracts.firstWhere(
+          (contract) => contract['id'] == ticketContractId,
+          orElse: () => contracts.first, // Fallback to first contract
+        );
+
+        final businessModelLookupId = matchingContract['businessModelLookupId'] as int?;
+        if (mounted) {
+          setState(() {
+            contractBusinessModelLookupId = businessModelLookupId;
+          });
+        }
+      }
+    } catch (e) {
+      log('Error loading contract business model: $e');
+    }
+  }
+
+  Future<void> _loadMaterialsCount() async {
+    try {
+      final appProvider = Provider.of<AppProvider>(context, listen: false);
+      final result = await BookingApi.getMaterialsByTicketId(
+        ticketId: int.parse(widget.id),
+        token: appProvider.accessToken ?? appProvider.userModel?.token ?? "",
+        context: context,
+      );
+
+      if (mounted && result != null && result['materials'] != null) {
+        final materials = List<Map<String, dynamic>>.from(result['materials']);
+        setState(() {
+          materialsCount = materials.length;
+        });
+      } else if (mounted) {
+        setState(() {
+          materialsCount = 0;
+        });
+      }
+    } catch (e) {
+      log('Error loading materials count: $e');
+      if (mounted) {
+        setState(() {
+          materialsCount = 0;
+        });
+      }
+    }
+  }
+
+  int _getMaterialsCount() {
+    // Return the materials count fetched from API
+    return materialsCount;
   }
 }
 

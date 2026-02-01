@@ -386,5 +386,30 @@
   "delegatedToWefix": "Delegated to Wefix",
   "delegatedToWefixBy": "Delegated to Wefix by",
   "notAssigned": "Not Assigned",
-  "pleaseLoginWithMobileNumber": "Please login using your mobile number"
+  "pleaseLoginWithMobileNumber": "Please login using your mobile number",
+  "materialsManagement": "Materials Management",
+  "addMaterial": "Add Material",
+  "noMaterialsAddedYet": "No Materials Added Yet",
+  "tapAddMaterialButton": "Tap 'Add Material' button to add your first material",
+  "confirmDelete": "Confirm Delete",
+  "areYouSureDeleteMaterial": "Are you sure you want to delete this material?",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "materialDeletedSuccessfully": "Material deleted successfully",
+  "errorLoadingMaterials": "Error loading materials",
+  "materialsSummary": "Materials Summary",
+  "totalItems": "Total Items",
+  "totalAmount": "Total Amount",
+  "quantity": "Quantity",
+  "amount": "Amount",
+  "filesAttached": "{count, plural, =1 {1 file attached} other {{count} files attached}}",
+  "@filesAttached": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "materialsNote": "Materials Note",
+  "materialsNotePlaceholder": "Add notes about materials..."
 }

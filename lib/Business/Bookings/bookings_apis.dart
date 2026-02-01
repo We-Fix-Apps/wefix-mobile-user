@@ -1134,4 +1134,169 @@ class BookingApi {
       return null;
     }
   }
+
+  // * MMS API - Get materials for a ticket
+  static Future<Map<String, dynamic>?> getMaterialsByTicketId({
+    required String token,
+    required int ticketId,
+    BuildContext? context,
+  }) async {
+    try {
+      await AuthHelper.ensureTokenValidForCompanyPersonnel(context);
+      final updatedToken = await AuthHelper.getUpdatedToken(context, token);
+
+      final url = '${EndPoints.mmsBaseUrl}materials/ticket/$ticketId';
+      final response = await HttpHelper.getData2(
+        query: url,
+        token: updatedToken,
+        context: context,
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        if (body['success'] == true) {
+          return body['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      log('getMaterialsByTicketId exception: $e');
+      return null;
+    }
+  }
+
+  // * MMS API - Create material
+  static Future<Map<String, dynamic>?> createMaterial({
+    required String token,
+    required int ticketId,
+    required String title,
+    String? description,
+    required double amount,
+    double? quantity,
+    double? totalAmount,
+    List<int>? fileIds,
+    BuildContext? context,
+  }) async {
+    try {
+      await AuthHelper.ensureTokenValidForCompanyPersonnel(context);
+      final updatedToken = await AuthHelper.getUpdatedToken(context, token);
+
+      final url = '${EndPoints.mmsBaseUrl}materials';
+      final body = {
+        'ticketId': ticketId,
+        'title': title,
+        if (description != null) 'description': description,
+        'amount': amount,
+        if (quantity != null) 'quantity': quantity,
+        if (totalAmount != null) 'totalAmount': totalAmount,
+        if (fileIds != null) 'fileIds': fileIds,
+      };
+
+      final response = await HttpHelper.postData2(
+        query: url,
+        token: updatedToken,
+        data: body,
+        context: context,
+      );
+
+      if (response.statusCode == 201) {
+        final responseBody = json.decode(response.body);
+        if (responseBody['success'] == true) {
+          return responseBody['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      log('createMaterial exception: $e');
+      return null;
+    }
+  }
+
+  // * MMS API - Update material
+  static Future<Map<String, dynamic>?> updateMaterial({
+    required String token,
+    required int materialId,
+    String? title,
+    String? description,
+    double? amount,
+    double? quantity,
+    double? totalAmount,
+    List<int>? fileIds,
+    BuildContext? context,
+  }) async {
+    try {
+      await AuthHelper.ensureTokenValidForCompanyPersonnel(context);
+      final updatedToken = await AuthHelper.getUpdatedToken(context, token);
+
+      final url = '${EndPoints.mmsBaseUrl}materials/$materialId';
+      var headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer $updatedToken',
+        'x-client-type': 'mobile',
+      };
+
+      final body = {
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
+        if (amount != null) 'amount': amount,
+        if (quantity != null) 'quantity': quantity,
+        if (totalAmount != null) 'totalAmount': totalAmount,
+        if (fileIds != null) 'fileIds': fileIds,
+      };
+
+      final response = await http.put(
+        Uri.parse(url),
+        body: jsonEncode(body),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = json.decode(response.body);
+        if (responseBody['success'] == true) {
+          return responseBody['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      log('updateMaterial exception: $e');
+      return null;
+    }
+  }
+
+  // * MMS API - Delete material
+  static Future<bool> deleteMaterial({
+    required String token,
+    required int materialId,
+    BuildContext? context,
+  }) async {
+    try {
+      await AuthHelper.ensureTokenValidForCompanyPersonnel(context);
+      final updatedToken = await AuthHelper.getUpdatedToken(context, token);
+
+      final url = '${EndPoints.mmsBaseUrl}materials/$materialId';
+      var headers = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': '*/*',
+        'Connection': 'keep-alive',
+        'Authorization': 'Bearer $updatedToken',
+        'x-client-type': 'mobile',
+      };
+
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        return body['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      log('deleteMaterial exception: $e');
+      return false;
+    }
+  }
 }

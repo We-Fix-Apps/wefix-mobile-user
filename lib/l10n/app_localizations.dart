@@ -2425,6 +2425,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please login using your mobile number'**
   String get pleaseLoginWithMobileNumber;
+
+  /// No description provided for @materialsManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials Management'**
+  String get materialsManagement;
+
+  /// No description provided for @addMaterial.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Material'**
+  String get addMaterial;
+
+  /// No description provided for @noMaterialsAddedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No Materials Added Yet'**
+  String get noMaterialsAddedYet;
+
+  /// No description provided for @tapAddMaterialButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \'Add Material\' button to add your first material'**
+  String get tapAddMaterialButton;
+
+  /// No description provided for @confirmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Delete'**
+  String get confirmDelete;
+
+  /// No description provided for @areYouSureDeleteMaterial.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this material?'**
+  String get areYouSureDeleteMaterial;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @materialDeletedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Material deleted successfully'**
+  String get materialDeletedSuccessfully;
+
+  /// No description provided for @errorLoadingMaterials.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading materials'**
+  String get errorLoadingMaterials;
+
+  /// No description provided for @materialsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials Summary'**
+  String get materialsSummary;
+
+  /// No description provided for @totalItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Items'**
+  String get totalItems;
+
+  /// No description provided for @totalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Amount'**
+  String get totalAmount;
+
+  /// No description provided for @quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantity;
+
+  /// No description provided for @amount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get amount;
+
+  /// No description provided for @filesAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 file attached} other {{count} files attached}}'**
+  String filesAttached(int count);
+
+  /// No description provided for @materialsNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Materials Note'**
+  String get materialsNote;
+
+  /// No description provided for @materialsNotePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add notes about materials...'**
+  String get materialsNotePlaceholder;
 }
 
 class _AppLocalizationsDelegate

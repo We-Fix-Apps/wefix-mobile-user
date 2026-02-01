@@ -58,6 +58,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   final TextEditingController ticketTitle = TextEditingController();
   final TextEditingController serviceDescription = TextEditingController();
   final TextEditingController ticketDescription = TextEditingController();
+  final TextEditingController materialsNote = TextEditingController();
 
   // State variable to store service description for summary tab
   String _serviceDescriptionText = '';
@@ -79,6 +80,14 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   bool isDelegatedToWeFix = false; // Track if ticket is delegated to WeFix (B2B business model)
   bool isWeFixUser = false; // Track if current user is from WeFix company (ID: 39)
   bool shouldHideAssignmentFields = false; // Single flag for hiding team leader/technician (following frontend-OMS pattern)
+  
+  // Toggle states
+  bool withMaterial = false;
+  bool withFemaleEngineer = false;
+
+  // Materials list
+  List<Map<String, dynamic>> materials = [];
+  bool isLoadingMaterials = false;
 
   // Lists (these should be fetched from APIs)
   List<DropdownCardItem> contracts = [];
@@ -236,6 +245,11 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
     _loadInitialData().then((_) {
       if (widget.ticketData != null && mounted) {
         _populateFieldsFromTicketData(widget.ticketData!);
+        // Fetch materials when editing (always load, but only show if withMaterial is true)
+        final ticketId = widget.ticketData!['id'];
+        if (ticketId != null) {
+          _loadMaterialsForTicket(ticketId);
+        }
       }
     });
   }
@@ -1189,8 +1203,60 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         // If no status in ticket data, default to first status
         selectedTicketStatus = ticketStatuses.first;
       }
+
+      // Populate toggle states
+      withMaterial = data['withMaterial'] == true || data['isWithMaterial'] == true;
+      withFemaleEngineer = data['havingFemaleEngineer'] == true || data['isWithFemale'] == true || data['isWithFemaleEngineer'] == true;
+      
+      // Populate materials note
+      if (data['materialsNote'] != null) {
+        materialsNote.text = data['materialsNote'] as String;
+      } else if (data['materials_note'] != null) {
+        // Try alternative field name (snake_case)
+        materialsNote.text = data['materials_note'] as String;
+      } else if (data['note'] != null && withMaterial) {
+        // Try generic 'note' field if withMaterial is true
+        materialsNote.text = data['note'] as String;
+      }
+      
       // TODO: Map other fields when APIs are available
     });
+  }
+
+  Future<void> _loadMaterialsForTicket(dynamic ticketId) async {
+    if (ticketId == null) return;
+
+    setState(() {
+      isLoadingMaterials = true;
+    });
+
+    try {
+      final appProvider = Provider.of<AppProvider>(context, listen: false);
+      final result = await BookingApi.getMaterialsByTicketId(
+        ticketId: ticketId is int ? ticketId : int.parse(ticketId.toString()),
+        token: appProvider.accessToken ?? appProvider.userModel?.token ?? "",
+        context: context,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (result != null && result['materials'] != null) {
+            materials = List<Map<String, dynamic>>.from(result['materials']);
+          } else {
+            materials = [];
+          }
+          isLoadingMaterials = false;
+        });
+      }
+    } catch (e) {
+      log('Error loading materials: $e');
+      if (mounted) {
+        setState(() {
+          materials = [];
+          isLoadingMaterials = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadSubServices(int mainServiceId, {bool autoSelectFirst = false}) async {
@@ -1953,8 +2019,9 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           'ticketTimeFrom': timeFromStr!,
           'ticketTimeTo': timeToStr!,
           'ticketDescription': ticketDescription.text.trim(),
-          'havingFemaleEngineer': false,
-          'withMaterial': false,
+          'havingFemaleEngineer': withFemaleEngineer,
+          'withMaterial': withMaterial,
+          if (withMaterial && materialsNote.text.trim().isNotEmpty) 'materialsNote': materialsNote.text.trim(),
           'mainServiceId': selectedMainService!.id,
           if (selectedSubService != null) 'subServiceId': selectedSubService!.id,
           if (serviceDescription.text.trim().isNotEmpty) 'serviceDescription': serviceDescription.text.trim(),
@@ -2947,6 +3014,259 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                 },
               ),
               errorMessage: fieldErrors['subService'],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Toggle: With Material
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.greyColorback,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  localizations.withMaterial,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Switch(
+                  value: withMaterial,
+                  onChanged: (value) async {
+                    // If toggling from true to false, show confirmation and delete materials
+                    if (withMaterial && !value && widget.ticketData != null && widget.ticketData!['id'] != null) {
+                      // First, fetch all materials for this ticket
+                      final appProvider = Provider.of<AppProvider>(context, listen: false);
+                      final token = appProvider.accessToken ?? appProvider.userModel?.token ?? "";
+                      
+                      try {
+                        final materialsResult = await BookingApi.getMaterialsByTicketId(
+                          ticketId: widget.ticketData!['id'] as int,
+                          token: token,
+                          context: context,
+                        );
+                        
+                        final materials = materialsResult?['materials'] as List? ?? [];
+                        final materialsCount = materials.length;
+                        
+                        if (materialsCount > 0) {
+                          // Show confirmation dialog
+                          final localizations = AppLocalizations.of(context);
+                          final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+                          final isArabic = languageProvider.lang == "ar";
+                          
+                          final shouldDelete = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(isArabic ? 'تأكيد الحذف' : 'Confirm Delete'),
+                              content: Text(
+                                isArabic
+                                    ? 'سيتم حذف جميع المواد المرتبطة بهذا التذكرة ($materialsCount ${materialsCount == 1 ? 'مادة' : 'مواد'}). هل أنت متأكد؟'
+                                    : 'This will delete all materials associated with this ticket ($materialsCount material${materialsCount > 1 ? 's' : ''}). Are you sure?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: Text(localizations?.cancel ?? 'Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                  child: Text(localizations?.delete ?? 'Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          
+                          if (shouldDelete != true) {
+                            // User cancelled, don't change the toggle
+                            return;
+                          }
+                          
+                          // Delete all materials
+                          bool allDeleted = true;
+                          for (var material in materials) {
+                            final materialId = material['id'] as int?;
+                            if (materialId != null) {
+                              final deleted = await BookingApi.deleteMaterial(
+                                token: token,
+                                materialId: materialId,
+                                context: context,
+                              );
+                              if (!deleted) {
+                                allDeleted = false;
+                              }
+                            }
+                          }
+                          
+                          if (allDeleted && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isArabic
+                                      ? 'تم حذف $materialsCount ${materialsCount == 1 ? 'مادة' : 'مواد'} بنجاح'
+                                      : 'Successfully deleted $materialsCount material${materialsCount > 1 ? 's' : ''}',
+                                ),
+                                backgroundColor: Colors.green,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          } else if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isArabic
+                                      ? 'حدث خطأ أثناء حذف بعض المواد'
+                                      : 'An error occurred while deleting some materials',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                        
+                        // Update the toggle
+                        if (mounted) {
+                          setState(() {
+                            withMaterial = value;
+                            // Clear materials note when disabling
+                            if (!value) {
+                              materialsNote.clear();
+                            }
+                          });
+                        }
+                      } catch (e) {
+                        log('Error deleting materials: $e');
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isArabic
+                                    ? 'حدث خطأ أثناء حذف المواد'
+                                    : 'An error occurred while deleting materials',
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                        // Don't update the toggle if there was an error
+                        return;
+                      }
+                    } else {
+                      // Toggling from false to true, or no materials to delete - just update normally
+                      setState(() {
+                        withMaterial = value;
+                        // Clear materials note when disabling
+                        if (!value) {
+                          materialsNote.clear();
+                        }
+                      });
+                    }
+                  },
+                  activeColor: Colors.orange,
+                  inactiveThumbColor: Colors.grey[400],
+                  inactiveTrackColor: Colors.grey[300],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Materials Note (only shown when withMaterial is true)
+          if (withMaterial) ...[
+            Container(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)?.materialsNote ?? 'Materials Note',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Stack(
+                    children: [
+                      WidgetTextField(
+                        AppLocalizations.of(context)?.materialsNotePlaceholder ?? 'Add notes about materials...',
+                        controller: materialsNote,
+                        maxLines: 4,
+                        maxLength: 500,
+                        fillColor: AppColors.greyColorback,
+                        haveBorder: false,
+                        radius: 5,
+                        onChanged: (value) {
+                          setState(() {
+                            // Clear any errors when user starts typing
+                          });
+                        },
+                      ),
+                      Positioned(
+                        bottom: 8,
+                        right: isArabic ? null : 12,
+                        left: isArabic ? 12 : null,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${materialsNote.text.length} / 500',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Materials List Section (only shown when editing) - HIDDEN
+          ],
+
+          // Toggle: With Female Engineer
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.greyColorback,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  localizations.havingFemaleEngineer,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Switch(
+                  value: withFemaleEngineer,
+                  onChanged: (value) {
+                    setState(() {
+                      withFemaleEngineer = value;
+                    });
+                  },
+                  activeColor: Colors.orange,
+                  inactiveThumbColor: Colors.grey[400],
+                  inactiveTrackColor: Colors.grey[300],
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
