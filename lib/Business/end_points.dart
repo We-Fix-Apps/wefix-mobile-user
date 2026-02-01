@@ -150,4 +150,5 @@ class EndPoints {
   static String mmsTicketTypes = 'company-data/ticket-types';
   static String mmsTicketStatuses = 'company-data/ticket-statuses';
   static String mmsUploadFiles = 'files/upload-multiple'; // New - Upload multiple files
+  static String mmsDeleteAccount = 'user/account'; // Soft delete account (DELETE method)
 }

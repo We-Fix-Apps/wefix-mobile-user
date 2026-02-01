@@ -1226,11 +1226,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmDelete => 'Confirm Delete';
 
   @override
-  String get areYouSureDeleteMaterial =>
-      'Are you sure you want to delete this material?';
+  String get areYouSureDeleteAccount =>
+      'Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.';
+
+  @override
+  String get accountDeletedSuccessfully =>
+      'Your account has been deleted successfully.';
+
+  @override
+  String get errorDeletingAccount =>
+      'Failed to delete account. Please try again later.';
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get areYouSureDeleteMaterial =>
+      'Are you sure you want to delete this material?';
 
   @override
   String get materialDeletedSuccessfully => 'Material deleted successfully';

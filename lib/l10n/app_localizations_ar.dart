@@ -1220,10 +1220,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmDelete => 'تأكيد الحذف';
 
   @override
-  String get areYouSureDeleteMaterial => 'هل أنت متأكد من حذف هذه المادة؟';
+  String get areYouSureDeleteAccount =>
+      'هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بياناتك بشكل دائم.';
+
+  @override
+  String get accountDeletedSuccessfully => 'تم حذف حسابك بنجاح.';
+
+  @override
+  String get errorDeletingAccount =>
+      'فشل حذف الحساب. يرجى المحاولة مرة أخرى لاحقاً.';
 
   @override
   String get cancel => 'إلغاء';
+
+  @override
+  String get areYouSureDeleteMaterial => 'هل أنت متأكد من حذف هذه المادة؟';
 
   @override
   String get materialDeletedSuccessfully => 'تم حذف المادة بنجاح';

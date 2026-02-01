@@ -2456,17 +2456,35 @@ abstract class AppLocalizations {
   /// **'Confirm Delete'**
   String get confirmDelete;
 
-  /// No description provided for @areYouSureDeleteMaterial.
+  /// No description provided for @areYouSureDeleteAccount.
   ///
   /// In en, this message translates to:
-  /// **'Are you sure you want to delete this material?'**
-  String get areYouSureDeleteMaterial;
+  /// **'Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.'**
+  String get areYouSureDeleteAccount;
+
+  /// No description provided for @accountDeletedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deleted successfully.'**
+  String get accountDeletedSuccessfully;
+
+  /// No description provided for @errorDeletingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete account. Please try again later.'**
+  String get errorDeletingAccount;
 
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// No description provided for @areYouSureDeleteMaterial.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this material?'**
+  String get areYouSureDeleteMaterial;
 
   /// No description provided for @materialDeletedSuccessfully.
   ///

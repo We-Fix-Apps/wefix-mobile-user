@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
@@ -23,6 +21,7 @@ import 'package:wefix/Presentation/Profile/Screens/EditUser/edit_mobile_screen.d
 import 'package:wefix/Presentation/Profile/Screens/EditUser/change_password_screen.dart';
 import 'package:wefix/Presentation/wallet/screens/wallet_screen.dart';
 import 'package:wefix/l10n/app_localizations.dart';
+import 'package:wefix/Business/orders/profile_api.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -96,26 +95,109 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 WidgetCard(
                     isDelete: true,
                     title: AppText(context).deletemyAccount,
-                    onTap: () {
-                      showDialog(
+                    onTap: () async {
+                      // Show confirmation dialog first
+                      final confirmResult = await showDialog<bool>(
                         context: context,
                         builder: (context) {
-                          return WidgetDialog(
-                            title: AppText(context, isFunction: true).successfully,
-                            desc: 'Your Account deleted Successfully',
-                            isError: false,
-                            onTap: () {
-                              // Set logout flag in cache
-                              CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
-                              // Clear user data but preserve for biometric login
-                              setState(() => appProvider.clearUser(preserveUserDataForBiometric: true));
-                              appProvider.clearTokens();
-                              // Navigate to login screen and remove all previous routes
-                              Navigator.pushAndRemoveUntil(context, downToTop(const LoginScreen()), (route) => false);
-                            },
+                          return AlertDialog(
+                            title: Text(AppLocalizations.of(context)?.confirmDelete ?? 'Confirm Delete'),
+                            content: Text(AppLocalizations.of(context)?.areYouSureDeleteAccount ?? 'Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently deleted.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                ),
+                                child: Text(AppLocalizations.of(context)?.delete ?? 'Delete'),
+                              ),
+                            ],
                           );
                         },
                       );
+
+                      if (confirmResult == true && mounted) {
+                        // Show loading dialog
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                        );
+
+                        try {
+                          final token = appProvider.accessToken ?? appProvider.userModel?.token ?? '';
+                          
+                          // Determine if user is B2B or B2C
+                          final roleId = appProvider.userModel?.customer.roleId;
+                          final roleIdInt = roleId is int ? roleId : (roleId is String ? int.tryParse(roleId.toString()) : null);
+                          final bool isB2B = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22 || roleIdInt == 26);
+                          
+                          final result = await ProfileApis.deleteAccount(token: token, isB2B: isB2B);
+
+                          if (mounted) {
+                            Navigator.pop(context); // Close loading dialog
+
+                            if (result == true) {
+                              // Show success dialog
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return WidgetDialog(
+                                    title: AppText(context, isFunction: true).successfully,
+                                    desc: AppLocalizations.of(context)?.accountDeletedSuccessfully ?? 'Your account has been deleted successfully.',
+                                    isError: false,
+                                    onTap: () {
+                                      // Set logout flag in cache
+                                      CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
+                                      // Clear user data but preserve for biometric login
+                                      setState(() => appProvider.clearUser(preserveUserDataForBiometric: true));
+                                      appProvider.clearTokens();
+                                      // Navigate to login screen and remove all previous routes
+                                      Navigator.pushAndRemoveUntil(context, downToTop(const LoginScreen()), (route) => false);
+                                    },
+                                  );
+                                },
+                              );
+                            } else {
+                              // Show error dialog
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return WidgetDialog(
+                                    title: 'Error',
+                                    desc: AppLocalizations.of(context)?.errorDeletingAccount ?? 'Failed to delete account. Please try again later.',
+                                    isError: true,
+                                    onTap: () => Navigator.pop(context),
+                                  );
+                                },
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            Navigator.pop(context); // Close loading dialog
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return WidgetDialog(
+                                  title: 'Error',
+                                  desc: AppLocalizations.of(context)?.errorDeletingAccount ?? 'An error occurred while deleting your account. Please try again later.',
+                                  isError: true,
+                                  onTap: () => Navigator.pop(context),
+                                );
+                              },
+                            );
+                          }
+                        }
+                      }
                     }),
               ],
             ],

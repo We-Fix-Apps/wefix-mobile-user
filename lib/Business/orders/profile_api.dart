@@ -587,19 +587,49 @@ class ProfileApis {
 
   static Future deleteAccount({
     required String token,
+    required bool isB2B, // true for B2B (backend-mms), false for B2C (backend-oms)
   }) async {
     try {
-      final response = await HttpHelper.postData(
-        query: EndPoints.deleteAccount,
-        token: token,
-      );
+      if (isB2B) {
+        // B2B: Use backend-mms endpoint for account deletion (soft-delete)
+        final url = Uri.parse('${EndPoints.mmsBaseUrl}${EndPoints.mmsDeleteAccount}');
+        
+        var headers = {
+          'Content-Type': 'application/json',
+          'Accept': '*/*',
+          'Connection': 'keep-alive',
+          'Authorization': 'Bearer $token',
+        };
+        
+        final response = await http.delete(url, headers: headers);
 
-      log('deleteAccount() [ STATUS ] -> ${response.statusCode}');
+        log('deleteAccount() [B2B] [ STATUS ] -> ${response.statusCode}');
 
-      if (response.statusCode == 200) {
-        return true;
+        if (response.statusCode == 200) {
+          final body = json.decode(response.body);
+          if (body['success'] == true) {
+            return true;
+          }
+          return false;
+        } else {
+          log('deleteAccount() [B2B] [ ERROR ] -> Status ${response.statusCode}, body: ${response.body}');
+          return false;
+        }
       } else {
-        return false;
+        // B2C: Use backend-oms endpoint (ASP.NET API)
+        final response = await HttpHelper.postData(
+          query: EndPoints.deleteAccount,
+          token: token,
+        );
+
+        log('deleteAccount() [B2C] [ STATUS ] -> ${response.statusCode}');
+
+        if (response.statusCode == 200) {
+          return true;
+        } else {
+          log('deleteAccount() [B2C] [ ERROR ] -> Status ${response.statusCode}');
+          return false;
+        }
       }
     } catch (e) {
       log('deleteAccount() [ ERROR ] -> $e');
