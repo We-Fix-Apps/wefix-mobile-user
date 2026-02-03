@@ -407,6 +407,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
           onTap: onTap,
           borderRadius: BorderRadius.circular(7),
           child: Container(
+             width: 80,
+             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(border: Border.all(color: AppColors(context).primaryColor), borderRadius: BorderRadius.circular(7)),
             child: Text(action, style: const TextStyle(color: Colors.black, fontSize: 13)),
