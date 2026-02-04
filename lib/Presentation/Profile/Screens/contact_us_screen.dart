@@ -407,12 +407,14 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
           onTap: onTap,
           borderRadius: BorderRadius.circular(7),
           child: Container(
+            width: 70,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(border: Border.all(color: AppColors(context).primaryColor), borderRadius: BorderRadius.circular(7)),
-            child: Text(action, style: const TextStyle(color: Colors.black, fontSize: 13)),
+            child: Text(action, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black, fontSize: 13)),
           ),
         ));
   }
+
 
   Widget _actionItem(String icon, String label, Function() onTap) {
     return Expanded(
