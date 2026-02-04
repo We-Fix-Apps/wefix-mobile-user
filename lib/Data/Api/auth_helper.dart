@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
+import 'package:wefix/Data/Functions/cash_strings.dart';
 import 'package:wefix/Data/Functions/token_refresh.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/main.dart' show navigatorKey;
 import 'package:wefix/Presentation/auth/login_screen.dart';
+import 'package:wefix/Presentation/Components/widget_dialog.dart';
 
 /// Helper class for authentication-related operations
 class AuthHelper {
@@ -80,13 +82,13 @@ class AuthHelper {
     if (statusCode == 401 || statusCode == 403) {
       // Check if user account is deactivated - force logout immediately
       if (responseMessage == 'User account is deactivated') {
-        await _forceLogoutImmediate(context);
+        await _forceLogoutImmediate(context, message: 'User account is deactivated');
         return;
       }
       
       // Check if token is invalid for this service - force logout immediately
       if (responseMessage == 'Invalid token for this service') {
-        await _forceLogoutImmediate(context);
+        await _forceLogoutImmediate(context, message: 'Invalid token for this service');
         return;
       }
       
@@ -104,13 +106,56 @@ class AuthHelper {
     }
   }
 
-  /// Force logout immediately without refresh attempt (for deactivated accounts)
-  static Future<void> _forceLogoutImmediate(BuildContext? context) async {
+  /// Force logout immediately without refresh attempt (for deactivated accounts or invalid tokens)
+  static Future<void> _forceLogoutImmediate(BuildContext? context, {String? message}) async {
     try {
       BuildContext? ctx = context ?? navigatorKey.currentContext;
       if (ctx != null) {
-        final appProvider = Provider.of<AppProvider>(ctx, listen: false);
-        await _forceLogoutDirect(appProvider, ctx);
+        // Show error message to user before logout
+        if (message != null) {
+          // Get current language
+          String? langCode = CacheHelper.getData(key: LANG_CACHE);
+          bool isArabic = langCode == 'ar';
+          
+          String title = isArabic ? 'خطأ في المصادقة' : 'Authentication Error';
+          String desc;
+          
+          if (message == 'Invalid token for this service') {
+            desc = isArabic 
+                ? 'رمز غير صالح لهذه الخدمة. يرجى تسجيل الدخول مرة أخرى.'
+                : 'Invalid token for this service. Please login again.';
+          } else if (message == 'User account is deactivated') {
+            desc = isArabic
+                ? 'تم إلغاء تفعيل حسابك. يرجى التواصل مع الدعم.'
+                : 'Your account has been deactivated. Please contact support.';
+          } else {
+            desc = message;
+          }
+          
+          // Show dialog and wait for user to dismiss it, then logout
+          await showDialog(
+            context: ctx,
+            barrierDismissible: false,
+            builder: (dialogContext) {
+              return WidgetDialog(
+                title: title,
+                desc: desc,
+                isError: true,
+                onTap: () {
+                  Navigator.of(dialogContext).pop();
+                },
+              );
+            },
+          );
+          
+          // After dialog is dismissed, proceed with logout
+          final appProvider = Provider.of<AppProvider>(ctx, listen: false);
+          await _forceLogoutDirect(appProvider, ctx);
+        } else {
+          // If no message, logout directly
+          final appProvider = Provider.of<AppProvider>(ctx, listen: false);
+          await _forceLogoutDirect(appProvider, ctx);
+        }
       }
     } catch (e) {
       // Silent fail
