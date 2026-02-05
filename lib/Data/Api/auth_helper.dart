@@ -109,8 +109,16 @@ class AuthHelper {
   /// Force logout immediately without refresh attempt (for deactivated accounts or invalid tokens)
   static Future<void> _forceLogoutImmediate(BuildContext? context, {String? message}) async {
     try {
+      // Get context - try parameter first, then navigatorKey, then wait for it
       BuildContext? ctx = context ?? navigatorKey.currentContext;
-      if (ctx != null) {
+      
+      // If context is not available, wait a bit and try again
+      if (ctx == null) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        ctx = navigatorKey.currentContext;
+      }
+      
+      if (ctx != null && ctx.mounted) {
         // Show error message to user before logout
         if (message != null) {
           // Get current language
@@ -122,8 +130,8 @@ class AuthHelper {
           
           if (message == 'Invalid token for this service') {
             desc = isArabic 
-                ? 'رمز غير صالح لهذه الخدمة. يرجى تسجيل الدخول مرة أخرى.'
-                : 'Invalid token for this service. Please login again.';
+                ? 'انتهت صلاحية جلسة تسجيل الدخول. يرجى تسجيل الدخول مرة أخرى للمتابعة.'
+                : 'Your session has expired. Please login again to continue.';
           } else if (message == 'User account is deactivated') {
             desc = isArabic
                 ? 'تم إلغاء تفعيل حسابك. يرجى التواصل مع الدعم.'
@@ -149,16 +157,39 @@ class AuthHelper {
           );
           
           // After dialog is dismissed, proceed with logout
-          final appProvider = Provider.of<AppProvider>(ctx, listen: false);
-          await _forceLogoutDirect(appProvider, ctx);
+          if (ctx.mounted) {
+            final appProvider = Provider.of<AppProvider>(ctx, listen: false);
+            await _forceLogoutDirect(appProvider, ctx);
+          }
         } else {
           // If no message, logout directly
-          final appProvider = Provider.of<AppProvider>(ctx, listen: false);
-          await _forceLogoutDirect(appProvider, ctx);
+          if (ctx.mounted) {
+            final appProvider = Provider.of<AppProvider>(ctx, listen: false);
+            await _forceLogoutDirect(appProvider, ctx);
+          }
+        }
+      } else {
+        // If context is still not available, try to get AppProvider and logout directly
+        // This is a fallback for edge cases
+        try {
+          final fallbackCtx = navigatorKey.currentContext;
+          if (fallbackCtx != null && fallbackCtx.mounted) {
+            final appProvider = Provider.of<AppProvider>(fallbackCtx, listen: false);
+            await _forceLogoutDirect(appProvider, fallbackCtx);
+          } else {
+            // If all else fails, just clear cache and tokens
+            await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
+          }
+        } catch (e) {
+          // If all else fails, just clear cache and tokens
+          await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
         }
       }
     } catch (e) {
-      // Silent fail
+      // Silent fail - but try to at least clear the session
+      try {
+        await CacheHelper.saveData(key: CacheHelper.isLoggedOut, value: true);
+      } catch (_) {}
     }
   }
 
