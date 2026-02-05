@@ -52,6 +52,7 @@ class ObjTickets {
   String qrCode;
   String reportLink;
   bool isRated;
+  String? reportSummary;
   List<dynamic> ticketAttatchments;
   List<dynamic> ticketImages;
 
@@ -88,6 +89,7 @@ class ObjTickets {
     required this.qrCode,
     required this.reportLink,
     required this.isRated,
+    this.reportSummary,
     required this.ticketAttatchments,
     required this.ticketTools,
     required this.ticketMaterials,
@@ -120,6 +122,7 @@ class ObjTickets {
         qrCode: json["qrCode"],
         reportLink: json["reportLink"],
         isRated: json["isRated"],
+        reportSummary: json["reportSummary"],
         ticketAttatchments:
             List<dynamic>.from(json["ticketAttatchments"].map((x) => x)),
         ticketImages: List<dynamic>.from(json["ticketImages"].map((x) => x)),
@@ -159,6 +162,7 @@ class ObjTickets {
         "qrCode": qrCode,
         "reportLink": reportLink,
         "isRated": isRated,
+        "reportSummary": reportSummary,
         "ticketAttatchments":
             List<dynamic>.from(ticketAttatchments.map((x) => x)),
         "ticketTools": List<dynamic>.from(ticketTools.map((x) => x)),

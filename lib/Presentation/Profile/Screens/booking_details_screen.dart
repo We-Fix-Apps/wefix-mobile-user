@@ -1325,9 +1325,43 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
         throw Exception(language == 'ar' ? 'يرجى تسجيل الدخول' : 'Please login');
       }
 
+      // Prepare ticket data for report generation
+      // Map files to reportFiles format (only files marked for report)
+      List<Map<String, dynamic>> reportFiles = [];
+      if (ticketData['files'] != null && ticketData['files'] is List) {
+        final allFiles = ticketData['files'] as List;
+        // Filter files that should be in report (inReport = true) or all files if inReport is not available
+        final filesForReport = allFiles.where((file) {
+          // If inReport field exists, use it; otherwise include all files
+          if (file is Map && file.containsKey('inReport')) {
+            return file['inReport'] == true;
+          }
+          // For backward compatibility, include all files if inReport is not available
+          return true;
+        }).toList();
+        
+        reportFiles = filesForReport.map((file) {
+          final fileMap = file is Map ? file : {};
+          return {
+            'id': fileMap['id'],
+            'filename': fileMap['fileName'] ?? fileMap['filename'] ?? '',
+            'originalFilename': fileMap['fileName'] ?? fileMap['originalFilename'] ?? fileMap['filename'] ?? '',
+            'path': fileMap['filePath'] ?? fileMap['path'] ?? '',
+            'mimeType': _getMimeTypeFromPath(fileMap['filePath'] ?? fileMap['path'] ?? '') ?? 
+                        (fileMap['mimeType'] ?? 'application/octet-stream'),
+            'reportOrder': fileMap['reportOrder'] ?? 0,
+          };
+        }).toList();
+      }
+      
+      // Prepare final ticket data with reportFiles and reportSummary
+      final reportTicketData = Map<String, dynamic>.from(ticketData);
+      reportTicketData['reportFiles'] = reportFiles;
+      // Always include reportSummary (even if null)
+      reportTicketData['reportSummary'] = ticketData['reportSummary'];
+      
       // Call the PDF generation API
       // Use backend-mms endpoint which should proxy to backend-shms
-      // Note: backend-mms needs to have the reports route added
       final apiUrl = '${EndPoints.mmsBaseUrl}reports/ticket-pdf-v2';
       
       final response = await http.post(
@@ -1337,7 +1371,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
-          'ticketData': ticketData,
+          'ticketData': reportTicketData,
           'language': language,
         }),
       );
@@ -1569,6 +1603,36 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
         );
       },
     );
+  }
+
+  /// Get MIME type from file path/extension
+  String? _getMimeTypeFromPath(String filePath) {
+    if (filePath.isEmpty) return null;
+    
+    final extension = filePath.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'pdf':
+        return 'application/pdf';
+      case 'doc':
+      case 'docx':
+        return 'application/msword';
+      case 'xls':
+      case 'xlsx':
+        return 'application/vnd.ms-excel';
+      case 'mp4':
+        return 'video/mp4';
+      case 'mp3':
+        return 'audio/mpeg';
+      default:
+        return 'application/octet-stream';
+    }
   }
 
   /// Build full URL from relative path

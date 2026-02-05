@@ -322,6 +322,7 @@ class BookingApi {
                 'source': ticketData['source'] ?? '',
                 'createdAt': ticketData['createdAt'] ?? '',
                 'updatedAt': ticketData['updatedAt'] ?? '',
+                'reportSummary': ticketData['reportSummary'],
               }
             };
             
