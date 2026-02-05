@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,8 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Bookings/bookings_apis.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
@@ -46,11 +49,44 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
   Map<String, dynamic>? fullTicketData; // Full ticket data from MMS API
   int materialsCount = 0; // Materials count fetched from API
   int? contractBusinessModelLookupId; // Contract business model lookup ID (24 = B2B, 25 = White Label)
+  final ScrollController _scrollController = ScrollController();
+  bool _showDownloadButton = false;
+  bool _isDownloading = false;
 
   @override
   void initState() {
     super.initState();
     getBookingDetails();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      final delta = 100.0; // Show button when within 100px of bottom
+      
+      if (currentScroll >= (maxScroll - delta)) {
+        if (!_showDownloadButton) {
+          setState(() {
+            _showDownloadButton = true;
+          });
+        }
+      } else {
+        if (_showDownloadButton) {
+          setState(() {
+            _showDownloadButton = false;
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -178,34 +214,63 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
               
           
           : const SizedBox(),
-      floatingActionButton: bookingDetailsModel?.objTickets.status == "Completed"
-          ? const SizedBox()
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FloatingActionButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      downToTop(
-                        CommentsScreenById(ticketId: bookingDetailsModel?.objTickets.id ?? 0, toUserId: bookingDetailsModel?.objTickets.userId ?? 0),
+      floatingActionButton: _showDownloadButton && (bookingDetailsModel != null || fullTicketData != null)
+          ? FloatingActionButton.extended(
+              onPressed: _isDownloading ? null : _downloadReport,
+              backgroundColor: AppColors(context).primaryColor,
+              icon: _isDownloading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
-                    );
-                  },
-                  backgroundColor: AppColors(context).primaryColor,
-                  child: const Icon(Icons.chat_bubble),
-                ),
-              ],
-            ),
+                    )
+                  : const Icon(Icons.download, color: Colors.white),
+              label: Text(
+                _isDownloading
+                    ? (languageProvider.lang == "ar" ? "جاري التحميل..." : "Downloading...")
+                    : (languageProvider.lang == "ar" ? "تحميل التقرير" : "Download Report"),
+                style: const TextStyle(color: Colors.white),
+              ),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: loading == true
           ? LinearProgressIndicator(
               color: AppColors(context).primaryColor,
               backgroundColor: AppColors.secoundryColor,
             )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(8),
-              child: Column(
+          : NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification notification) {
+                if (notification is ScrollUpdateNotification) {
+                  if (_scrollController.hasClients) {
+                    final maxScroll = _scrollController.position.maxScrollExtent;
+                    final currentScroll = _scrollController.position.pixels;
+                    final delta = 100.0;
+                    
+                    if (currentScroll >= (maxScroll - delta)) {
+                      if (!_showDownloadButton) {
+                        setState(() {
+                          _showDownloadButton = true;
+                        });
+                      }
+                    } else {
+                      if (_showDownloadButton) {
+                        setState(() {
+                          _showDownloadButton = false;
+                        });
+                      }
+                    }
+                  }
+                }
+                return false;
+              },
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(8),
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('🛠️ ${AppText(context).maintenanceTicketDetails}',
@@ -1207,6 +1272,7 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 
@@ -1214,6 +1280,136 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
     final uri = Uri.parse(url);
 
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _downloadReport() async {
+    if (_isDownloading) return;
+    
+    setState(() {
+      _isDownloading = true;
+    });
+
+    try {
+      final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+      final appProvider = Provider.of<AppProvider>(context, listen: false);
+      final language = languageProvider.lang ?? 'ar';
+      
+      // Get ticket data - prefer fullTicketData if available (B2B), otherwise use bookingDetailsModel
+      Map<String, dynamic>? ticketData;
+      String? ticketCodeId;
+      
+      if (fullTicketData != null) {
+        ticketData = fullTicketData;
+        ticketCodeId = fullTicketData!['ticketCodeId']?.toString() ?? fullTicketData!['id']?.toString();
+      } else if (bookingDetailsModel != null) {
+        ticketCodeId = bookingDetailsModel!.objTickets.id?.toString();
+        // For non-B2B users, we need to fetch full ticket data from API
+        // For now, we'll use the reportLink if available
+        if (bookingDetailsModel!.objTickets.reportLink != null && 
+            bookingDetailsModel!.objTickets.reportLink!.isNotEmpty) {
+          _launchUrl(bookingDetailsModel!.objTickets.reportLink!);
+          setState(() {
+            _isDownloading = false;
+          });
+          return;
+        }
+      }
+
+      if (ticketData == null || ticketCodeId == null) {
+        throw Exception(language == 'ar' ? 'لا توجد بيانات التذكرة' : 'Ticket data not available');
+      }
+
+      // Get token from app provider
+      final token = appProvider.userModel?.token;
+      if (token == null) {
+        throw Exception(language == 'ar' ? 'يرجى تسجيل الدخول' : 'Please login');
+      }
+
+      // Call the PDF generation API
+      // Use backend-mms endpoint which should proxy to backend-shms
+      // Note: backend-mms needs to have the reports route added
+      final apiUrl = '${EndPoints.mmsBaseUrl}reports/ticket-pdf-v2';
+      
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'ticketData': ticketData,
+          'language': language,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        // Check if response body is not empty
+        if (response.bodyBytes.isEmpty) {
+          throw Exception(language == 'ar' ? 'الاستجابة فارغة من الخادم' : 'Empty response from server');
+        }
+
+        // Save the PDF file
+        final directory = await getApplicationDocumentsDirectory();
+        final date = DateTime.now().toIso8601String().split('T')[0];
+        final fileName = 'Ticket_Report_${ticketCodeId}_$date.pdf';
+        final filePath = '${directory.path}/$fileName';
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Open the file
+        final result = await OpenFile.open(filePath);
+        
+        if (result.type != ResultType.done) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                language == 'ar' 
+                    ? 'تم تحميل التقرير بنجاح' 
+                    : 'Report downloaded successfully',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        // Try to parse error message, but handle cases where response is not JSON
+        String errorMessage = language == 'ar' ? 'فشل تحميل التقرير' : 'Failed to download report';
+        try {
+          if (response.body.isNotEmpty) {
+            final errorData = jsonDecode(response.body);
+            errorMessage = errorData['message'] ?? errorMessage;
+          } else {
+            errorMessage = language == 'ar' 
+                ? 'خطأ في الخادم (${response.statusCode})' 
+                : 'Server error (${response.statusCode})';
+          }
+        } catch (e) {
+          // If JSON parsing fails, use status code message
+          errorMessage = language == 'ar' 
+              ? 'خطأ في الخادم (${response.statusCode})' 
+              : 'Server error (${response.statusCode})';
+        }
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+      final language = languageProvider.lang ?? 'ar';
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            language == 'ar' 
+                ? 'خطأ في تحميل التقرير: ${e.toString()}' 
+                : 'Error downloading report: ${e.toString()}',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isDownloading = false;
+      });
+    }
   }
 
   void showAttachmentBottomSheet(BuildContext context) {
