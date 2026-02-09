@@ -28,10 +28,6 @@ class WidgetCachNetworkImage extends StatelessWidget {
         width: width,
         fit: boxFit,
 
-        // 🔑 مهم جدًا للـ Grid
-        memCacheHeight: height?.toInt(),
-        memCacheWidth: width?.toInt(),
-
         placeholder: (_, __) => Container(
           color: AppColors.lightGreyColor,
           alignment: Alignment.center,
