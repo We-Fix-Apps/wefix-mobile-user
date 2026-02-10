@@ -22,6 +22,7 @@ import 'package:wefix/Presentation/SplashScreen/splash_screen.dart';
 import 'package:wefix/Data/Functions/token_refresh.dart';
 import 'package:wefix/Data/Functions/token_utils.dart';
 import 'package:wefix/Data/Functions/permissions_helper.dart';
+import 'package:wefix/Data/services/crashlytics_service.dart';
 import 'Data/model/user_model.dart';
 import 'l10n/app_localizations.dart';
 
@@ -59,6 +60,12 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await CacheHelper.init();
+
+  // Set user info in Crashlytics if user is cached
+  UserModel? cachedUser = MainManagements.handelUserData();
+  if (cachedUser != null) {
+    await CrashlyticsService.setUserInfo(cachedUser);
+  }
 
   SystemChrome.setPreferredOrientations(
     [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],

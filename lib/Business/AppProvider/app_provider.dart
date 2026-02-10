@@ -7,6 +7,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:wefix/Data/Functions/cash_strings.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
+import 'package:wefix/Data/services/crashlytics_service.dart';
 
 import 'package:wefix/Data/model/app_languege_model.dart';
 import 'package:wefix/Data/model/user_model.dart';
@@ -173,6 +174,11 @@ class AppProvider with ChangeNotifier {
     if (user != null) {
       CacheHelper.saveData(
           key: CacheHelper.userData, value: json.encode(userModel));
+      // Set user info in Crashlytics
+      CrashlyticsService.setUserInfo(user);
+    } else {
+      // Clear user info from Crashlytics if user is null
+      CrashlyticsService.clearUserInfo();
     }
     notifyListeners();
   }
@@ -312,6 +318,8 @@ class AppProvider with ChangeNotifier {
     // Tokens are needed for biometric login to work properly
     if (!preserveUserDataForBiometric) {
       clearTokens();
+      // Clear user info from Crashlytics on logout
+      CrashlyticsService.clearUserInfo();
     }
     // Preserve user data in cache for biometric authentication after logout
     // Only clear it if explicitly requested (e.g., for security/account deletion)
