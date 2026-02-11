@@ -15,9 +15,10 @@ Future<void> init() async {
   );
   // Initialize Crashlytics
   await CrashlyticsService.initialize();
-  await FcmHelper.initFcm();
   sl.registerSingleton<FirebaseMessaging>(FirebaseMessaging.instance);
-  await FcmHelper.initFcm();
+  await FcmHelper.initFcm(); // Only call once to avoid duplicate handlers
   await NotificationsController.initializeLocalNotifications();
   await NotificationsController.initializeIsolateReceivePort();
+  // Initialize event listeners to handle notification taps
+  await NotificationsController.initializeNotificationsEventListeners();
 }

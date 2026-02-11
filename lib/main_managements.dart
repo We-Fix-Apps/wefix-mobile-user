@@ -4,17 +4,16 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:bot_toast/bot_toast.dart';
 import 'package:wefix/Data/model/user_model.dart';
-import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/Functions/cash_strings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
-import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
+import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
+import 'package:wefix/Data/Notification/fcm_setup.dart';
 
 class MainManagements {
   // ! Start Home Layout
@@ -55,149 +54,124 @@ class MainManagements {
     log('Fcm Token :- ${appProvider.fcmToken}');
   }
 
+  // Helper function to navigate to ticket details or notifications screen
+  static void _navigateFromNotification(BuildContext context, Map<String, dynamic> data) {
+    try {
+      final ticketId = data['ticketId']?.toString();
+      if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
+        log('Navigating to ticket details: $ticketId');
+        Navigator.push(
+          context,
+          rightToLeft(TicketDetailsScreen(id: ticketId)),
+        );
+      } else {
+        log('No ticketId found, navigating to notifications screen');
+        Navigator.push(context, downToTop(NotificationsScreen()));
+      }
+    } catch (e) {
+      log('Error navigating from notification: $e');
+      // Fallback to notifications screen on error
+      try {
+        Navigator.push(context, downToTop(NotificationsScreen()));
+      } catch (e2) {
+        log('Error navigating to notifications screen: $e2');
+      }
+    }
+  }
+
+  // Helper function to get localized notification text
+  static String _getLocalizedNotificationText(
+    Map<String, dynamic> data,
+    String defaultText,
+    String enKey,
+    String arKey,
+  ) {
+    try {
+      // Get user's language preference
+      final langCode = CacheHelper.getData(key: LANG_CACHE);
+      log('Language code from cache: $langCode');
+      
+      // Handle both string and dynamic types
+      String? langString;
+      if (langCode is String) {
+        langString = langCode;
+      } else if (langCode != null) {
+        langString = langCode.toString();
+      }
+      
+      final isArabic = langString != null && langString.toLowerCase().trim() == 'ar';
+      log('Is Arabic: $isArabic (langString: $langString)');
+
+      // Check if localized data exists in message.data
+      log('Checking for keys: $enKey, $arKey in data: ${data.keys.toList()}');
+      if (data.containsKey(enKey) || data.containsKey(arKey)) {
+        final enValue = data[enKey]?.toString().trim() ?? '';
+        final arValue = data[arKey]?.toString().trim() ?? '';
+        
+        log('English value: $enValue, Arabic value: $arValue');
+        
+        if (isArabic) {
+          // Prefer Arabic, fallback to English, then default
+          final result = arValue.isNotEmpty 
+              ? arValue 
+              : (enValue.isNotEmpty ? enValue : defaultText);
+          log('Selected Arabic text: $result');
+          return result;
+        } else {
+          // Prefer English, fallback to Arabic, then default
+          final result = enValue.isNotEmpty 
+              ? enValue 
+              : (arValue.isNotEmpty ? arValue : defaultText);
+          log('Selected English text: $result');
+          return result;
+        }
+      }
+
+      // Fallback to default notification text
+      log('No localized keys found, using default: $defaultText');
+      return defaultText.isNotEmpty ? defaultText : 'New Notification';
+    } catch (e) {
+      log('Error getting localized notification text: $e');
+      return defaultText.isNotEmpty ? defaultText : 'New Notification';
+    }
+  }
+
   static void handelNotification({required Future<void> Function(RemoteMessage) handler, required GlobalKey<NavigatorState> navigatorKey, required BuildContext context}) {
     // Todo : Start Notifications
 
-    // * If Application is open , then it will work
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      log('Got a message whilst in the foreground!');
-      log('Message data: ${message.data}');
+    // * If Application is open (foreground), notifications are handled by FcmHelper._fcmForegroundHandler
+    // which creates localized system notifications using Awesome Notifications
+    // No need to handle here to avoid duplicates
 
-      if (message.notification != null) {
-        log('Message also contained a notification: ${message.notification}');
-        BotToast.showNotification(
-            onTap: () {
-              Navigator.push(navigatorKey.currentState!.context, downToTop(NotificationsScreen()));
-            },
-            contentPadding: const EdgeInsets.all(8.0),
-            align: Alignment.topCenter,
-            title: (w) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.notifications_active,
-                          color: AppColors(context).primaryColor,
-                        ),
-                        const SizedBox(width: 10.0),
-                        Text(
-                          message.notification?.title ?? ' ',
-                          style: TextStyle(
-                            fontSize: AppSize(context).smallText2,
-                            color: AppColors(context).primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                ),
-            subtitle: (w) => Text(
-                  message.notification?.body ?? ' ',
-                  style: TextStyle(
-                    color: AppColors.greyColor2,
-                    fontWeight: FontWeight.normal,
-                    fontSize: AppSize(context).smallText3,
-                  ),
-                ),
-            duration: const Duration(seconds: 5));
-      }
-    });
-
-    // * If Application is in backGround , then it will work
+    // * If Application is in backGround or Terminated
+    // Handle navigation when app is opened from background via notification tap
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage remoteMessage) async {
       log('onMessageOpenedApp : $remoteMessage');
-      if (remoteMessage.notification != null) {
-        BotToast.showNotification(
-            onTap: () {
-              Navigator.push(navigatorKey.currentState!.context, downToTop(NotificationsScreen()));
-            },
-            contentPadding: const EdgeInsets.all(8.0),
-            align: Alignment.topCenter,
-            title: (w) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.notifications_active,
-                          color: AppColors(context).primaryColor,
-                        ),
-                        const SizedBox(width: 10.0),
-                        Text(
-                          remoteMessage.notification?.title ?? ' ',
-                          style: TextStyle(
-                            color: AppColors(context).primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                ),
-            subtitle: (w) => Text(
-                  remoteMessage.notification?.body ?? ' ',
-                  style: const TextStyle(
-                    color: AppColors.greyColor2,
-                    fontWeight: FontWeight.normal,
-                    fontSize: 14,
-                  ),
-                ),
-            duration: const Duration(seconds: 5));
+      log('onMessageOpenedApp data: ${remoteMessage.data}');
+      // Navigate to ticket details if ticketId is present
+      if (remoteMessage.data.containsKey('ticketId')) {
+        FcmHelper.navigateFromFirebaseMessage(remoteMessage.data);
       }
     });
 
-    // * If Application is in Closed or Terminiated
+    // * If Application is in Closed or Terminated
+    // Handle navigation when app is opened from terminated state via notification tap
     FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? remoteMessage) {
-      if (remoteMessage?.notification != null) {
-        BotToast.showNotification(
-            onTap: () {
-              // Navigator.pushNamed(
-              //   navigatorKey.currentState!.context,
-              //   '/home',
-              //   arguments: {'message': json.encode(remoteMessage?.data)},
-              // );
-              Navigator.push(navigatorKey.currentState!.context, downToTop(NotificationsScreen()));
-            },
-            contentPadding: const EdgeInsets.all(8.0),
-            align: Alignment.topCenter,
-            title: (w) => Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.notifications_active,
-                          color: AppColors(context).primaryColor,
-                        ),
-                        const SizedBox(width: 10.0),
-                        Text(
-                          remoteMessage?.notification?.title ?? ' ',
-                          style: TextStyle(
-                            color: AppColors(context).primaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                ),
-            subtitle: (w) => Text(
-                  remoteMessage?.notification?.body ?? ' ',
-                  style: const TextStyle(
-                    color: AppColors.greyColor2,
-                    fontWeight: FontWeight.normal,
-                    fontSize: 14,
-                  ),
-                ),
-            duration: const Duration(seconds: 5));
+      if (remoteMessage != null) {
+        log('getInitialMessage: $remoteMessage');
+        log('getInitialMessage data: ${remoteMessage.data}');
+        // Navigate to ticket details if ticketId is present
+        if (remoteMessage.data.containsKey('ticketId')) {
+          // Use a longer delay for terminated state to ensure app is fully initialized
+          Future.delayed(const Duration(milliseconds: 2000), () {
+            FcmHelper.navigateFromFirebaseMessage(remoteMessage.data);
+          });
+        }
       }
     });
 
-    FirebaseMessaging.onBackgroundMessage(handler);
+    // Background handler is already registered in FcmHelper.initFcm() in injection_container.dart
+    // No need to register here to avoid overriding the localized handler
+    // FirebaseMessaging.onBackgroundMessage(handler);
   }
 }

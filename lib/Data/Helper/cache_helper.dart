@@ -1,29 +1,50 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CacheHelper {
-  static late SharedPreferences sharedPreferences;
+  static SharedPreferences? _sharedPreferences;
 
-  static init() async {
-    sharedPreferences = await SharedPreferences.getInstance();
+  static Future<void> init() async {
+    _sharedPreferences = await SharedPreferences.getInstance();
   }
 
   static dynamic getData({required String key}) {
-    return sharedPreferences.get(key);
+    try {
+      if (_sharedPreferences == null) {
+        return null;
+      }
+      return _sharedPreferences!.get(key);
+    } catch (e) {
+      return null;
+    }
   }
 
   static dynamic removeData({required String key}) {
-    return sharedPreferences.remove(key);
+    try {
+      if (_sharedPreferences == null) {
+        return false;
+      }
+      return _sharedPreferences!.remove(key);
+    } catch (e) {
+      return false;
+    }
   }
 
   static Future<bool> saveData(
       {required String key, required dynamic value}) async {
-    if (value is int) return await sharedPreferences.setInt(key, value);
-    if (value is double) return await sharedPreferences.setDouble(key, value);
-    if (value is bool) return await sharedPreferences.setBool(key, value);
-    if (value is List<String>) {
-      return await sharedPreferences.setStringList(key, value);
+    try {
+      if (_sharedPreferences == null) {
+        await init();
+      }
+      if (value is int) return await _sharedPreferences!.setInt(key, value);
+      if (value is double) return await _sharedPreferences!.setDouble(key, value);
+      if (value is bool) return await _sharedPreferences!.setBool(key, value);
+      if (value is List<String>) {
+        return await _sharedPreferences!.setStringList(key, value);
+      }
+      return await _sharedPreferences!.setString(key, value);
+    } catch (e) {
+      return false;
     }
-    return await sharedPreferences.setString(key, value);
   }
 
   static String lang = 'LANGUAGEAPP';

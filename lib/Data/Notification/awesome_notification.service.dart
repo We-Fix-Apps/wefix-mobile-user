@@ -6,6 +6,9 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:wefix/Data/Notification/globale.dart';
 import 'package:wefix/Data/Notification/model/notification_channel_model.dart';
+import 'package:wefix/Data/Functions/navigation.dart';
+import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
+import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
  
 import '../../../../main.dart';
 
@@ -18,7 +21,7 @@ class NotificationsController {
   static Future<void> initializeLocalNotifications() async {
     await initializeIsolateReceivePort();
     await AwesomeNotifications().initialize(
-        "resource://drawable/app_icon",
+        "resource://mipmap/launcher_icon", // Match AndroidManifest.xml icon
         [
           NotificationChannel(
               channelGroupKey: NotificationChannelKey.basicChannel.groupKey,
@@ -161,11 +164,85 @@ class NotificationsController {
   }
 
   static Future<void> onActionReceivedMethodImpl(ReceivedAction receivedAction) async {
-    var message = 'Action ${receivedAction.actionType?.name} received on ${receivedAction.actionLifeCycle?.name}';
-    log(message);
-
+    log('Action ${receivedAction.actionType?.name} received on ${receivedAction.actionLifeCycle?.name}');
+    log('Notification payload: ${receivedAction.payload}');
+    
     // Always ensure that all plugins was initialized
     WidgetsFlutterBinding.ensureInitialized();
+    
+    // Handle navigation when notification is clicked
+    if (receivedAction.payload != null && receivedAction.payload!.isNotEmpty) {
+      final payload = receivedAction.payload!;
+      final ticketId = payload['ticketId']?.toString();
+      
+      log('Processing notification tap - ticketId: $ticketId, payload: $payload');
+      
+      // Use a delay to ensure the app context is ready, especially for foreground notifications
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
+        log('Navigating to ticket details: $ticketId');
+        try {
+          // Try to get context from navigatorKey
+          final context = navigatorKey.currentState?.context;
+          if (context != null && context.mounted) {
+            Navigator.push(
+              context,
+              rightToLeft(TicketDetailsScreen(id: ticketId)),
+            );
+            log('Successfully navigated to ticket details: $ticketId');
+          } else {
+            log('Context is null or not mounted, retrying navigation...');
+            // Retry after a longer delay if context is not ready
+            Future.delayed(const Duration(milliseconds: 1000), () {
+              try {
+                final retryContext = navigatorKey.currentState?.context;
+                if (retryContext != null && retryContext.mounted) {
+                  Navigator.push(
+                    retryContext,
+                    rightToLeft(TicketDetailsScreen(id: ticketId)),
+                  );
+                  log('Successfully navigated to ticket details on retry: $ticketId');
+                } else {
+                  log('Failed to navigate - context still not available');
+                }
+              } catch (e) {
+                log('Error navigating to ticket on retry: $e');
+              }
+            });
+          }
+        } catch (e) {
+          log('Error navigating to ticket: $e');
+        }
+      } else {
+        log('No ticketId found, navigating to notifications screen');
+        try {
+          final context = navigatorKey.currentState?.context;
+          if (context != null && context.mounted) {
+            Navigator.push(context, downToTop(NotificationsScreen()));
+            log('Successfully navigated to notifications screen');
+          } else {
+            log('Context is null or not mounted for notifications screen');
+            // Retry after a longer delay
+            Future.delayed(const Duration(milliseconds: 1000), () {
+              try {
+                final retryContext = navigatorKey.currentState?.context;
+                if (retryContext != null && retryContext.mounted) {
+                  Navigator.push(retryContext, downToTop(NotificationsScreen()));
+                  log('Successfully navigated to notifications screen on retry');
+                }
+              } catch (e) {
+                log('Error navigating to notifications screen on retry: $e');
+              }
+            });
+          }
+        } catch (e) {
+          log('Error navigating to notifications screen: $e');
+        }
+      }
+    } else {
+      log('No payload found in notification action');
+    }
   }
 
   // ***************************************************************
@@ -177,7 +254,62 @@ class NotificationsController {
 
     if (receivedAction?.channelKey == 'call_channel') {
       initialAction = receivedAction;
+    } else if (receivedAction != null) {
+      // Handle ticket notifications when app is opened from terminated state
+      log('Initial notification action received: ${receivedAction.payload}');
+      // Wait longer for app to be fully initialized when opened from terminated state
+      await Future.delayed(const Duration(milliseconds: 2000));
+      // Retry navigation with multiple attempts to ensure app is ready
+      _navigateFromTerminatedState(receivedAction);
     }
+  }
+  
+  /// Handle navigation when app is opened from terminated state
+  /// Uses retry logic with increasing delays to ensure app is fully initialized
+  static Future<void> _navigateFromTerminatedState(ReceivedAction receivedAction) async {
+    if (receivedAction.payload == null || receivedAction.payload!.isEmpty) {
+      log('No payload found in initial notification action');
+      return;
+    }
+    
+    final payload = receivedAction.payload!;
+    final ticketId = payload['ticketId']?.toString();
+    
+    log('Processing initial notification tap - ticketId: $ticketId, payload: $payload');
+    
+    // Try navigation with multiple retries and increasing delays
+    for (int attempt = 0; attempt < 5; attempt++) {
+      await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+      
+      try {
+        final context = navigatorKey.currentState?.context;
+        if (context != null && context.mounted) {
+          if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
+            log('Navigating to ticket details: $ticketId (attempt ${attempt + 1})');
+            Navigator.push(
+              context,
+              rightToLeft(TicketDetailsScreen(id: ticketId)),
+            );
+            log('Successfully navigated to ticket details: $ticketId');
+            return;
+          } else {
+            log('Navigating to notifications screen (attempt ${attempt + 1})');
+            Navigator.push(
+              context,
+              downToTop(NotificationsScreen()),
+            );
+            log('Successfully navigated to notifications screen');
+            return;
+          }
+        } else {
+          log('Context not ready yet (attempt ${attempt + 1}/5)');
+        }
+      } catch (e) {
+        log('Error navigating on attempt ${attempt + 1}: $e');
+      }
+    }
+    
+    log('Failed to navigate after 5 attempts - app may not be fully initialized');
   }
 
   //  *********************************************
@@ -195,6 +327,7 @@ class NotificationsController {
     String? bigPicture,
     NotificationChannelModel? channel,
     required Map<String, String?> payload,
+    int? notificationId,
   }) async {
     AwesomeNotifications().isNotificationAllowed().then((isAllowed) async {
       if (!isAllowed) {
@@ -202,17 +335,22 @@ class NotificationsController {
       } else {
         handleNotificationPayload(navigatorKey.currentState!.context, payload.cast());
 
+        // Use provided notificationId or -1 (random) to prevent duplicates
+        // If notificationId is provided, it will replace any existing notification with the same ID
+        final id = notificationId ?? -1;
+        
         await AwesomeNotifications().createNotification(
           content: NotificationContent(
-              id: -1,
-              // -1 is replaced by a random number
+              id: id,
+              // If id is -1, it's replaced by a random number
+              // If id is provided, it will replace any existing notification with the same ID
               channelKey: channel?.key ?? NotificationChannelKey.basicChannel.key,
               title: title,
               body: body,
               bigPicture: bigPicture,
               // 'https://storage.googleapis.com/cms-storage-bucket/d406c736e7c4c57f5f61.png',
-              largeIcon: "asset://assets/images/logo3N.png",
-              notificationLayout: NotificationLayout.BigPicture,
+              largeIcon: bigPicture?.isNotEmpty == true ? bigPicture : null,
+              notificationLayout: bigPicture?.isNotEmpty == true ? NotificationLayout.BigPicture : NotificationLayout.Default,
               payload: payload),
         );
       }
@@ -267,12 +405,16 @@ class NotificationsController {
   }
 
   static void handleNotificationPayload(BuildContext context, Map<String, dynamic> payload) {
-    // switch (notificationModel.topic) {
-    // case 'new_reservation':
-    //   // context.read<TodayReservationCubit>().getTodayReservation();
-    //   context.read<TodayReservationCubit>().clearAndFetchReservations();
-    //   break;
-    // }
+    // Handle navigation when notification is created (for foreground notifications)
+    try {
+      final ticketId = payload['ticketId']?.toString();
+      if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
+        log('Notification payload contains ticketId: $ticketId');
+        // Navigation will be handled by onActionReceivedMethodImpl when user taps
+      }
+    } catch (e) {
+      log('Error handling notification payload: $e');
+    }
   }
 
   static cancelScheduleNotification({required int id}) async {

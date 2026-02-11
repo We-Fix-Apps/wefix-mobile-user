@@ -23,6 +23,7 @@ import 'package:wefix/Data/Functions/token_refresh.dart';
 import 'package:wefix/Data/Functions/token_utils.dart';
 import 'package:wefix/Data/Functions/permissions_helper.dart';
 import 'package:wefix/Data/services/crashlytics_service.dart';
+import 'package:wefix/Data/Notification/awesome_notification.service.dart';
 import 'Data/model/user_model.dart';
 import 'l10n/app_localizations.dart';
 
@@ -30,9 +31,21 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // await Firebase.initializeApp();
+  // This handler is registered first in main.dart, but the actual notification
+  // creation is handled by FcmHelper._fcmBackgroundHandler in fcm_setup.dart
+  // which is registered during init() in injection_container.dart
+  // We keep this as a fallback, but it should not be called if FcmHelper.initFcm() runs first
   log('Handling a background message: ${message.messageId}');
   log('Message data: ${message.data}');
+  
+  // Try to call the FcmHelper handler if available
+  // Note: This might not work if FcmHelper hasn't been initialized yet
+  try {
+    // Import and call FcmHelper's background handler
+    // Since we can't import here (top-level function), we'll handle it in fcm_setup.dart
+  } catch (e) {
+    log('Error in background handler: $e');
+  }
 }
 
 Future<void> main() async {
@@ -56,8 +69,9 @@ Future<void> main() async {
   //   options: DefaultFirebaseOptions.currentPlatform,
   // );
 
-  // REGISTER BACKGROUND HANDLER BEFORE runApp
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // Background handler is registered in FcmHelper.initFcm() in injection_container.dart
+  // No need to register here to avoid overriding the localized handler
+  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await CacheHelper.init();
 
@@ -144,7 +158,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     MainManagements.handelNotification(
       context: context,
-      handler: _firebaseMessagingBackgroundHandler,
+      handler: _firebaseMessagingBackgroundHandler, // This is a fallback, but FcmHelper handles background notifications
       navigatorKey: navigatorKey,
     );
 
@@ -154,6 +168,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
 
     MainManagements.handelLanguage(context: context);
+    
+    // Handle initial notification if app was opened from a terminated state
+    // Use a longer delay to ensure app is fully initialized
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      NotificationsController.interceptInitialCallActionRequest();
+    });
   }
 
   @override

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Authantication/auth_apis.dart';
+import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
@@ -504,6 +505,38 @@ class _LoginScreenState extends State<LoginScreen> {
                                         style: const TextStyle(
                                             fontWeight: FontWeight.bold))
                                   ])),
+                            )
+                          ],
+                        ),
+                        SizedBox(height: AppSize(context).height * .02),
+                        // * Continue as Guest
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                // Navigate to home layout as guest (no authentication required)
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  downToTop(const HomeLayout()),
+                                  (route) => false,
+                                );
+                              },
+                              child: Builder(
+                                builder: (context) {
+                                  final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+                                  return Text(
+                                    languageProvider.lang == "ar" 
+                                        ? "المتابعة كضيف" 
+                                        : "Continue as Guest",
+                                    style: TextStyle(
+                                      color: AppColors(context).primaryColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: AppSize(context).smallText2,
+                                    ),
+                                  );
+                                },
+                              ),
                             )
                           ],
                         ),

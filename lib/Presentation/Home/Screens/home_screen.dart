@@ -109,35 +109,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
     final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
     
-    // Only call subscription check for all users
-    isSubsicribed();
+    // Check if user is guest (no authentication)
+    final isGuest = appProvider.userModel == null || 
+                   appProvider.userModel?.token == null || 
+                   appProvider.userModel!.token.isEmpty;
     
-    // Only call old ASP.NET APIs for B2C users
-    if (!isB2BUser) {
+    // Only call subscription check for authenticated users (not guests)
+    if (!isGuest) {
+      isSubsicribed();
+    }
+    
+    // Only call old ASP.NET APIs for B2C users (not guests)
+    if (!isB2BUser && !isGuest) {
       Future.wait([beforExpiredSubscription()]);
       getAllHomeApis().then((value) {
         getActiveTicket();
-
-      // try {
-      //   WidgetsBinding.instance.addPostFrameCallback((_) {
-      //     CustomeTutorialCoachMark.createTutorial(keyButtons, contents);
-      //     Future.delayed(const Duration(seconds: 2), () {
-      //       Map showTour =
-      //           json.decode(CacheHelper.getData(key: CacheHelper.showTour));
-      //       CustomeTutorialCoachMark.showTutorial(context,
-      //           isShow: showTour["home"] ?? true);
-      //       setState(() {
-      //         showTour["home"] = false;
-      //       });
-      //       CacheHelper.saveData(
-      //           key: CacheHelper.showTour, value: json.encode(showTour));
-      //       log(showTour.toString());
-      //     });
-      //   });
-      // } catch (e) {
-      //   log(e.toString());
-      // }
       });
+    } else if (isGuest) {
+      // For guest users, only load public home data without authentication
+      getAllHomeApis();
     }
 
     // Slide from bottom to top (down to up)
@@ -459,16 +449,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                                 children: [
-                                                                  Text(
-                                                                    languageProvider.lang == "ar" ? ticketModel?.tickets[index].descriptionAr ?? "" : ticketModel?.tickets[index].description ?? "",
-                                                                    maxLines: 3,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                    style: TextStyle(
-                                                                      fontSize: AppSize(context).smallText1,
-                                                                      fontWeight: FontWeight.bold,
-                                                                    ),
+                                                                  // Show ticket type instead of description
+                                                                  Row(
+                                                                    children: [
+                                                                      const Text("📋 "),
+                                                                      Expanded(
+                                                                        child: Text(
+                                                                          _getTicketTypeName(ticketModel?.tickets[index].ticketTypeId ?? 0, languageProvider.lang ?? "en"),
+                                                                          maxLines: 1,
+                                                                          overflow: TextOverflow.ellipsis,
+                                                                          style: TextStyle(
+                                                                            fontSize: AppSize(context).smallText1,
+                                                                            fontWeight: FontWeight.bold,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
                                                                   ),
                                                                   const SizedBox(height: 10),
+                                                                  // Show ticket updated time instead of time interval
                                                                   Row(
                                                                     children: [
                                                                       const Text("🕑 "),
@@ -758,7 +757,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final isGuest = token == null || token.isEmpty;
     
     try {
-      HomeApis.allHomeApis(token: appProvider.userModel?.token ?? "").then((value) {
+      // Pass null token for guests, empty string for logged-in users without token
+      HomeApis.allHomeApis(token: isGuest ? null : (appProvider.userModel?.token ?? "")).then((value) {
         setState(() {
           homeModel = value;
           loading = false;
@@ -774,7 +774,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future beforExpiredSubscription({isfromPlaceOreder = true}) async {
-    AppProvider appProvider = Provider.of(context, listen: false);
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    
+    // Skip for guest users (no token)
+    final isGuest = appProvider.userModel == null || 
+                   appProvider.userModel?.token == null || 
+                   appProvider.userModel!.token.isEmpty;
+    
+    if (isGuest) {
+      return;
+    }
+    
     await HomeApis.beforExpiredSubscription(token: '${appProvider.userModel?.token}').then((value) {
       if (value == true) _notifyLoginSuccess();
     });
@@ -819,5 +829,47 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     // Save today's date
     await prefs.setString(_lastNotificationDateKey, today.toIso8601String());
+  }
+
+  // Helper function to get ticket type name from ticketTypeId
+  String _getTicketTypeName(int ticketTypeId, String lang) {
+    // Common ticket type IDs mapping
+    // Note: These IDs may vary based on your backend configuration
+    // You may need to adjust these based on your actual ticket type IDs
+    final Map<int, Map<String, String>> ticketTypes = {
+      1: {'en': 'Corrective', 'ar': 'تصحيحي'},
+      2: {'en': 'Preventive', 'ar': 'وقائي'},
+      3: {'en': 'Emergency', 'ar': 'طوارئ'},
+    };
+    
+    final type = ticketTypes[ticketTypeId];
+    if (type != null) {
+      return lang == "ar" ? type['ar'] ?? type['en']! : type['en']!;
+    }
+    
+    // Fallback if ticketTypeId is not in the mapping
+    return lang == "ar" ? "نوع التذكرة" : "Ticket Type";
+  }
+
+  // Helper function to format ticket time from DateTime
+  String _formatTicketTime(dynamic timeFrom) {
+    if (timeFrom == null) return "";
+    
+    try {
+      DateTime time;
+      if (timeFrom is DateTime) {
+        time = timeFrom;
+      } else if (timeFrom is String) {
+        time = DateTime.parse(timeFrom);
+      } else {
+        return "";
+      }
+      
+      // Format as HH:mm (24-hour format)
+      return DateFormat('HH:mm').format(time);
+    } catch (e) {
+      log('Error formatting ticket time: $e');
+      return "";
+    }
   }
 }

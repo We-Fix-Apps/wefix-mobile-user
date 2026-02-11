@@ -128,7 +128,7 @@ class EndPoints {
   static String serviceCompany = 'customer/ServiceCompany';
 
   // * MMS API (Backend MMS)
-  static String mmsBaseUrl = 'https://wefix-backend-mms-prod.ngrok.app/api/v1/'; // Update with your backend URL
+  static String mmsBaseUrl = 'https://wefix-backend-mms-dev.ngrok.app/api/v1/'; // Update with your backend URL
   static String mmsLogin = 'user/login'; // Deprecated - use mmsRequestOTP and mmsVerifyOTP
   static String mmsRequestOTP = 'user/request-otp'; // Request OTP for Business Services login
   static String mmsVerifyOTP = 'user/verify-otp'; // Verify OTP for Business Services login
