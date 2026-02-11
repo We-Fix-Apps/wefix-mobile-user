@@ -485,26 +485,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
 
-                      // Only show Guest login and Create Account for regular users (My Services)
+                      // Only show Create Account for regular users (My Services) — Guest login hidden
                       if (!isCompanyPersonnel) ...[
-                        const Divider(
-                          color: AppColors.greyColorback,
-                        ),
-
-                        Center(
-                            child: TextButton(
-                                onPressed: () {
-                                  navigateToAndRemoveUntil(
-                                      context, const HomeLayout());
-                                },
-                                child: Text(
-                                  AppText(context).loginAsG,
-                                  style: TextStyle(
-                                    color: AppColors(context).primaryColor,
-                                  ),
-                                ))),
-                        SizedBox(height: AppSize(context).height * .02),
-
                         // * Create Acounts
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
