@@ -281,7 +281,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                             ),
                           ))
-                  : ((subsicripeModel?.status ?? false) && (subsicripeModel?.onDemandVisit ?? 0) > 0)
+                  : ((subsicripeModel?.status ?? false) ||
+                          (subsicripeModel?.onDemandVisit ?? 0) > 0 ||
+                          (subsicripeModel?.numberOnFemalUse ?? 0) > 0 ||
+                          (subsicripeModel?.emergancyVisit ?? 0) > 0 ||
+                          (subsicripeModel?.recurringVistUse ?? 0) > 0)
                       ? showConfirmAppointmentDialog(context, () {
                           addRequest();
                         })
@@ -603,6 +607,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+/*
+
+"TicketTypeId" -> 3
+"date" = DateTime (2026-02-11 13:14:59.389809)
+"time" -> "02:00 - 04:00 PM"
+"services" -> List (1 item)
+"totalPrice" -> 42.0
+"totalTickets" -> 2
+"gender" -> "Male"
+
+
+
   String getPaymentSummaryValue(
     Map<dynamic, dynamic> appointmentInfo,
     SubsicripeModel? subsicripeModel,
@@ -719,179 +735,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return basePrice;
   }
 
-  makeLoadingFor2Seconds() {
-    setState(() {
-      loading2 = true;
-    });
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        loading2 = false;
-      });
-    });
-  }
 
-  showPaymentMethod(context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => StatefulBuilder(builder: (context, set) {
-        return Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Wrap(
-              runSpacing: 10,
-              children: [
-                Center(
-                  child: Text(
-                    AppText(context, isFunction: true).selectPaymentMethods,
-                    style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                _paymentOption("visa", AppText(context, isFunction: true).visa, "assets/icon/bank-card_17727858.svg", set),
-                _paymentOption("qlic", AppText(context, isFunction: true).cliq, "assets/icon/final_cliq_logo-02_1.svg", set),
-                _paymentOption("wallet", AppText(context, isFunction: true).wallet, "assets/icon/wallet.svg", set),
-                _paymentOption("Paybal", AppText(context, isFunction: true).paypal, "assets/icon/paybal.svg", set),
-                _paymentOption("later", " ${AppText(context, isFunction: true).paylater}", "assets/icon/delay_3360328.svg", set),
-                const Divider(),
-                const SizedBox(height: 20),
-                Center(
-                  child: Image.asset(
-                    "assets/icon/verified.png",
-                    width: 170,
-                  ),
-                ),
-                CustomBotton(
-                    title: AppText(context, isFunction: true).continuesss,
-                    loading: loading,
-                    onTap: () {
-                      // set(() {
-                      //   loading = true;
-                      // });
-                      showConfirmAppointmentDialog(context, () {
-                        pop(context);
-                        addRequest();
-                      });
-                      // isSubsicribed().then((value) {
-                      //   set(() {
-                      //     loading5 = false;
-                      //   });
-                      // });
-                    }),
-              ],
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _paymentOption(String value, String label, String icon, void Function(void Function()) localSetState) {
-    final isSelected = selectedPayment == value;
-    return InkWell(
-      onTap: () => localSetState(() => selectedPayment = value),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? AppColors(context).primaryColor : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-          color: isSelected ? AppColors(context).primaryColor.withOpacity(0.05) : AppColors.whiteColor1,
-        ),
-        child: Row(
-          children: [
-            SvgPicture.asset(
-              icon,
-              width: 30,
-            ),
-            const SizedBox(width: 12),
-            Text(label, style: const TextStyle(fontSize: 16)),
-            const Spacer(),
-            if (isSelected) Icon(Icons.check_circle, color: AppColors(context).primaryColor),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void showUpgradeDialog(BuildContext context) {
-    Navigator.pop(context);
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: AppColors.whiteColor1,
-          icon: Center(
-            child: Text(
-              "🚀",
-              style: TextStyle(fontSize: AppSize(context).largText1),
-            ),
-          ),
-          title: Text(
-            AppText(context, isFunction: true).upgradeandSaveBig,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          // ignore: prefer_const_constructors
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              Text(
-                AppText(context, isFunction: true).subscribenowandsave50JODDonmissoutonthisspecialoffer,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
-          actions: [
-            SizedBox(
-              width: double.infinity, // Ensures buttons take full width
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                    child: CustomBotton(
-                      height: AppSize(context).height * .04,
-                      title: AppText(context, isFunction: true).subscribeNow,
-                      onTap: () {
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            downToTop(const HomeLayout(
-                              index: 2,
-                            )),
-                            (route) => false);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: CustomBotton(
-                      border: true,
-                      color: AppColors.whiteColor1,
-                      height: AppSize(context).height * .04,
-                      title: AppText(context, isFunction: true).skip,
-                      textColor: AppColors(context).primaryColor,
-                      onTap: () {
-                        Navigator.pushAndRemoveUntil(context, downToTop(const HomeLayout()), (route) => false);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Future addRequest() async {
     AppProvider appProvider = Provider.of(context, listen: false);
@@ -1078,6 +922,405 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         setState(() {});
         loading = false;
       }
+    });
+  }
+
+
+*/
+  String getPaymentSummaryValue(Map<dynamic, dynamic> appointmentInfo, SubsicripeModel? subsicripeModel, double? totalAfterDiscount, BuildContext context) {
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    final bool isSubscribed = subsicripeModel?.status == true;
+    final int requestedTickets = appointmentInfo["totalTickets"] ?? 0;
+    final double basePrice = totalAfterDiscount ?? (appointmentInfo["totalPrice"] ?? 0);
+    final double extras = _calculateExtras(appointmentInfo, subsicripeModel, appProvider);
+    // 🔴 Case 1: Not subscribed → always pay
+    if (!isSubscribed) {
+      final double finalPrice = _calculateNonSubscriberPrice(appointmentInfo, basePrice) + extras;
+      return "${AppText(context).jod} ${finalPrice.toStringAsFixed(2)}";
+    }
+    // 🟢 Case 2: Subscribed
+    return _handleSubscribedCase(appointmentInfo: appointmentInfo, subsicripeModel: subsicripeModel, requestedTickets: requestedTickets, basePrice: basePrice, extras: extras, context: context);
+  }
+
+  double _calculateExtras(Map appointmentInfo, SubsicripeModel? subsicripeModel, AppProvider appProvider) {
+    double total = 0;
+    final bool isFemale = appointmentInfo["gender"] == "Female";
+    final bool isEmergency = appointmentInfo["TicketTypeId"] == 1;
+    final int femaleRemaining = subsicripeModel?.numberOnFemalUse ?? 0;
+    final int emergencyRemaining = subsicripeModel?.emergancyVisit ?? 0;
+    // Advantage
+    total += double.tryParse(appProvider.advantages["totalPrice"]?.toString() ?? "0") ?? 0;
+    // Female
+    if (isFemale && femaleRemaining <= 0) total += 10;
+    // Emergency
+    if (isEmergency && emergencyRemaining <= 0) total += 10;
+    return total;
+  }
+
+  double _calculateNonSubscriberPrice(Map appointmentInfo, double basePrice) {
+    double total = basePrice;
+    if (appointmentInfo["gender"] == "Female") total += 10;
+    if (appointmentInfo["TicketTypeId"] == 1) total += 10;
+    return total;
+  }
+
+  String _handleSubscribedCase(
+      {required Map appointmentInfo, required SubsicripeModel? subsicripeModel, required int requestedTickets, required double basePrice, required double extras, required BuildContext context}) {
+    final int onDemandRemaining = subsicripeModel?.onDemandVisit ?? 0;
+    // 1️⃣ Enough tickets
+    if (requestedTickets <= onDemandRemaining) {
+      if (extras > 0) return "$requestedTickets ${AppText(context).ticket} + ${AppText(context).jod} ${extras.toStringAsFixed(2)} ";
+      return "$requestedTickets ${AppText(context).ticket}";
+    }
+    // 2️⃣ Partial tickets + price
+    if (onDemandRemaining > 0) {
+      final int extraTickets = requestedTickets - onDemandRemaining;
+      final double pricePerTicket = basePrice / requestedTickets;
+      final double extraPrice = (pricePerTicket * extraTickets) + extras;
+      return "$onDemandRemaining ${AppText(context).ticket} + ${AppText(context).jod} ${extraPrice.toStringAsFixed(2)}";
+    }
+    // 3️⃣ No tickets left → pay full
+    final double finalPrice = basePrice + extras;
+    return "${AppText(context).jod} ${finalPrice.toStringAsFixed(2)}";
+  }
+
+  makeLoadingFor2Seconds() {
+    setState(() {
+      loading2 = true;
+    });
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        loading2 = false;
+      });
+    });
+  }
+
+  showPaymentMethod(context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => StatefulBuilder(builder: (context, set) {
+        return Padding(
+          padding: MediaQuery.of(context).viewInsets,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Wrap(
+              runSpacing: 10,
+              children: [
+                Center(
+                  child: Text(
+                    AppText(context, isFunction: true).selectPaymentMethods,
+                    style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _paymentOption("visa", AppText(context, isFunction: true).visa, "assets/icon/bank-card_17727858.svg", set),
+                _paymentOption("qlic", AppText(context, isFunction: true).cliq, "assets/icon/final_cliq_logo-02_1.svg", set),
+                _paymentOption("wallet", AppText(context, isFunction: true).wallet, "assets/icon/wallet.svg", set),
+                _paymentOption("Paybal", AppText(context, isFunction: true).paypal, "assets/icon/paybal.svg", set),
+                _paymentOption("later", " ${AppText(context, isFunction: true).paylater}", "assets/icon/delay_3360328.svg", set),
+                const Divider(),
+                const SizedBox(height: 20),
+                Center(
+                  child: Image.asset(
+                    "assets/icon/verified.png",
+                    width: 170,
+                  ),
+                ),
+                CustomBotton(
+                    title: AppText(context, isFunction: true).continuesss,
+                    loading: loading,
+                    onTap: () {
+                      // set(() {
+                      //   loading = true;
+                      // });
+                      showConfirmAppointmentDialog(context, () {
+                        pop(context);
+                        addRequest();
+                      });
+                      // isSubsicribed().then((value) {
+                      //   set(() {
+                      //     loading5 = false;
+                      //   });
+                      // });
+                    }),
+              ],
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _paymentOption(String value, String label, String icon, void Function(void Function()) localSetState) {
+    final isSelected = selectedPayment == value;
+    return InkWell(
+      onTap: () => localSetState(() => selectedPayment = value),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isSelected ? AppColors(context).primaryColor : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? AppColors(context).primaryColor.withOpacity(0.05) : AppColors.whiteColor1,
+        ),
+        child: Row(
+          children: [
+            SvgPicture.asset(
+              icon,
+              width: 30,
+            ),
+            const SizedBox(width: 12),
+            Text(label, style: const TextStyle(fontSize: 16)),
+            const Spacer(),
+            if (isSelected) Icon(Icons.check_circle, color: AppColors(context).primaryColor),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void showUpgradeDialog(BuildContext context) {
+    Navigator.pop(context);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.whiteColor1,
+          icon: Center(
+            child: Text(
+              "🚀",
+              style: TextStyle(fontSize: AppSize(context).largText1),
+            ),
+          ),
+          title: Text(
+            AppText(context, isFunction: true).upgradeandSaveBig,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          // ignore: prefer_const_constructors
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Text(
+                AppText(context, isFunction: true).subscribenowandsave50JODDonmissoutonthisspecialoffer,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity, // Ensures buttons take full width
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: CustomBotton(
+                      height: AppSize(context).height * .04,
+                      title: AppText(context, isFunction: true).subscribeNow,
+                      onTap: () {
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            downToTop(const HomeLayout(
+                              index: 2,
+                            )),
+                            (route) => false);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: CustomBotton(
+                      border: true,
+                      color: AppColors.whiteColor1,
+                      height: AppSize(context).height * .04,
+                      title: AppText(context, isFunction: true).skip,
+                      textColor: AppColors(context).primaryColor,
+                      onTap: () {
+                        Navigator.pushAndRemoveUntil(context, downToTop(const HomeLayout()), (route) => false);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future addRequest() async {
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+
+    final appointmentInfo = appProvider.appoitmentInfo;
+    final bool isSubscribed = subsicripeModel?.status == true;
+    final bool isFemale = appointmentInfo["gender"] == "Female";
+
+    final int requestedTickets = appointmentInfo["totalTickets"] ?? 0;
+    final int onDemandRemaining = subsicripeModel?.onDemandVisit ?? 0;
+    final int femaleRemaining = subsicripeModel?.numberOnFemalUse ?? 0;
+    final int emergencyRemaining = subsicripeModel?.emergancyVisit ?? 0;
+
+    // --- Extras ---
+    double advantageExtra = double.tryParse(appProvider.advantages["totalPrice"]?.toString() ?? "0") ?? 0;
+    double femaleExtra = (isFemale && femaleRemaining <= 0) ? 10 : 0;
+    double emergencyExtra = (appointmentInfo["TicketTypeId"] == 1 && emergencyRemaining <= 0) ? 10 : 0;
+
+    // --- Base Price ---
+    double basePrice = totalafterDiscount ?? (appointmentInfo["totalPrice"] ?? 0).toDouble();
+
+    double totalPrice = basePrice + advantageExtra + femaleExtra + emergencyExtra;
+
+    // --- Tickets ---
+    int numberOfTickets = 0;
+
+    if (!isSubscribed || onDemandRemaining <= 0) {
+      // Not subscribed OR no On-Demand tickets left → pay price only
+      numberOfTickets = 0;
+    } else if (requestedTickets <= onDemandRemaining) {
+      // Enough tickets → use requested amount
+      numberOfTickets = requestedTickets;
+    } else {
+      // Partial tickets → use remaining + charge for extra tickets
+      int extraTickets = requestedTickets - onDemandRemaining;
+      double pricePerTicket = requestedTickets > 0 ? basePrice / requestedTickets : 0;
+      totalPrice += pricePerTicket * extraTickets;
+
+      numberOfTickets = onDemandRemaining;
+    }
+
+    // --- Payload ---
+    Map<String, dynamic> data = {
+      "TicketTypeId": appointmentInfo["services"][0]["ServiceId"] == 104 ? 4 : appointmentInfo["TicketTypeId"],
+      "PromoCode": promoCodeController.text,
+      "SelectedDate": appointmentInfo["date"].toString().substring(0, 10),
+      "SelectedDateTime": appointmentInfo["time"],
+      "Description": appProvider.desc.text,
+      "TicketDescription": appProvider.ticketDescription.text,
+      "Location":
+          "${appProvider.places![0].country}, ${appProvider.places![0].locality}, ${appProvider.places![0].name}, ${appProvider.places![0].subAdministrativeArea}, ${appProvider.places![0].subLocality}",
+      "Latitude": appProvider.currentLocation?.latitude.toString() ?? "",
+      "Longitude": appProvider.currentLocation?.longitude.toString() ?? "",
+      "IsWithFemale": isFemale,
+      "IsWithMaterial": appProvider.isMaterialFromProvider,
+      "CustomerPackageId": subsicripeModel?.objSubscribe?.id,
+      "TotalPrice": totalPrice,
+      "ServiceTicket": appointmentInfo["services"],
+      "Attachments": appProvider.attachments,
+      "RealEstateId": int.tryParse(appProvider.realStateId ?? "") ?? 0,
+      "NumberOfTicket": numberOfTickets,
+      "AdvantageTicket": appProvider.advantages["advantages"] ?? [],
+      "DiscountAmount": totalDiscountAmount ?? 0,
+    };
+
+    if (mounted) {
+      setState(() => loading = true);
+    }
+
+    await CreateOrderApi.requestService(
+      token: '${appProvider.userModel?.token}',
+      data: data,
+    ).then((value) async {
+      appointmentModel = value;
+      appProvider.clearRealState();
+      appProvider.deleteAdv();
+
+      addAppointmentToGoogleCalendar(
+        date: appointmentInfo["date"].toString().substring(0, 10),
+        time: appointmentInfo["time"],
+      );
+
+      // --- Dialog / BottomSheet ---
+      if (subsicripeModel?.status == false) {
+        // Not subscribed → show success dialog
+        showDialog(
+          context: context,
+          builder: (_) => WidgetDialog(
+            title: AppText(context).successfully,
+            desc: AppText(context).orderSentSuccessfully,
+            isError: false,
+            onTap: () {
+              Navigator.pushAndRemoveUntil(context, downToTop(const HomeLayout()), (route) => false);
+            },
+          ),
+        );
+      } else {
+        // Subscribed → show usage details bottom sheet
+        showModalBottomSheet(
+          context: context,
+          isDismissible: false,
+          isScrollControlled: true,
+          enableDrag: false,
+          builder: (_) => WillPopScope(
+            onWillPop: () async => false,
+            child: SizedBox(
+              width: AppSize(context).width,
+              height: AppSize(context).height * .7,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    SvgPicture.asset("assets/icon/success.svg"),
+                    const SizedBox(height: 10),
+                    Text(
+                      AppText(context).orderSentSuccessfully,
+                      style: TextStyle(fontSize: AppSize(context).smallText1, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 20),
+                    UsageDetailsWidget(
+                        title: AppText(context).recurringVisits,
+                        value: appointmentModel?.customerPackages.recurringVist ?? 0,
+                        total: appointmentModel?.customerPackages.totalRecurringVist ?? 0,
+                        color: Colors.green),
+                    UsageDetailsWidget(
+                        title: AppText(context).ondemandVisits,
+                        value: appointmentModel?.customerPackages.onDemandVisit ?? 0,
+                        total: appointmentModel?.customerPackages.totalOnDemandVisit ?? 0,
+                        color: Colors.red),
+                    UsageDetailsWidget(
+                        title: AppText(context).emergencyVisits,
+                        value: appointmentModel?.customerPackages.emeregencyVisit ?? 0,
+                        total: appointmentModel?.customerPackages.totalEmeregencyVisit ?? 0,
+                        color: Colors.orange),
+                    UsageDetailsWidget(
+                        title: AppText(context).femaleUse,
+                        value: appointmentModel?.customerPackages.numberOnFemalUse ?? 0,
+                        total: appointmentModel?.customerPackages.totalNumberOnFemalUse ?? 0,
+                        color: Colors.purple),
+                    UsageDetailsWidget(
+                        title: AppText(context).consultations,
+                        value: appointmentModel?.customerPackages.conultation ?? 0,
+                        total: appointmentModel?.customerPackages.totalConultation ?? 0,
+                        color: Colors.blue),
+                    UsageDetailsWidget(
+                        title: AppText(context).interiorDesign,
+                        value: appointmentModel?.customerPackages.interiorDesign ?? 0,
+                        total: appointmentModel?.customerPackages.totalInteriorDesign ?? 0,
+                        color: Colors.pink),
+                    const Spacer(),
+                    CustomBotton(
+                        title: AppText(context).back,
+                        onTap: () {
+                          Navigator.pushAndRemoveUntil(context, downToTop(const HomeLayout()), (route) => false);
+                        })
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      if (mounted) setState(() => loading = false);
     });
   }
 

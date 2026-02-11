@@ -52,10 +52,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool startsSearch = false;
 
   late TutorialCoachMark tutorialCoachMark;
-  
+
   // GlobalKey to access B2BHome state for refreshing tickets
   final GlobalKey<State<B2BHome>> _b2BHomeKey = GlobalKey<State<B2BHome>>();
-  
+
   // Public method to refresh B2BHome tickets (called from layout_screen)
   void refreshB2BHomeTickets() {
     final state = _b2BHomeKey.currentState;
@@ -95,7 +95,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    Future.wait([beforExpiredSubscription(), isSubsicribed()]);
+
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    final isGuest = appProvider.userModel == null || appProvider.userModel?.token == null || appProvider.userModel!.token.isEmpty;
+    if (isGuest == true) {
+      Future.wait([isSubsicribed()]);
+    } else {
+      Future.wait([beforExpiredSubscription(), isSubsicribed()]);
+    }
     getAllHomeApis().then((value) {
       getActiveTicket();
 
@@ -150,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       roleIdInt = int.tryParse(currentUserRoleId.toString());
     }
     final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
-    
+
     return isB2BUser
         ? loading5 == true
             ? Center(
@@ -617,10 +624,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     AppProvider appProvider = Provider.of(context, listen: false);
 
     // Skip for guest users (no token)
-    final isGuest = appProvider.userModel == null || 
-                   appProvider.userModel?.token == null || 
-                   appProvider.userModel!.token.isEmpty;
-    
+    final isGuest = appProvider.userModel == null || appProvider.userModel?.token == null || appProvider.userModel!.token.isEmpty;
+
     if (isGuest) {
       setState(() {
         loading5 = false;
@@ -641,9 +646,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       roleIdInt = int.tryParse(currentUserRoleId.toString());
     }
     final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
-    
+
     if (appProvider.accessToken != null && isB2BUser) {
-      // User is logged in via backend-mms, skip backend-oms subscription check
       setState(() {
         loading5 = false;
       });
@@ -676,16 +680,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future getActiveTicket() async {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    
+
     // Skip for guest users (no token)
-    final isGuest = appProvider.userModel == null || 
-                   appProvider.userModel?.token == null || 
-                   appProvider.userModel!.token.isEmpty;
-    
+    final isGuest = appProvider.userModel == null || appProvider.userModel?.token == null || appProvider.userModel!.token.isEmpty;
+
     if (isGuest) {
       return;
     }
-    
+
     // Skip for B2B users (MMS users) - they use MMS API endpoints, not OMS
     // B2B users should use getCompanyTicketsFromMMS() in B2B home screen
     final currentUserRoleId = appProvider.userModel?.customer.roleId;
@@ -698,12 +700,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       roleIdInt = int.tryParse(currentUserRoleId.toString());
     }
     final isB2BUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22);
-    
+
     if (isB2BUser) {
       // B2B users use MMS API, skip this OMS endpoint call
       return;
     }
-    
+
     if (!mounted) return;
     setState(() {
       loading2 = true;
@@ -732,11 +734,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       loading = true;
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
-    
+
     // For guest users, pass null token instead of empty string
     final token = appProvider.userModel?.token;
     final isGuest = token == null || token.isEmpty;
-    
+
     try {
       HomeApis.allHomeApis(token: appProvider.userModel?.token ?? "").then((value) {
         setState(() {
@@ -756,7 +758,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Future beforExpiredSubscription({isfromPlaceOreder = true}) async {
     AppProvider appProvider = Provider.of(context, listen: false);
     await HomeApis.beforExpiredSubscription(token: '${appProvider.userModel?.token}').then((value) {
-      if (value == true) _notifyLoginSuccess();
+      if (value == true) {
+        _notifyLoginSuccess();
+      } else {
+        setState(() {
+          loading5 = false;
+        });
+      }
     });
   }
 

@@ -41,7 +41,7 @@ class MainManagements {
     if (userData != null && userData != 'null' && userData != 'CLEAR_USER_DATA') {
       final body = json.decode(userData);
       user = UserModel.fromJson(body);
-      log(user.token ?? '');
+      log(user.token);
       return user;
     } else {
       return null;
