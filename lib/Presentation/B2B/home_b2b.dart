@@ -12,6 +12,7 @@ import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/model/subsicripe_model.dart';
 import 'package:wefix/Data/model/ticket_model.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
+import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
 import 'package:wefix/Presentation/B2B/tickets_screen.dart';
 import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
 import 'package:wefix/Presentation/Components/language_icon.dart';
@@ -425,7 +426,15 @@ class _HeaderSectionState extends State<_HeaderSection> {
           ),
         ),
         const Spacer(),
-        Icon(Icons.notifications_none_rounded, color: Colors.grey[600]),
+        InkWell(
+          onTap: () {
+            Navigator.push(context, rightToLeft(NotificationsScreen()));
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(Icons.notifications_none_rounded, color: Colors.grey[600]),
+          ),
+        ),
         const SizedBox(width: 8),
         const LanguageButton(),
       ],

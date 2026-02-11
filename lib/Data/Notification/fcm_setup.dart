@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
@@ -15,6 +16,7 @@ import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/main.dart';
 import 'awesome_notification.service.dart';
+import 'notification_cache_service.dart';
 
 class FcmHelper {
   // prevent making instance
@@ -22,6 +24,178 @@ class FcmHelper {
 
   // FCM Messaging
   static late FirebaseMessaging messaging;
+  
+  // Deduplication: Track recently created notification IDs and content to prevent duplicates
+  // Use both in-memory (for fast access) and persistent storage (for cross-isolate deduplication)
+  static final Set<int> _recentNotificationIds = <int>{};
+  static final Map<int, DateTime> _notificationTimestamps = <int, DateTime>{};
+  static final Map<String, DateTime> _recentNotificationContent = <String, DateTime>{};
+  
+  // Cache keys for persistent storage
+  static const String _notificationIdsKey = 'recent_notification_ids';
+  static const String _notificationContentKey = 'recent_notification_content';
+  
+  // Clean up old notification IDs and content (older than 30 seconds)
+  // Increased window to catch duplicates across isolates
+  static Future<void> _cleanupOldNotificationIds() async {
+    try {
+      final now = DateTime.now();
+      
+      // Clean up in-memory data
+      _notificationTimestamps.removeWhere((id, timestamp) {
+        if (now.difference(timestamp).inSeconds > 30) {
+          _recentNotificationIds.remove(id);
+          return true;
+        }
+        return false;
+      });
+      _recentNotificationContent.removeWhere((content, timestamp) {
+        return now.difference(timestamp).inSeconds > 30;
+      });
+      
+      // Clean up persistent storage
+      final storedIdsJson = CacheHelper.getData(key: _notificationIdsKey) as String?;
+      if (storedIdsJson != null) {
+        try {
+          final storedIds = Map<String, dynamic>.from(json.decode(storedIdsJson));
+          final cleanedIds = <String, dynamic>{};
+          storedIds.forEach((id, timestampMillis) {
+            if (timestampMillis is int) {
+              final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
+              if (now.difference(timestamp).inSeconds <= 30) {
+                cleanedIds[id] = timestampMillis;
+              }
+            }
+          });
+          await CacheHelper.saveData(key: _notificationIdsKey, value: json.encode(cleanedIds));
+        } catch (e) {
+          log('Error parsing stored notification IDs: $e');
+        }
+      }
+      
+      final storedContentJson = CacheHelper.getData(key: _notificationContentKey) as String?;
+      if (storedContentJson != null) {
+        try {
+          final storedContent = Map<String, dynamic>.from(json.decode(storedContentJson));
+          final cleanedContent = <String, dynamic>{};
+          storedContent.forEach((content, timestampMillis) {
+            if (timestampMillis is int) {
+              final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
+              if (now.difference(timestamp).inSeconds <= 30) {
+                cleanedContent[content] = timestampMillis;
+              }
+            }
+          });
+          await CacheHelper.saveData(key: _notificationContentKey, value: json.encode(cleanedContent));
+        } catch (e) {
+          log('Error parsing stored notification content: $e');
+        }
+      }
+    } catch (e) {
+      log('Error cleaning up old notification IDs: $e');
+    }
+  }
+  
+  // Check if notification ID or content was recently created (within last 30 seconds)
+  // Checks both in-memory and persistent storage for cross-isolate deduplication
+  static Future<bool> _isDuplicateNotification(int notificationId, String title, String body) async {
+    await _cleanupOldNotificationIds();
+    
+    final now = DateTime.now();
+    final notificationIdStr = notificationId.toString();
+    
+    // Check in-memory first (fast)
+    if (_recentNotificationIds.contains(notificationId)) {
+      log('⚠️ DUPLICATE DETECTED (in-memory) - ID: $notificationId');
+      return true;
+    }
+    
+    // Check persistent storage (for cross-isolate deduplication)
+    try {
+      final storedIdsJson = CacheHelper.getData(key: _notificationIdsKey) as String?;
+      if (storedIdsJson != null) {
+        final storedIds = Map<String, dynamic>.from(json.decode(storedIdsJson));
+        if (storedIds.containsKey(notificationIdStr)) {
+          final timestampMillis = storedIds[notificationIdStr] as int?;
+          if (timestampMillis != null) {
+            final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
+            if (now.difference(timestamp).inSeconds < 30) {
+              log('⚠️ DUPLICATE DETECTED (persistent storage) - ID: $notificationId');
+              return true;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      log('Error checking persistent storage for duplicate ID: $e');
+    }
+    
+    // Also check by content (title + body) to catch duplicates even if IDs somehow differ
+    final contentKey = '${title}_$body';
+    
+    // Check in-memory
+    if (_recentNotificationContent.containsKey(contentKey)) {
+      final lastSeen = _recentNotificationContent[contentKey]!;
+      if (now.difference(lastSeen).inSeconds < 30) {
+        log('⚠️ DUPLICATE DETECTED (in-memory content) - Content: $contentKey');
+        return true;
+      }
+    }
+    
+    // Check persistent storage for content
+    try {
+      final storedContentJson = CacheHelper.getData(key: _notificationContentKey) as String?;
+      if (storedContentJson != null) {
+        final storedContent = Map<String, dynamic>.from(json.decode(storedContentJson));
+        if (storedContent.containsKey(contentKey)) {
+          final timestampMillis = storedContent[contentKey] as int?;
+          if (timestampMillis != null) {
+            final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
+            if (now.difference(timestamp).inSeconds < 30) {
+              log('⚠️ DUPLICATE DETECTED (persistent storage content) - Content: $contentKey');
+              return true;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      log('Error checking persistent storage for duplicate content: $e');
+    }
+    
+    return false;
+  }
+  
+  // Mark notification ID and content as created (both in-memory and persistent storage)
+  static Future<void> _markNotificationCreated(int notificationId, String title, String body) async {
+    final now = DateTime.now();
+    final nowMillis = now.millisecondsSinceEpoch;
+    final notificationIdStr = notificationId.toString();
+    final contentKey = '${title}_$body';
+    
+    // Update in-memory
+    _recentNotificationIds.add(notificationId);
+    _notificationTimestamps[notificationId] = now;
+    _recentNotificationContent[contentKey] = now;
+    
+    // Update persistent storage for cross-isolate deduplication
+    try {
+      final storedIdsJson = CacheHelper.getData(key: _notificationIdsKey) as String?;
+      final storedIds = storedIdsJson != null 
+          ? Map<String, dynamic>.from(json.decode(storedIdsJson))
+          : <String, dynamic>{};
+      storedIds[notificationIdStr] = nowMillis;
+      await CacheHelper.saveData(key: _notificationIdsKey, value: json.encode(storedIds));
+      
+      final storedContentJson = CacheHelper.getData(key: _notificationContentKey) as String?;
+      final storedContent = storedContentJson != null
+          ? Map<String, dynamic>.from(json.decode(storedContentJson))
+          : <String, dynamic>{};
+      storedContent[contentKey] = nowMillis;
+      await CacheHelper.saveData(key: _notificationContentKey, value: json.encode(storedContent));
+    } catch (e) {
+      log('Error saving notification to persistent storage: $e');
+    }
+  }
 
   /// this function will initialize firebase and fcm instance
   static Future<void> initFcm() async {
@@ -191,12 +365,44 @@ class FcmHelper {
     // Create a localized system notification that will appear in notification tray (when user swipes down)
     // This won't show as a heads-up because we set alert: false in setForegroundNotificationPresentationOptions
     try {
-      // Generate unique notification ID based on ticketId or messageId to prevent duplicates
+      // Generate consistent notification ID based on ticketId and type to prevent duplicates
+      // Using consistent ID ensures duplicates replace each other instead of creating new ones
       final ticketId = message.data['ticketId']?.toString();
-      final messageId = message.messageId ?? message.data.hashCode.toString();
-      final notificationId = ticketId != null && ticketId.isNotEmpty 
-          ? int.tryParse(ticketId) ?? messageId.hashCode 
-          : messageId.hashCode;
+      final notificationType = message.data['type']?.toString() ?? 'general';
+      
+      // Create consistent ID: combine ticketId (if exists) and type
+      // This ensures the same notification (same ticketId + type) replaces the previous one instead of creating duplicates
+      // Only use timestamp as fallback if no ticketId is available
+      final notificationIdString = ticketId != null && ticketId.isNotEmpty
+          ? '${ticketId}_${notificationType}'
+          : '${notificationType}_${DateTime.now().millisecondsSinceEpoch}';
+      final uniqueNotificationId = notificationIdString.hashCode.abs() % 2147483647;
+      
+      log('Foreground notification - ID: $uniqueNotificationId, ticketId: $ticketId, type: $notificationType, title: $localizedTitle');
+      
+      // Check for duplicates before creating notification (by ID and content)
+      final isDuplicate = await _isDuplicateNotification(uniqueNotificationId, localizedTitle, localizedBody);
+      if (isDuplicate) {
+        log('⚠️ DUPLICATE DETECTED - Skipping duplicate notification with ID: $uniqueNotificationId (ticketId: $ticketId, type: $notificationType)');
+        return;
+      }
+      
+      // Mark as created to prevent duplicates
+      await _markNotificationCreated(uniqueNotificationId, localizedTitle, localizedBody);
+      log('✅ Marked notification as created - ID: $uniqueNotificationId');
+      
+      // Cache the notification
+      final cachedNotification = CachedNotification(
+        id: uniqueNotificationId.toString(),
+        ticketId: ticketId,
+        title: localizedTitle,
+        titleAr: message.data['titleAr']?.toString(),
+        description: localizedBody,
+        descriptionAr: message.data['bodyAr']?.toString(),
+        createdDate: DateTime.now(),
+        data: message.data.cast(),
+      );
+      await NotificationCacheService.saveNotification(cachedNotification);
       
       // Create notification with localized text
       // This will appear in notification tray but not as a heads-up (no duplicate with BotToast)
@@ -205,16 +411,33 @@ class FcmHelper {
           body: localizedBody.isNotEmpty ? localizedBody : 'You have a new notification',
           bigPicture: '',
           payload: message.data.cast(),
-          notificationId: notificationId.abs() % 2147483647);
-      log('Created localized system notification for notification tray with ID: ${notificationId.abs() % 2147483647}');
+          notificationId: uniqueNotificationId);
+      log('✅ Created localized system notification for notification tray with ID: $uniqueNotificationId (ticketId: $ticketId, type: $notificationType)');
     } catch (e) {
       log('Error creating system notification: $e');
     }
     
     // Show BotToast snackbar for in-app display after a delay
     // This ensures the system notification appears first
-    Future.delayed(const Duration(milliseconds: 4500), () {
-      _showInAppNotification(localizedTitle, localizedBody, message.data);
+    // Also check for duplicates before showing BotToast
+    Future.delayed(const Duration(milliseconds: 4500), () async {
+      // Re-check for duplicates before showing BotToast (in case multiple messages arrive)
+      final ticketId = message.data['ticketId']?.toString();
+      final notificationType = message.data['type']?.toString() ?? 'general';
+      final botToastNotificationIdString = ticketId != null && ticketId.isNotEmpty
+          ? '${ticketId}_${notificationType}_bottoast'
+          : '${notificationType}_${DateTime.now().millisecondsSinceEpoch}_bottoast';
+      final botToastNotificationId = botToastNotificationIdString.hashCode.abs() % 2147483647;
+      
+      // Check if this BotToast notification was already shown
+      final isDuplicate = await _isDuplicateNotification(botToastNotificationId, localizedTitle, localizedBody);
+      if (!isDuplicate) {
+        await _markNotificationCreated(botToastNotificationId, localizedTitle, localizedBody);
+        _showInAppNotification(localizedTitle, localizedBody, message.data);
+        log('✅ BotToast notification shown with ID: $botToastNotificationId');
+      } else {
+        log('⚠️ DUPLICATE BotToast DETECTED - Skipping BotToast notification with ID: $botToastNotificationId');
+      }
     });
   }
   
@@ -399,20 +622,52 @@ class FcmHelper {
     log('Notification payload: ${message.data}');
     
     try {
-      // Generate unique notification ID based on ticketId or messageId to prevent duplicates
+      // Generate consistent notification ID based on ticketId and type to prevent duplicates
+      // Using consistent ID ensures duplicates replace each other instead of creating new ones
       final ticketId = message.data['ticketId']?.toString();
-      final messageId = message.messageId ?? message.data.hashCode.toString();
-      final notificationId = ticketId != null && ticketId.isNotEmpty 
-          ? int.tryParse(ticketId) ?? messageId.hashCode 
-          : messageId.hashCode;
+      final notificationType = message.data['type']?.toString() ?? 'general';
+      
+      // Create consistent ID: combine ticketId (if exists) and type
+      // This ensures the same notification (same ticketId + type) replaces the previous one instead of creating duplicates
+      // Only use timestamp as fallback if no ticketId is available
+      final notificationIdString = ticketId != null && ticketId.isNotEmpty
+          ? '${ticketId}_${notificationType}'
+          : '${notificationType}_${DateTime.now().millisecondsSinceEpoch}';
+      final notificationId = notificationIdString.hashCode.abs() % 2147483647;
+      
+      log('Background notification - ID: $notificationId, ticketId: $ticketId, type: $notificationType, title: $localizedTitle');
+      
+      // Check for duplicates before creating notification (by ID and content)
+      final isDuplicate = await _isDuplicateNotification(notificationId, localizedTitle, localizedBody);
+      if (isDuplicate) {
+        log('⚠️ DUPLICATE DETECTED - Skipping duplicate notification with ID: $notificationId (ticketId: $ticketId, type: $notificationType)');
+        return;
+      }
+      
+      // Mark as created to prevent duplicates
+      await _markNotificationCreated(notificationId, localizedTitle, localizedBody);
+      log('✅ Marked notification as created - ID: $notificationId');
+      
+      // Cache the notification
+      final cachedNotification = CachedNotification(
+        id: notificationId.toString(),
+        ticketId: ticketId,
+        title: localizedTitle,
+        titleAr: message.data['titleAr']?.toString(),
+        description: localizedBody,
+        descriptionAr: message.data['bodyAr']?.toString(),
+        createdDate: DateTime.now(),
+        data: message.data.cast(),
+      );
+      await NotificationCacheService.saveNotification(cachedNotification);
       
       await NotificationsController.createNewNotification(
           title: localizedTitle.isNotEmpty ? localizedTitle : 'New Notification',
           body: localizedBody.isNotEmpty ? localizedBody : 'You have a new notification',
           bigPicture: '',
           payload: message.data.cast(),
-          notificationId: notificationId.abs() % 2147483647); // Ensure positive int within range
-      log('Notification created successfully with ID: ${notificationId.abs() % 2147483647}');
+          notificationId: notificationId); // Consistent ID ensures duplicates replace each other
+      log('✅ Notification created successfully with ID: $notificationId (ticketId: $ticketId, type: $notificationType)');
     } catch (e) {
       log('Error creating notification: $e');
       // Re-throw to ensure Firebase knows the handler completed
