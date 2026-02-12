@@ -6,9 +6,13 @@ import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Data/model/home_model.dart';
 import 'package:wefix/Presentation/Components/custom_cach_network_image.dart';
+import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/SubCategory/Screens/sub_category_screen.dart';
 import 'package:wefix/Presentation/SubCategory/Screens/sub_services_screen.dart';
 import 'package:wefix/Presentation/Subscriptions/Screens/Subscriptions_screen.dart';
+import 'package:wefix/Presentation/auth/login_screen.dart';
+
+import '../../../Business/AppProvider/app_provider.dart';
 
 class ServicesWidget extends StatefulWidget {
   final List<Category> categories;
@@ -44,11 +48,28 @@ class _ServicesWidgetState extends State<ServicesWidget> {
                 child: InkWell(
                     key: index == 0 ? widget.key1 : null,
                     onTap: () {
-                      category.subscribScreen == true
-                          ? Navigator.push(context, downToTop(const SubscriptionScreen()))
-                          : category.subCategory?.isNotEmpty == true
-                              ? Navigator.push(context, downToTop(SubCategoryScreen(categories: category.subCategory, title: category.titleEn, titleAr: category.titleAr)))
-                              : Navigator.push(context, downToTop(SubServicesScreen(catId: category.id, title: languageProvider.lang == "ar" ? category.titleAr : category.titleEn)));
+                      AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+                      final isGuest = appProvider.userModel == null || appProvider.userModel?.token == null || appProvider.userModel!.token.isEmpty;
+                      if (isGuest == true) {
+                        showDialog(
+                            context: context,
+                            builder: (context) => WidgetDialog(
+                                title: 'Worning',
+                                desc: 'You Must Be Login For Use This Feature!',
+                                isError: true,
+                                bottonText: 'Login',
+                                onTap: () => Navigator.pushAndRemoveUntil(
+                                      context,
+                                      downToTop(const LoginScreen()),
+                                      (route) => false,
+                                    )));
+                      } else {
+                        category.subscribScreen == true
+                            ? Navigator.push(context, downToTop(const SubscriptionScreen()))
+                            : category.subCategory?.isNotEmpty == true
+                                ? Navigator.push(context, downToTop(SubCategoryScreen(categories: category.subCategory, title: category.titleEn, titleAr: category.titleAr)))
+                                : Navigator.push(context, downToTop(SubServicesScreen(catId: category.id, title: languageProvider.lang == "ar" ? category.titleAr : category.titleEn)));
+                      }
                     },
                     child: Center(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisSize: MainAxisSize.min, spacing: 5, children: [

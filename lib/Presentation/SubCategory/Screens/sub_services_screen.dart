@@ -38,7 +38,6 @@ import '../../Components/tour_widget.dart';
 class SubServicesScreen extends StatefulWidget {
   final String title;
   final int catId;
-  
 
   const SubServicesScreen({
     super.key,
@@ -86,13 +85,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
   ];
 
   List<Map> contents = [
-    {
-      "title": AppText(navigatorKey.currentState!.context).selectDateTime,
-      "description":
-          AppText(navigatorKey.currentState!.context).nowYouCanSelect,
-      "image": "assets/image/date.png",
-      "isTop": true
-    },
+    {"title": AppText(navigatorKey.currentState!.context).selectDateTime, "description": AppText(navigatorKey.currentState!.context).nowYouCanSelect, "image": "assets/image/date.png", "isTop": true},
   ];
 
   final List<GlobalKey<State<StatefulWidget>>> keyButton = [
@@ -121,21 +114,22 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
     getSubCat();
     isSubsicribed();
     // 👇 create & show tutorial only once
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    final isGuest = appProvider.userModel == null || appProvider.userModel?.token == null || appProvider.userModel!.token.isEmpty;
+    if (isGuest == false) {
+      try {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          CustomeTutorialCoachMark.createTutorial(keyButton, content);
+          Future.delayed(const Duration(seconds: 2), () {
+            Map showTour = json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+            CustomeTutorialCoachMark.showTutorial(context, isShow: showTour["subCategory"] ?? true);
 
-    try {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        CustomeTutorialCoachMark.createTutorial(keyButton, content);
-        Future.delayed(const Duration(seconds: 2), () {
-          Map showTour =
-              json.decode(CacheHelper.getData(key: CacheHelper.showTour));
-          CustomeTutorialCoachMark.showTutorial(context,
-              isShow: showTour["subCategory"] ?? true);
-
-          log(showTour.toString());
+            log(showTour.toString());
+          });
         });
-      });
-    } catch (e) {
-      log(e.toString());
+      } catch (e) {
+        log(e.toString());
+      }
     }
 
     super.initState();
@@ -149,11 +143,8 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
           LanguageButton(),
         ],
         centerTitle: true,
-        titleTextStyle: TextStyle(
-            fontSize: AppSize(context).mediumText3,
-            color: AppColors.blackColor1,
-            fontWeight: FontWeight.bold),
-        title: Text(widget.title), 
+        titleTextStyle: TextStyle(fontSize: AppSize(context).mediumText3, color: AppColors.blackColor1, fontWeight: FontWeight.bold),
+        title: Text(widget.title),
       ),
       body: (isLoading == true) && (loadingTime == true)
           ? LinearProgressIndicator(
@@ -163,8 +154,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
           : subServiceModel?.service.length == 0
               ? const EmptyScreen()
               : SafeArea(
-                child: SingleChildScrollView(
-                  
+                  child: SingleChildScrollView(
                     child: Column(
                       children: [
                         ListView.builder(
@@ -173,104 +163,66 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                           itemCount: subServiceModel?.service.length ?? 0,
                           itemBuilder: (context, index) {
                             final key = index == 0 ? keyButton[0] : null;
-                            return subServiceModel
-                                        ?.service[index].haveQuantity ==
-                                    true
+                            return subServiceModel?.service[index].haveQuantity == true
                                 ? ServiceQuintityCardWidget(
                                     // key: index == 0 ? keyButton11 : null,
                                     isSubsicribed: subsicripeModel?.status,
                                     increment: () {
                                       setState(() {
-                                        subServiceModel!
-                                            .service[index].quantity++;
+                                        subServiceModel!.service[index].quantity++;
                                         subsicripeModel?.status == false
-                                            ? totalPrice += subServiceModel!
-                                                .service[index].discountPrice
-                                            : totalPrice += subServiceModel!
-                                                    .service[index]
-                                                    .subscriptionPrice ??
-                                                0;
-                                        totalTickets += subServiceModel
-                                                ?.service[index].numOfTicket ??
-                                            0;
+                                            ? totalPrice += subServiceModel!.service[index].discountPrice
+                                            : totalPrice += subServiceModel!.service[index].subscriptionPrice ?? 0;
+                                        totalTickets += subServiceModel?.service[index].numOfTicket ?? 0;
                                       });
-                    
+
                                       // Check if service already exists in the list
-                                      final existingIndex =
-                                          serviceId.indexWhere(
-                                        (element) =>
-                                            element["ServiceId"] ==
-                                            subServiceModel!.service[index].id,
+                                      final existingIndex = serviceId.indexWhere(
+                                        (element) => element["ServiceId"] == subServiceModel!.service[index].id,
                                       );
-                    
+
                                       if (existingIndex != -1) {
                                         // Update quantity if exists
-                                        serviceId[existingIndex]["quantity"] =
-                                            subServiceModel!
-                                                .service[index].quantity;
+                                        serviceId[existingIndex]["quantity"] = subServiceModel!.service[index].quantity;
                                       } else {
                                         // Add new service if not exists
                                         serviceId.add({
-                                          "ServiceId": subServiceModel!
-                                              .service[index].id,
-                                          "quantity": subServiceModel!
-                                              .service[index].quantity,
+                                          "ServiceId": subServiceModel!.service[index].id,
+                                          "quantity": subServiceModel!.service[index].quantity,
                                         });
                                       }
-                    
+
                                       log(serviceId.toString());
                                     },
                                     decrement: () {
-                                      if (subServiceModel!
-                                              .service[index].quantity >
-                                          0) {
+                                      if (subServiceModel!.service[index].quantity > 0) {
                                         setState(() {
-                                          subServiceModel!
-                                              .service[index].quantity--;
+                                          subServiceModel!.service[index].quantity--;
                                           subsicripeModel?.status == false
-                                              ? totalPrice -= subServiceModel!
-                                                  .service[index].discountPrice
-                                              : totalPrice -= subServiceModel!
-                                                      .service[index]
-                                                      .subscriptionPrice ??
-                                                  0;
-                                          totalTickets -= subServiceModel
-                                                  ?.service[index]
-                                                  .numOfTicket ??
-                                              0;
+                                              ? totalPrice -= subServiceModel!.service[index].discountPrice
+                                              : totalPrice -= subServiceModel!.service[index].subscriptionPrice ?? 0;
+                                          totalTickets -= subServiceModel?.service[index].numOfTicket ?? 0;
                                         });
-                    
-                                        final existingIndex =
-                                            serviceId.indexWhere(
-                                          (element) =>
-                                              element["ServiceId"] ==
-                                              subServiceModel!
-                                                  .service[index].id,
+
+                                        final existingIndex = serviceId.indexWhere(
+                                          (element) => element["ServiceId"] == subServiceModel!.service[index].id,
                                         );
-                    
+
                                         if (existingIndex != -1) {
-                                          if (subServiceModel!
-                                                  .service[index].quantity ==
-                                              0) {
+                                          if (subServiceModel!.service[index].quantity == 0) {
                                             // Quantity reached 0, remove from list
                                             serviceId.removeAt(existingIndex);
                                           } else {
                                             // Just update quantity
-                                            serviceId[existingIndex]
-                                                    ["quantity"] =
-                                                subServiceModel!
-                                                    .service[index].quantity;
+                                            serviceId[existingIndex]["quantity"] = subServiceModel!.service[index].quantity;
                                           }
                                         }
                                       }
-                    
+
                                       log(serviceId.toString());
                                     },
-                                    count: subServiceModel!
-                                            .service[index].quantity ??
-                                        0,
-                                    isAddedd: subServiceModel!
-                                        .service[index].isSelected,
+                                    count: subServiceModel!.service[index].quantity ?? 0,
+                                    isAddedd: subServiceModel!.service[index].isSelected,
                                     services: subServiceModel!.service[index],
                                     onTap: () {
                                       log(services.toString());
@@ -280,100 +232,59 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                     key: key,
                                     child: ServiceCardWidget(
                                       isSubsicribed: subsicripeModel?.status,
-                                      isAddedd: subServiceModel!
-                                          .service[index].isSelected,
+                                      isAddedd: subServiceModel!.service[index].isSelected,
                                       services: subServiceModel!.service[index],
                                       onTap: () {
                                         try {
-                                          WidgetsBinding.instance
-                                              .addPostFrameCallback((_) {
-                                            CustomeTutorialCoachMark
-                                                .createTutorial(
-                                                    keyButtons, contents);
-                                            Future.delayed(
-                                                const Duration(seconds: 0), () {
-                                              Map showTour = json.decode(
-                                                  CacheHelper.getData(
-                                                      key: CacheHelper
-                                                          .showTour));
-                                              CustomeTutorialCoachMark
-                                                  .showTutorial(context,
-                                                      isShow: showTour[
-                                                              "subCategory"] ??
-                                                          true);
+                                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                                            CustomeTutorialCoachMark.createTutorial(keyButtons, contents);
+                                            Future.delayed(const Duration(seconds: 0), () {
+                                              Map showTour = json.decode(CacheHelper.getData(key: CacheHelper.showTour));
+                                              CustomeTutorialCoachMark.showTutorial(context, isShow: showTour["subCategory"] ?? true);
                                               setState(() {
                                                 showTour["subCategory"] = false;
                                               });
-                                              CacheHelper.saveData(
-                                                  key: CacheHelper.showTour,
-                                                  value: json.encode(showTour));
+                                              CacheHelper.saveData(key: CacheHelper.showTour, value: json.encode(showTour));
                                               log(showTour.toString());
                                             });
                                           });
                                         } catch (e) {
                                           log(e.toString());
                                         }
-                    
+
                                         // createTutorial(_createTargets2());
                                         // Future.delayed(
                                         //     const Duration(seconds: 0),
                                         //     showTutorial);
                                         setState(() {
-                                          subServiceModel!
-                                                  .service[index].isSelected =
-                                              !subServiceModel!
-                                                  .service[index].isSelected;
-                    
-                                          if (subServiceModel!
-                                                  .service[index].isSelected ==
-                                              true) {
+                                          subServiceModel!.service[index].isSelected = !subServiceModel!.service[index].isSelected;
+
+                                          if (subServiceModel!.service[index].isSelected == true) {
                                             serviceId.add({
-                                              "ServiceId": subServiceModel!
-                                                  .service[index].id,
+                                              "ServiceId": subServiceModel!.service[index].id,
                                               "quantity": 1,
                                             });
                                             subsicripeModel?.status == false
-                                                ? totalPrice += subServiceModel!
-                                                    .service[index]
-                                                    .discountPrice
-                                                : totalPrice += subServiceModel!
-                                                        .service[index]
-                                                        .subscriptionPrice ??
-                                                    0;
-                    
-                                            totalTickets += subServiceModel
-                                                    ?.service[index]
-                                                    .numOfTicket ??
-                                                0;
+                                                ? totalPrice += subServiceModel!.service[index].discountPrice
+                                                : totalPrice += subServiceModel!.service[index].subscriptionPrice ?? 0;
+
+                                            totalTickets += subServiceModel?.service[index].numOfTicket ?? 0;
                                             // Add the service price
                                           } else {
-                                            final existingIndex =
-                                                serviceId.indexWhere(
-                                              (element) =>
-                                                  element["ServiceId"] ==
-                                                  subServiceModel!
-                                                      .service[index].id,
+                                            final existingIndex = serviceId.indexWhere(
+                                              (element) => element["ServiceId"] == subServiceModel!.service[index].id,
                                             );
-                    
+
                                             serviceId.removeAt(existingIndex);
-                    
+
                                             subsicripeModel?.status == false
-                                                ? totalPrice -= subServiceModel!
-                                                    .service[index]
-                                                    .discountPrice
-                                                : totalPrice -= subServiceModel!
-                                                        .service[index]
-                                                        .subscriptionPrice ??
-                                                    0;
-                    
-                                            totalTickets -= subServiceModel
-                                                    ?.service[index]
-                                                    .numOfTicket ??
-                                                0;
+                                                ? totalPrice -= subServiceModel!.service[index].discountPrice
+                                                : totalPrice -= subServiceModel!.service[index].subscriptionPrice ?? 0;
+
+                                            totalTickets -= subServiceModel?.service[index].numOfTicket ?? 0;
                                             // Remove the service price
                                           }
-                                          isAddedd = subServiceModel!
-                                              .service[index].isSelected;
+                                          isAddedd = subServiceModel!.service[index].isSelected;
                                         });
                                         log(services.toString());
                                       },
@@ -384,7 +295,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                       ],
                     ),
                   ),
-              ),
+                ),
       bottomNavigationBar: serviceId.isEmpty
           ? const SizedBox()
           : Material(
@@ -468,10 +379,8 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                AppText(context, isFunction: true)
-                                    .selectDateTime,
-                                style: const TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
+                                AppText(context, isFunction: true).selectDateTime,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.close),
@@ -485,8 +394,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                         Container(
                           margin: const EdgeInsets.symmetric(horizontal: 16),
                           decoration: BoxDecoration(
-                            color: Colors.grey
-                                .shade300, // Background for the whole tab bar
+                            color: Colors.grey.shade300, // Background for the whole tab bar
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: TabBar(
@@ -506,9 +414,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                               Tab(
                                   child: Text(
                                 AppText(context, isFunction: true).later,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: AppSize(context).smallText2),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText2),
                               )),
                               Tab(
                                 child: Row(
@@ -521,12 +427,8 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                       repeat: ImageRepeat.repeat,
                                     ),
                                     Text(
-                                      AppText(context, isFunction: true)
-                                          .emergency,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize:
-                                              AppSize(context).smallText2),
+                                      AppText(context, isFunction: true).emergency,
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppSize(context).smallText2),
                                     )
                                   ],
                                 ),
@@ -544,8 +446,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                               children: [
                                 _dateTimeContent(setModalState),
                                 Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     const SizedBox(),
@@ -554,8 +455,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                          AppText(context, isFunction: true)
-                                                .estimatedTimeToArrivalminutes,
+                                            AppText(context, isFunction: true).estimatedTimeToArrivalminutes,
                                             style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,
@@ -568,15 +468,10 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                               vertical: 16,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: AppColors(context)
-                                                  .primaryColor
-                                                  .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
+                                              color: AppColors(context).primaryColor.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
                                               border: Border.all(
-                                                color: AppColors(context)
-                                                    .primaryColor
-                                                    .withOpacity(0.3),
+                                                color: AppColors(context).primaryColor.withOpacity(0.3),
                                               ),
                                             ),
                                             child: Row(
@@ -584,8 +479,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                               children: [
                                                 Icon(
                                                   Icons.access_time,
-                                                  color: AppColors(context)
-                                                      .primaryColor,
+                                                  color: AppColors(context).primaryColor,
                                                   size: 24,
                                                 ),
                                                 const SizedBox(width: 8),
@@ -594,8 +488,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                   style: TextStyle(
                                                     fontSize: 18,
                                                     fontWeight: FontWeight.bold,
-                                                    color: AppColors(context)
-                                                        .primaryColor,
+                                                    color: AppColors(context).primaryColor,
                                                   ),
                                                 ),
                                               ],
@@ -607,29 +500,16 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                     Padding(
                                       padding: const EdgeInsets.all(16.0),
                                       child: CustomBotton(
-                                        title:
-                                            AppText(context, isFunction: true)
-                                                .continuesss,
+                                        title: AppText(context, isFunction: true).continuesss,
                                         loading: loading6,
                                         onTap: () {
                                           DateTime now = DateTime.now();
 
                                           // Define start and end times for today
-                                          DateTime startTime = DateTime(
-                                              now.year,
-                                              now.month,
-                                              now.day,
-                                              8,
-                                              0); // 8:00 AM
-                                          DateTime endTime = DateTime(
-                                              now.year,
-                                              now.month,
-                                              now.day,
-                                              17,
-                                              0); // 5:00 PM
+                                          DateTime startTime = DateTime(now.year, now.month, now.day, 8, 0); // 8:00 AM
+                                          DateTime endTime = DateTime(now.year, now.month, now.day, 17, 0); // 5:00 PM
 
-                                          if (now.isAfter(startTime) &&
-                                              now.isBefore(endTime)) {
+                                          if (now.isAfter(startTime) && now.isBefore(endTime)) {
                                             setModalState(() {
                                               loading6 = true;
                                             });
@@ -641,56 +521,36 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                                 showDialog(
                                                   context: context,
                                                   builder: (context) {
-                                                    return WidgetDialog(
-                                                        title: AppText(context,
-                                                                isFunction:
-                                                                    true)
-                                                            .warning,
-                                                        desc: AppText(context,
-                                                                isFunction:
-                                                                    true)
-                                                            .wearesorryapp,
-                                                        isError: true);
+                                                    return WidgetDialog(title: AppText(context, isFunction: true).warning, desc: AppText(context, isFunction: true).wearesorryapp, isError: true);
                                                   },
                                                 );
                                               } else {
                                                 Navigator.pop(context);
-                                                AppProvider appProvider =
-                                                    Provider.of<AppProvider>(
-                                                        context,
-                                                        listen: false);
+                                                AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
 
                                                 appProvider.saveAppoitmentInfo({
                                                   "TicketTypeId": 1,
                                                   "date": DateTime.now(),
-                                                  "time":
-                                                      "After 90 - 120 minutes",
+                                                  "time": "After 90 - 120 minutes",
                                                   "services": serviceId,
                                                   "totalPrice": totalPrice,
                                                   "totalTickets": totalTickets,
                                                   "gender": "Male",
                                                 });
 
-                                                if (subsicripeModel?.status ==
-                                                    true) {
-                                                  if ((subsicripeModel
-                                                              ?.objSubscribe
-                                                              ?.emeregencyVisit ??
-                                                          0) <=
-                                                      0) {
+                                                if (subsicripeModel?.status == true) {
+                                                  if ((subsicripeModel?.objSubscribe?.emeregencyVisit ?? 0) <= 0) {
                                                     showUpgradeDialog(context);
                                                   } else {
                                                     Navigator.push(
                                                       context,
-                                                      downToTop(
-                                                          const UploadOptionsScreen()),
+                                                      downToTop(const UploadOptionsScreen()),
                                                     );
                                                   }
                                                 } else {
                                                   Navigator.push(
                                                     context,
-                                                    downToTop(
-                                                        const UploadOptionsScreen()),
+                                                    downToTop(const UploadOptionsScreen()),
                                                   );
                                                 }
                                               }
@@ -700,12 +560,8 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                                               context: context,
                                               builder: (context) {
                                                 return WidgetDialog(
-                                                  title: AppText(context,
-                                                          isFunction: true)
-                                                      .warning,
-                                                  desc: AppText(context,
-                                                          isFunction: true)
-                                                      .thisservice,
+                                                  title: AppText(context, isFunction: true).warning,
+                                                  desc: AppText(context, isFunction: true).thisservice,
                                                   isError: true,
                                                 );
                                               },
@@ -755,8 +611,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
             children: [
               const SizedBox(height: 10),
               Text(
-                AppText(context, isFunction: true)
-                    .subscribenowandsave50JODDonmissoutonthisspecialoffer,
+                AppText(context, isFunction: true).subscribenowandsave50JODDonmissoutonthisspecialoffer,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
@@ -838,8 +693,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                         scrollDirection: Axis.horizontal,
                         itemCount: timeAppoitmentModel?.timesList.length,
                         itemBuilder: (context, index) {
-                          final timeItem =
-                              timeAppoitmentModel?.timesList[index];
+                          final timeItem = timeAppoitmentModel?.timesList[index];
                           final isSelected = timeItem?.time == selectedTime;
                           final isDisabled = timeItem?.status == false;
 
@@ -847,35 +701,24 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                             onTap: isDisabled
                                 ? null
                                 : () {
-                                    setModalState(() =>
-                                        selectedTime = timeItem?.time ?? "");
+                                    setModalState(() => selectedTime = timeItem?.time ?? "");
                                     setState(() {}); // Reflect changes
                                   },
                             child: Opacity(
-                              opacity:
-                                  isDisabled ? 0.4 : 1.0, // visually greyed out
+                              opacity: isDisabled ? 0.4 : 1.0, // visually greyed out
                               child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                margin: const EdgeInsets.symmetric(horizontal: 6),
                                 decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors(context).primaryColor
-                                      : Colors.grey.shade300,
+                                  color: isSelected ? AppColors(context).primaryColor : Colors.grey.shade300,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  formatTime(timeItem?.time,
-                                      languageProvider.lang ?? "en"),
+                                  formatTime(timeItem?.time, languageProvider.lang ?? "en"),
                                   style: TextStyle(
-                                    color: isSelected
-                                        ? AppColors.whiteColor1
-                                        : AppColors.blackColor1,
-                                    fontWeight: isSelected
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                                    color: isSelected ? AppColors.whiteColor1 : AppColors.blackColor1,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                   ),
                                 ),
                               ),
@@ -904,11 +747,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                       showDialog(
                         context: context,
                         builder: (context) {
-                          return WidgetDialog(
-                              title: AppText(context, isFunction: true).warning,
-                              desc: AppText(context, isFunction: true)
-                                  .wearesorryapp,
-                              isError: true);
+                          return WidgetDialog(title: AppText(context, isFunction: true).warning, desc: AppText(context, isFunction: true).wearesorryapp, isError: true);
                         },
                       );
                     } else {
@@ -944,8 +783,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                     builder: (context) {
                       return WidgetDialog(
                         title: AppText(context, isFunction: true).warning,
-                        desc:
-                            AppText(context, isFunction: true).pleaseSelectTime,
+                        desc: AppText(context, isFunction: true).pleaseSelectTime,
                         isError: true,
                       );
                     },
@@ -982,10 +820,8 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        AppText(context, isFunction: true)
-                            .chooseTechniciaGender,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                        AppText(context, isFunction: true).chooseTechniciaGender,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close),
@@ -1005,10 +841,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border.all(
-                                color: selectedGenderMale == true
-                                    ? AppColors(context).primaryColor
-                                    : AppColors.greyColor1),
+                            border: Border.all(color: selectedGenderMale == true ? AppColors(context).primaryColor : AppColors.greyColor1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Padding(
@@ -1030,10 +863,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            border: Border.all(
-                                color: selectedGenderFeMale == true
-                                    ? AppColors(context).primaryColor
-                                    : AppColors.greyColor1),
+                            border: Border.all(color: selectedGenderFeMale == true ? AppColors(context).primaryColor : AppColors.greyColor1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Padding(
@@ -1055,8 +885,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
                       title: AppText(context, isFunction: true).continuesss,
                       onTap: () {
                         pop(context);
-                        Navigator.push(context,
-                            downToTop(const AppoitmentDetailsScreen()));
+                        Navigator.push(context, downToTop(const AppoitmentDetailsScreen()));
                       }),
                 ],
               ),
@@ -1090,11 +919,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
     });
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     try {
-      HomeApis.getSubCatService(
-              token: appProvider.userModel?.token ?? "",
-              roleId: appProvider.userModel?.customer.roleId ?? 1,
-              id: widget.catId.toString())
-          .then((value) {
+      HomeApis.getSubCatService(token: appProvider.userModel?.token ?? "", roleId: appProvider.userModel?.customer.roleId ?? 1, id: widget.catId.toString()).then((value) {
         setState(() {
           subServiceModel = value;
           isLoading = false;
@@ -1115,9 +940,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
       loadingTime = true;
     });
 
-    final selectedDateStr = appProvider.selectedDate.toString().isEmpty
-        ? DateTime.now().toString().substring(0, 10)
-        : appProvider.selectedDate.toString().substring(0, 10);
+    final selectedDateStr = appProvider.selectedDate.toString().isEmpty ? DateTime.now().toString().substring(0, 10) : appProvider.selectedDate.toString().substring(0, 10);
 
     final result = await ProfileApis.getAppitmentTime(
       token: '${appProvider.userModel?.token}',
@@ -1129,9 +952,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
 
       DateTime now = DateTime.now();
       DateTime selectedDate = DateTime.parse(selectedDateStr);
-      bool isToday = now.year == selectedDate.year &&
-          now.month == selectedDate.month &&
-          now.day == selectedDate.day;
+      bool isToday = now.year == selectedDate.year && now.month == selectedDate.month && now.day == selectedDate.day;
 
       if (isToday) {
         result.timesList.removeWhere((element) {
@@ -1147,12 +968,10 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
             startTimeStr = '$startTimeStr $period';
 
             // Create full datetime string
-            final fullDateTimeStr =
-                '${DateFormat('yyyy-MM-dd').format(now)} $startTimeStr';
+            final fullDateTimeStr = '${DateFormat('yyyy-MM-dd').format(now)} $startTimeStr';
 
             // Parse it
-            final startDateTime =
-                DateFormat('yyyy-MM-dd hh:mm a').parse(fullDateTimeStr);
+            final startDateTime = DateFormat('yyyy-MM-dd hh:mm a').parse(fullDateTimeStr);
 
             return now.isAfter(startDateTime); // remove if expired
           } catch (e) {
@@ -1184,11 +1003,7 @@ class _SubServicesScreenState extends State<SubServicesScreen> {
       loading6 = true;
     });
 
-    await ProfileApis.chaeckAvalable(
-            token: '${appProvider.userModel?.token}',
-            date: DateFormat('yyyy-MM-dd')
-                .format(appProvider.selectedDate ?? DateTime.now()))
-        .then((value) {
+    await ProfileApis.chaeckAvalable(token: '${appProvider.userModel?.token}', date: DateFormat('yyyy-MM-dd').format(appProvider.selectedDate ?? DateTime.now())).then((value) {
       setState(() {
         loading6 = false;
         status = value;

@@ -9,6 +9,7 @@ import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/appText/appText.dart';
 import 'package:wefix/Presentation/B2B/ticket/create_update_ticket_screen_v2.dart';
+import 'package:wefix/Presentation/Components/widget_dialog.dart';
 import 'package:wefix/Presentation/Home/Screens/home_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/contact_us_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/bookings_screen.dart';
@@ -16,6 +17,7 @@ import 'package:wefix/Presentation/Profile/profile_screen.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Presentation/Subscriptions/Screens/Subscriptions_screen.dart';
 import 'package:wefix/Presentation/B2B/tickets_screen.dart';
+import 'package:wefix/Presentation/auth/login_screen.dart';
 
 class HomeLayout extends StatefulWidget {
   final int? index;
@@ -34,7 +36,7 @@ class _HomeLayoutState extends State<HomeLayout> {
   GlobalKey keyButton3 = GlobalKey();
   GlobalKey keyButton4 = GlobalKey();
   GlobalKey keyButton5 = GlobalKey();
-  
+
   // GlobalKey to access HomeScreen state
   final GlobalKey<State<HomeScreen>> _homeScreenKey = GlobalKey<State<HomeScreen>>();
 
@@ -47,19 +49,19 @@ class _HomeLayoutState extends State<HomeLayout> {
   }
 
   List<Widget> getScreens(bool isB2bAccount) => [
-    HomeScreen(key: _homeScreenKey),
-    isB2bAccount ? TicketsScreen() : BookingScreen(),
-    const SubscriptionScreen(),
-    const ProfileScreen(),
-    const ContactUsScreen(),
-  ];
+        HomeScreen(key: _homeScreenKey),
+        isB2bAccount ? TicketsScreen() : BookingScreen(),
+        const SubscriptionScreen(),
+        const ProfileScreen(),
+        const ContactUsScreen(),
+      ];
 
   @override
   Widget build(BuildContext context) {
     // Check if user is a B2B account (Admin 18, Team Leader 20, or Super User 26)
     final appProvider = Provider.of<AppProvider>(context, listen: false);
     final currentUserRoleId = appProvider.userModel?.customer.roleId;
-    
+
     int? roleIdInt;
     if (currentUserRoleId is int) {
       roleIdInt = currentUserRoleId;
@@ -68,14 +70,12 @@ class _HomeLayoutState extends State<HomeLayout> {
     } else if (currentUserRoleId != null) {
       roleIdInt = int.tryParse(currentUserRoleId.toString());
     }
-    
+
     final isB2bAccount = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 26);
-    
+
     // Use b2b_icon.svg for B2B accounts, otherwise use a different icon
-    final String centerIconPath = isB2bAccount 
-        ? "assets/icon/b2b_icon.svg" 
-        : "assets/icon/smile.svg";
-    
+    final String centerIconPath = isB2bAccount ? "assets/icon/b2b_icon.svg" : "assets/icon/smile.svg";
+
     List<TabItem> items = [
       TabItem(
           activeIcon: SvgPicture.asset(
@@ -159,7 +159,7 @@ class _HomeLayoutState extends State<HomeLayout> {
     if (index == 2) {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
       final currentUserRoleId = appProvider.userModel?.customer.roleId;
-      
+
       // Parse roleId to integer
       int? roleIdInt;
       if (currentUserRoleId is int) {
@@ -169,10 +169,10 @@ class _HomeLayoutState extends State<HomeLayout> {
       } else if (currentUserRoleId != null) {
         roleIdInt = int.tryParse(currentUserRoleId.toString());
       }
-      
+
       // Check if user is a company user (Admin 18, Team Leader 20, or Super User 26)
       final isCompanyUser = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 26);
-      
+
       if (isCompanyUser) {
         // Navigate to create ticket screen for company users
         Navigator.push(
@@ -197,10 +197,27 @@ class _HomeLayoutState extends State<HomeLayout> {
         return; // Don't change the current index
       }
     }
-    
-    setState(() {
-      currentIndex = index;
-    });
+
+    AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+    final isGuest = appProvider.userModel == null || appProvider.userModel?.token == null || appProvider.userModel!.token.isEmpty;
+    if (isGuest == true && (index == 1 || index == 2)) {
+      showDialog(
+          context: context,
+          builder: (context) => WidgetDialog(
+              title: 'Worning',
+              desc: 'You Must Be Login For Use This Feature!',
+              isError: true,
+              bottonText: 'Login',
+              onTap: () => Navigator.pushAndRemoveUntil(
+                    context,
+                    downToTop(const LoginScreen()),
+                    (route) => false,
+                  )));
+    } else {
+      setState(() {
+        currentIndex = index;
+      });
+    }
   }
 
   void handelCurrentIndex(int? index) {
@@ -211,7 +228,7 @@ class _HomeLayoutState extends State<HomeLayout> {
 
   void showTutorial() {
     try {
-    tutorialCoachMark.show(context: context);
+      tutorialCoachMark.show(context: context);
     } catch (e) {
       // Silently fail if tutorial wasn't created or has no targets
     }
@@ -219,12 +236,12 @@ class _HomeLayoutState extends State<HomeLayout> {
 
   void createTutorial() {
     final targets = _createTargets();
-    
+
     // Only create tutorial if there are valid targets
     if (targets.isEmpty) {
       return;
     }
-    
+
     tutorialCoachMark = TutorialCoachMark(
       targets: targets,
       colorShadow: Colors.red,

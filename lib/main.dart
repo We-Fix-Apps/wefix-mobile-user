@@ -36,7 +36,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // We keep this as a fallback, but it should not be called if FcmHelper.initFcm() runs first
   log('Handling a background message: ${message.messageId}');
   log('Message data: ${message.data}');
-  
+
   // Try to call the FcmHelper handler if available
   // Note: This might not work if FcmHelper hasn't been initialized yet
   try {
@@ -167,7 +167,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
 
     MainManagements.handelLanguage(context: context);
-    
+
     // Handle initial notification if app was opened from a terminated state
     // Use a longer delay to ensure app is fully initialized
     Future.delayed(const Duration(milliseconds: 2000), () {

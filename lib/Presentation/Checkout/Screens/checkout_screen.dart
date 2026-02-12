@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 import 'dart:developer';
 
@@ -540,33 +542,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
 
                             Container(
-                              padding: const EdgeInsets.all(12),
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: AppColors.redColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.info_outline,
-                                    color: AppColors.redColor,
-                                  ),
+                                padding: const EdgeInsets.all(12),
+                                width: double.infinity,
+                                decoration: BoxDecoration(color: AppColors.redColor.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                                child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                                  const Icon(Icons.info_outline, color: AppColors.redColor),
                                   const SizedBox(width: 5),
-                                  Expanded(
-                                    // ✅ prevents overflow, allows wrapping
-                                    child: Text(
-                                      AppText(context).noteM,
-                                      style: const TextStyle(
-                                        color: AppColors.redColor,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                                  Expanded(child: Text(AppText(context).noteM, style: const TextStyle(color: AppColors.redColor, fontWeight: FontWeight.w600)))
+                                ]))
 
                             // subsicripeModel?.status == false
                             //     ? SizedBox()
