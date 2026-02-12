@@ -16,17 +16,14 @@ class AppText {
   String get langCode => languages ?? 'en';
 
   String getTranslation(String key) {
-    
     try {
-      final languageList = languageProvider.allLanguage
-            .where((element) => element.key == langCode)
-          .toList();
-      
+      final languageList = languageProvider.allLanguage.where((element) => element.key == langCode).toList();
+
       if (languageList.isEmpty) return '';
-      
+
       final languages = languageList.first.languages;
       if (languages == null || languages.isEmpty) return '';
-      
+
       try {
         final translation = languages.firstWhere(
           (element) => element.wordKey == key,
@@ -272,6 +269,7 @@ class AppText {
     }
     return translation;
   }
+
   String get callforemergency => getTranslation('callforemergency');
   String get call => getTranslation('call');
   String get welcomePleaseenteryourdetailsbelow => getTranslation('welcomePleaseenteryourdetailsbelow');
@@ -299,6 +297,7 @@ class AppText {
   String get yourtransactionhasbeenfailed => getTranslation('yourtransactionhasbeenfailed');
   String get yourtransactionhasbeensuccessfullycompleted => getTranslation('yourtransactionhasbeensuccessfullycompleted');
   String get estimatedTimeToArrivalminutes => getTranslation('estimatedTimeToArrivalminutes');
+
   String get responseTime => getTranslation('responseTime');
   String get minutes => getTranslation('minutes');
   String get chooseTechniciaGender => getTranslation('chooseTechniciaGender');

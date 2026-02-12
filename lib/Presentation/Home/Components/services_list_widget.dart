@@ -51,8 +51,8 @@ class _ServicesWidgetState extends State<ServicesWidget> {
                               : Navigator.push(context, downToTop(SubServicesScreen(catId: category.id, title: languageProvider.lang == "ar" ? category.titleAr : category.titleEn)));
                     },
                     child: Center(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisSize: MainAxisSize.min, spacing: 10, children: [
-                      WidgetCachNetworkImage(image: category.icon ?? "", height: 60, width: 60, boxFit: BoxFit.cover),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.center, mainAxisSize: MainAxisSize.min, spacing: 5, children: [
+                      WidgetCachNetworkImage(image: category.icon ?? "", height: 70, width: 70, boxFit: BoxFit.cover),
                       Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 2.0),
                           child: Text(languageProvider.lang == "ar" ? category.titleAr : category.titleEn,

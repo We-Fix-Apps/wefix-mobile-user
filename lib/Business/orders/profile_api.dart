@@ -35,6 +35,7 @@ class ProfileApis {
       log('Error during force logout: $e');
     }
   }
+
   static Future getAddress({required String token}) async {
     try {
       final response = await HttpHelper.getData(
@@ -95,21 +96,13 @@ class ProfileApis {
     bool? isCompany,
   }) async {
     try {
-      final response = await HttpHelper.getData(
-        query: isCompany == true
-            ? EndPoints.isSubscribeCompany
-            : EndPoints.isSubsicribe,
-        token: token,
-      );
-
+      final response = await HttpHelper.getData(query: isCompany == true ? EndPoints.isSubscribeCompany : EndPoints.isSubsicribe, token: token);
       log('isSubsicribe() [ STATUS ] -> ${response.statusCode}');
-
       if (response.statusCode == 200) {
-        // Check if response body is not empty before decoding
         if (response.body.isNotEmpty) {
           final body = json.decode(response.body);
-        subsicripeModel = SubsicripeModel.fromJson(body);
-        return subsicripeModel;
+          subsicripeModel = SubsicripeModel.fromJson(body);
+          return subsicripeModel;
         } else {
           return null;
         }
@@ -127,12 +120,9 @@ class ProfileApis {
     String? date,
   }) async {
     try {
-      final response = await HttpHelper.postData(
-          query: EndPoints.checkAvilabel,
-          token: token,
-          data: {
-            "SelectedDatestr": date,
-          });
+      final response = await HttpHelper.postData(query: EndPoints.checkAvilabel, token: token, data: {
+        "SelectedDatestr": date,
+      });
 
       log('chaeckAvalable() [ STATUS ] -> ${response.statusCode}');
 
@@ -236,14 +226,11 @@ class ProfileApis {
     String? packageId,
   }) async {
     try {
-      final response = await HttpHelper.postData(
-          query: EndPoints.calculateSubPrice,
-          token: token,
-          data: {
-            "Age": 0,
-            "Area": area,
-            "PackageId": packageId,
-          });
+      final response = await HttpHelper.postData(query: EndPoints.calculateSubPrice, token: token, data: {
+        "Age": 0,
+        "Area": area,
+        "PackageId": packageId,
+      });
 
       log('calculateSubPrice() [ STATUS ] -> ${response.statusCode}');
 
@@ -404,18 +391,16 @@ class ProfileApis {
     try {
       // Use backend-mms endpoint only if user is company personnel (roleId == 2)
       final bool useMMS = isCompany == true;
-      
-      final url = useMMS 
-          ? Uri.parse('${EndPoints.mmsBaseUrl}${EndPoints.getProfile}')
-          : Uri.parse('${EndPoints.baseUrl}${EndPoints.getProfile}');
-      
+
+      final url = useMMS ? Uri.parse('${EndPoints.mmsBaseUrl}${EndPoints.getProfile}') : Uri.parse('${EndPoints.baseUrl}${EndPoints.getProfile}');
+
       var headers = {
         'Content-Type': 'application/json',
         'Accept': '*/*',
         'Connection': 'keep-alive',
         'Authorization': 'Bearer $token',
       };
-      
+
       final response = await http.get(url, headers: headers);
 
       // Check status code before parsing JSON
@@ -425,11 +410,11 @@ class ProfileApis {
           log('getProfileData() [ WARNING ] -> Empty response body');
           return null;
         }
-        
+
         try {
           final body = json.decode(response.body);
-        profileModel = ProfileModel.fromJson(body);
-        return profileModel;
+          profileModel = ProfileModel.fromJson(body);
+          return profileModel;
         } catch (parseError) {
           log('getProfileData() [ PARSE ERROR ] -> $parseError');
           return null;
@@ -437,12 +422,12 @@ class ProfileApis {
       } else {
         // For non-200 status codes, don't try to parse JSON
         log('getProfileData() [ ERROR ] -> Status ${response.statusCode}, body: ${response.body.isNotEmpty ? response.body.substring(0, response.body.length > 100 ? 100 : response.body.length) : "empty"}');
-        
+
         // Force logout if server is down (502 Bad Gateway)
         if (response.statusCode == 502) {
           _forceLogoutOnServerDown();
         }
-        
+
         return null;
       }
     } catch (e) {
@@ -459,15 +444,12 @@ class ProfileApis {
     required String email,
   }) async {
     try {
-      final response = await HttpHelper.postData(
-          query: EndPoints.editProfile,
-          token: token,
-          data: {
-            "email": email,
-            "firstname": firstName,
-            "lastname": lastName,
-            "profileImage": image,
-          });
+      final response = await HttpHelper.postData(query: EndPoints.editProfile, token: token, data: {
+        "email": email,
+        "firstname": firstName,
+        "lastname": lastName,
+        "profileImage": image,
+      });
 
       log('editProfile() [ STATUS ] -> ${response.statusCode}');
 
@@ -489,17 +471,17 @@ class ProfileApis {
   }) async {
     try {
       final url = Uri.parse('${EndPoints.mmsBaseUrl}${EndPoints.updateProfile}');
-      
+
       var request = http.MultipartRequest('PUT', url);
-      
+
       // Add headers
       request.headers['Authorization'] = 'Bearer $token';
-      
+
       // Add text fields
       request.fields['email'] = email;
       request.fields['firstname'] = firstName;
       request.fields['lastname'] = lastName;
-      
+
       // Add image file if provided
       if (imageFile != null && await imageFile.exists()) {
         request.files.add(
@@ -509,13 +491,13 @@ class ProfileApis {
         // If no new image but existing image URL, send it as a field
         request.fields['profileImage'] = existingImageUrl;
       }
-      
+
       // Send request
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-      
+
       log('updateProfileMMS() [ STATUS ] -> ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         if (body['success'] == true && body['profile'] != null) {
@@ -525,7 +507,7 @@ class ProfileApis {
       } else {
         log('updateProfileMMS() [ ERROR ] -> Status ${response.statusCode}, body: ${response.body}');
       }
-      
+
       return null;
     } catch (e) {
       log('updateProfileMMS() [ ERROR ] -> $e');
@@ -539,13 +521,10 @@ class ProfileApis {
     required String newPassword,
   }) async {
     try {
-      final response = await HttpHelper.postData(
-          query: EndPoints.changedPassword,
-          token: token,
-          data: {
-            "OldPassword": oldPassword,
-            "Password": newPassword,
-          });
+      final response = await HttpHelper.postData(query: EndPoints.changedPassword, token: token, data: {
+        "OldPassword": oldPassword,
+        "Password": newPassword,
+      });
 
       log('changePassword() [ STATUS ] -> ${response.statusCode}');
 
@@ -561,12 +540,9 @@ class ProfileApis {
     required String phone,
   }) async {
     try {
-      final response = await HttpHelper.postData(
-          query: EndPoints.changedPhone,
-          token: token,
-          data: {
-            "phone": phone,
-          });
+      final response = await HttpHelper.postData(query: EndPoints.changedPhone, token: token, data: {
+        "phone": phone,
+      });
 
       log('editProfile() [ STATUS ] -> ${response.statusCode}');
 

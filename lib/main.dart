@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:wefix/injection_container.dart';
-import 'package:wefix/firebase_options.dart';
 import 'package:wefix/main_managements.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
@@ -52,7 +51,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await init();
 
-  // await Firebase.initializeApp(
+  // await Firebase.initializeApp(dffsdfs
   //   options: DefaultFirebaseOptions.currentPlatform,
   // );
   await Permission.notification.isDenied.then((value) {
@@ -60,11 +59,11 @@ Future<void> main() async {
       Permission.notification.request();
     }
   });
-  
+
   // Request notification permission FIRST - before anything else
   // This ensures the native iOS dialog shows immediately
   await PermissionsHelper.requestNotificationPermissionOnLaunch();
-  
+
   // await Firebase.initializeApp(
   //   options: DefaultFirebaseOptions.currentPlatform,
   // );
@@ -152,7 +151,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Notification permission is already requested in main() via PermissionsHelper
     // No need to request again here
 
@@ -185,12 +184,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     // When app returns to foreground (resumed), check and refresh token if needed
     if (state == AppLifecycleState.resumed && _lastLifecycleState != AppLifecycleState.resumed) {
       _handleAppResumed();
     }
-    
+
     _lastLifecycleState = state;
   }
 
@@ -198,15 +197,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<void> _handleAppResumed() async {
     try {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
-      
+
       // Only check token for company personnel (MMS users)
-      if (appProvider.userModel != null && 
-          appProvider.accessToken != null && 
-          appProvider.refreshToken != null) {
-        
+      if (appProvider.userModel != null && appProvider.accessToken != null && appProvider.refreshToken != null) {
         // Check if token needs refresh or is expired
         final tokenExpiresAt = appProvider.tokenExpiresAt;
-        
+
         if (tokenExpiresAt != null) {
           // If token is expired or about to expire, try to refresh it
           if (!isTokenValid(tokenExpiresAt) || shouldRefreshToken(tokenExpiresAt)) {

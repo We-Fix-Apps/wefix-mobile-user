@@ -18,8 +18,7 @@ class BranchesListScreen extends StatefulWidget {
   State<BranchesListScreen> createState() => _BranchesListScreenState();
 }
 
-class _BranchesListScreenState extends State<BranchesListScreen>
-    with SingleTickerProviderStateMixin {
+class _BranchesListScreenState extends State<BranchesListScreen> with SingleTickerProviderStateMixin {
   final TextEditingController searchController = TextEditingController();
 
   final List<Map<String, dynamic>> branches = [
@@ -71,8 +70,7 @@ class _BranchesListScreenState extends State<BranchesListScreen>
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors(context).primaryColor,
         onPressed: () async {
-          final a =
-              await Navigator.push(context, rightToLeft(const AddBranchScreen()));
+          final a = await Navigator.push(context, rightToLeft(const AddBranchScreen()));
 
           if (a == true) {
             getBranches();
@@ -106,39 +104,38 @@ class _BranchesListScreenState extends State<BranchesListScreen>
                             ),
                           )
                         : ListView.builder(
-                      itemCount: branchesModel?.branches.length ?? 0,
-                      physics: const BouncingScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        final branch = branchesModel?.branches[index];
-                        return AnimatedSlide(
-                          duration: Duration(milliseconds: 400 + (index * 80)),
-                          offset: const Offset(0, 0),
-                          child: AnimatedOpacity(
-                            duration:
-                                Duration(milliseconds: 400 + (index * 80)),
-                            opacity: 1,
-                            child: _BranchCard(
-                              branch: branch!,
-                              name: branch.name,
-                              city: branch.city,
-                              phone: branch.phone,
-                              address: branch.address,
-                              representativeName: branch.representativeName,
-                              representativeEmail: branch.representativeEmail,
-                              onEdit: () {},
-                              onDelete: () {
-                                // TODO: Implement delete API call
-                                if (branchesModel != null && branchesModel!.branches.length > index) {
-                                setState(() {
-                                    branchesModel!.branches.removeAt(index);
-                                });
-                                }
-                              },
-                            ),
+                            itemCount: branchesModel?.branches.length ?? 0,
+                            physics: const BouncingScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              final branch = branchesModel?.branches[index];
+                              return AnimatedSlide(
+                                duration: Duration(milliseconds: 400 + (index * 80)),
+                                offset: const Offset(0, 0),
+                                child: AnimatedOpacity(
+                                  duration: Duration(milliseconds: 400 + (index * 80)),
+                                  opacity: 1,
+                                  child: _BranchCard(
+                                    branch: branch!,
+                                    name: branch.name,
+                                    city: branch.city,
+                                    phone: branch.phone,
+                                    address: branch.address,
+                                    representativeName: branch.representativeName,
+                                    representativeEmail: branch.representativeEmail,
+                                    onEdit: () {},
+                                    onDelete: () {
+                                      // TODO: Implement delete API call
+                                      if (branchesModel != null && branchesModel!.branches.length > index) {
+                                        setState(() {
+                                          branchesModel!.branches.removeAt(index);
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                 ],
               ),
@@ -152,22 +149,22 @@ class _BranchesListScreenState extends State<BranchesListScreen>
     setState(() {
       loading = true;
     });
-    
+
     // Use accessToken for MMS API calls (B2B users)
     final token = appProvider.accessToken ?? appProvider.userModel?.token ?? '';
-    
+
     B2bApi.getBranches(token: token, context: context).then((value) {
       if (!mounted) return;
-        setState(() {
-          loading = false;
-          branchesModel = value;
-        });
+      setState(() {
+        loading = false;
+        branchesModel = value;
+      });
     }).catchError((error) {
       if (!mounted) return;
-        setState(() {
-          loading = false;
+      setState(() {
+        loading = false;
         branchesModel = null;
-        });
+      });
     });
   }
 }
@@ -218,32 +215,30 @@ class _BranchCardState extends State<_BranchCard> {
     }
     final latDouble = double.tryParse(lat);
     final lngDouble = double.tryParse(lng);
-    return latDouble != null && lngDouble != null && 
-           !latDouble.isNaN && !lngDouble.isNaN &&
-           !(latDouble == 0.0 && lngDouble == 0.0);
+    return latDouble != null && lngDouble != null && !latDouble.isNaN && !lngDouble.isNaN && !(latDouble == 0.0 && lngDouble == 0.0);
   }
 
   Future<void> _reverseGeocodeLocation() async {
     if (!_hasValidCoordinates()) {
       return;
     }
-    
+
     setState(() {
       _isLoadingAddress = true;
     });
-    
+
     try {
       final lat = double.tryParse(widget.branch.latitude);
       final lng = double.tryParse(widget.branch.longitude);
-      
+
       if (lat != null && lng != null) {
         List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
-        
+
         if (placemarks.isNotEmpty && mounted) {
           final place = placemarks[0];
           // Format: City, State, Country
           List<String> addressParts = [];
-          
+
           if (place.locality != null && place.locality!.isNotEmpty) {
             addressParts.add(place.locality!);
           }
@@ -253,7 +248,7 @@ class _BranchCardState extends State<_BranchCard> {
           if (place.country != null && place.country!.isNotEmpty) {
             addressParts.add(place.country!);
           }
-          
+
           if (mounted) {
             setState(() {
               _formattedAddress = addressParts.isNotEmpty ? addressParts.join(', ') : null;
@@ -341,8 +336,7 @@ class _BranchCardState extends State<_BranchCard> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.person_outline_rounded,
-                              size: 14, color: Colors.grey.shade600),
+                          Icon(Icons.person_outline_rounded, size: 14, color: Colors.grey.shade600),
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(
@@ -362,8 +356,7 @@ class _BranchCardState extends State<_BranchCard> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.location_on_rounded,
-                              size: 16, color: Colors.grey.shade700),
+                          Icon(Icons.location_on_rounded, size: 16, color: Colors.grey.shade700),
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(
@@ -381,8 +374,7 @@ class _BranchCardState extends State<_BranchCard> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.location_on_rounded,
-                              size: 16, color: Colors.grey.shade700),
+                          Icon(Icons.location_on_rounded, size: 16, color: Colors.grey.shade700),
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(
@@ -397,30 +389,28 @@ class _BranchCardState extends State<_BranchCard> {
                         ],
                       ),
                     ] else if (widget.city.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Icons.location_on_rounded,
-                              size: 16, color: Colors.grey.shade700),
-                        const SizedBox(width: 5),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_rounded, size: 16, color: Colors.grey.shade700),
+                          const SizedBox(width: 5),
                           Expanded(
                             child: Text(
                               widget.city,
-                          style: TextStyle(
+                              style: TextStyle(
                                 color: Colors.grey.shade800,
-                            fontSize: 13,
+                                fontSize: 13,
                               ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                     ],
                     if (widget.phone.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.phone_rounded,
-                              size: 16, color: Colors.grey.shade700),
+                      Row(
+                        children: [
+                          Icon(Icons.phone_rounded, size: 16, color: Colors.grey.shade700),
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(
@@ -438,21 +428,20 @@ class _BranchCardState extends State<_BranchCard> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.email_outlined,
-                              size: 14, color: Colors.grey.shade600),
-                        const SizedBox(width: 5),
+                          Icon(Icons.email_outlined, size: 14, color: Colors.grey.shade600),
+                          const SizedBox(width: 5),
                           Expanded(
                             child: Text(
                               widget.representativeEmail!,
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
                                 fontSize: 12,
                               ),
                             ),
                           ),
                         ],
-                        ),
-                      ],
+                      ),
+                    ],
                   ],
                 ),
               ),

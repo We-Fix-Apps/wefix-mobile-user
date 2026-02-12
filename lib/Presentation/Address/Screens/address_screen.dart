@@ -32,7 +32,7 @@ class _AddressScreenState extends State<AddressScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
+    super.initState();
     getAddress();
   }
 
@@ -57,8 +57,7 @@ class _AddressScreenState extends State<AddressScreen> {
                     context: context,
                     builder: (context) => WidgetDialog(
                           title: AppText(context, isFunction: true).warning,
-                          desc: AppText(context, isFunction: true)
-                              .pleaselogintocontinue,
+                          desc: AppText(context, isFunction: true).pleaselogintocontinue,
                           isError: true,
                           bottonText: AppText(context, isFunction: true).login,
                           onTap: () => Navigator.push(
@@ -69,8 +68,7 @@ class _AddressScreenState extends State<AddressScreen> {
                           ),
                         ));
               } else {
-                final a = await Navigator.push(
-                    context, rightToLeft(const AddShippingAddress()));
+                final a = await Navigator.push(context, rightToLeft(const AddShippingAddress()));
 
                 if (a == true) {
                   getAddress();
@@ -96,20 +94,11 @@ class _AddressScreenState extends State<AddressScreen> {
                         itemCount: address?.length ?? 0,
                         itemBuilder: (context, index) {
                           return Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 4, horizontal: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                             child: InkWell(
                               onTap: () {
                                 setState(() {
-                                  appProvider.saveCusrrentLocation(LatLng(
-                                      double.tryParse(
-                                              address?[index].latitude ??
-                                                  "0") ??
-                                          0,
-                                      double.tryParse(
-                                              address?[index].longitude ??
-                                                  "0") ??
-                                          0));
+                                  appProvider.saveCusrrentLocation(LatLng(double.tryParse(address?[index].latitude ?? "0") ?? 0, double.tryParse(address?[index].longitude ?? "0") ?? 0));
                                 });
                                 Navigator.pop(context, true);
                               },
@@ -133,10 +122,8 @@ class _AddressScreenState extends State<AddressScreen> {
           loading = true;
         });
       }
-      AppProvider appProvider =
-          Provider.of<AppProvider>(context, listen: false);
-      await AddressApi.getAddress(token: appProvider.userModel?.token ?? '')
-          .then(
+      AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
+      await AddressApi.getAddress(token: appProvider.userModel?.token ?? '').then(
         (value) {
           if (mounted) {
             setState(() {

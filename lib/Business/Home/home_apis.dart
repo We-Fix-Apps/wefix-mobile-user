@@ -20,24 +20,13 @@ class HomeApis {
       final body = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        // Check if response has status field and it's false (error response)
         if (body is Map && body.containsKey('status') && body['status'] == false) {
-          // API returned error message even with 200 status
           log('allHomeApis() [ ERROR ] -> ${body['message'] ?? "Unknown error"}');
-          // For guest users or when status is false, return empty model
           log('API returned status: false - returning empty HomeModel');
-          // Return empty HomeModel
-          homeModel = HomeModel(
-            sliders: [],
-            categories: [],
-            serviceOffers: [],
-            servicePopular: [],
-            tickets: null,
-            roleId: 0, // Use 0 as default roleId
-          );
+          homeModel = HomeModel(sliders: [], categories: [], serviceOffers: [], servicePopular: [], tickets: null, roleId: 0);
           return homeModel;
         }
-        
+
         // Valid response - parse HomeModel
         try {
           homeModel = HomeModel.fromJson(body);
