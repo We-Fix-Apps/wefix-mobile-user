@@ -54,10 +54,12 @@ class _ServicesWidgetState extends State<ServicesWidget> {
                         showDialog(
                             context: context,
                             builder: (context) => WidgetDialog(
-                                title: 'Worning',
-                                desc: 'You Must Be Login For Use This Feature!',
+                                title: languageProvider.lang == "ar" ? 'تحذير' : 'Warning',
+                                desc: languageProvider.lang == "ar" 
+                                    ? 'يجب عليك تسجيل الدخول لاستخدام هذه الميزة!'
+                                    : 'You Must Be Login For Use This Feature!',
                                 isError: true,
-                                bottonText: 'Login',
+                                bottonText: languageProvider.lang == "ar" ? 'تسجيل الدخول' : 'Login',
                                 onTap: () => Navigator.pushAndRemoveUntil(
                                       context,
                                       downToTop(const LoginScreen()),
