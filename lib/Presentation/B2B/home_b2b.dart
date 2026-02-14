@@ -19,6 +19,8 @@ import 'package:wefix/Presentation/Components/language_icon.dart';
 import 'package:wefix/Business/orders/profile_api.dart';
 import 'package:wefix/Data/model/profile_model.dart';
 import 'package:wefix/Business/end_points.dart';
+import 'package:wefix/Data/Notification/notification_cache_service.dart';
+import 'dart:developer';
 
 import '../../l10n/app_localizations.dart';
 
@@ -238,11 +240,35 @@ class _HeaderSection extends StatefulWidget {
 class _HeaderSectionState extends State<_HeaderSection> {
   ProfileModel? profileModel;
   bool isLoading = false;
+  int notificationCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    updateNotificationCount();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Update notification count when screen becomes visible
+    updateNotificationCount();
+  }
+
+  Future<void> updateNotificationCount() async {
+    try {
+      // For B2B users, count all cached notifications (all are considered unread)
+      final cachedNotifications = NotificationCacheService.getCachedNotifications();
+      
+      if (mounted) {
+        setState(() {
+          notificationCount = cachedNotifications.length;
+        });
+      }
+    } catch (e) {
+      log('Error updating notification count: $e');
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -427,12 +453,26 @@ class _HeaderSectionState extends State<_HeaderSection> {
         ),
         const Spacer(),
         InkWell(
-          onTap: () {
-            Navigator.push(context, rightToLeft(NotificationsScreen()));
+          onTap: () async {
+            await Navigator.push(context, rightToLeft(NotificationsScreen()));
+            // Update count when returning from notifications screen
+            updateNotificationCount();
           },
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Icon(Icons.notifications_none_rounded, color: Colors.grey[600]),
+            child: Badge(
+              label: notificationCount > 0
+                  ? Text(
+                      notificationCount > 99 ? '99+' : notificationCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+              child: Icon(Icons.notifications_none_rounded, color: Colors.grey[600]),
+            ),
           ),
         ),
         const SizedBox(width: 8),
