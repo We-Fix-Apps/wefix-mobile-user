@@ -1,6 +1,6 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/Functions/cash_strings.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
-import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
+import 'package:wefix/Presentation/Profile/Screens/ticket_details_loader.dart';
 import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
@@ -24,6 +24,75 @@ class FcmHelper {
 
   // FCM Messaging
   static late FirebaseMessaging messaging;
+  
+  // Store pending notification data for navigation after splash screen
+  static Map<String, dynamic>? pendingNotificationData;
+  
+  // Flag to prevent multiple navigation attempts
+  static bool _isNavigating = false;
+  
+  // Cache keys for persistent storage (works across isolates)
+  static const String _pendingNotificationKey = 'pending_notification_data';
+  static const String _splashCompletedKey = 'splash_screen_completed';
+  static bool _splashCompletedInCurrentRun = false;
+  static bool _splashGateInitialized = false;
+  
+  /// Clear pending notification data (both in-memory and persistent storage)
+  static void _clearPendingNotificationData() {
+    pendingNotificationData = null;
+    try {
+      CacheHelper.removeData(key: _pendingNotificationKey);
+    } catch (e) {
+      // Error clearing stored notification
+    }
+  }
+  
+  /// Check if splash screen has completed (from persistent storage - works across isolates)
+  static bool _isSplashScreenCompleted() {
+    if (_splashCompletedInCurrentRun) return true;
+    if (_splashGateInitialized) return false;
+
+    try {
+      final completed = CacheHelper.getData(key: _splashCompletedKey);
+      return completed == true || completed == 'true';
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  /// Public method to check if splash screen has completed
+  /// Used to determine if we can navigate immediately when app is already running
+  static bool isSplashScreenCompleted() {
+    return _isSplashScreenCompleted();
+  }
+  
+  /// Mark that splash screen has completed - allows immediate navigation when notification data arrives
+  /// Uses persistent storage so it works across isolates
+  static void markSplashScreenCompleted() {
+    try {
+      _splashCompletedInCurrentRun = true;
+      _splashGateInitialized = true;
+      CacheHelper.saveData(key: _splashCompletedKey, value: true);
+      
+      // Don't trigger navigation here - let _onSplashExit() handle it
+      // This prevents duplicate navigation calls
+      // _checkAndNavigateFromStoredNotification(); // REMOVED - navigation handled by _onSplashExit()
+    } catch (e) {
+      // Error marking splash as completed
+    }
+  }
+  
+  /// Clear splash completion state at startup.
+  /// Must be called before notification handlers run.
+  static void clearSplashScreenCompleted() {
+    _splashCompletedInCurrentRun = false;
+    _splashGateInitialized = true;
+    try {
+      CacheHelper.removeData(key: _splashCompletedKey);
+    } catch (e) {
+      // Error clearing splash flag
+    }
+  }
   
   // Deduplication: Track recently created notification IDs and content to prevent duplicates
   // Use both in-memory (for fast access) and persistent storage (for cross-isolate deduplication)
@@ -69,7 +138,7 @@ class FcmHelper {
           });
           await CacheHelper.saveData(key: _notificationIdsKey, value: json.encode(cleanedIds));
         } catch (e) {
-          log('Error parsing stored notification IDs: $e');
+          // Error parsing stored notification IDs
         }
       }
       
@@ -88,11 +157,11 @@ class FcmHelper {
           });
           await CacheHelper.saveData(key: _notificationContentKey, value: json.encode(cleanedContent));
         } catch (e) {
-          log('Error parsing stored notification content: $e');
+          // Error parsing stored notification content
         }
       }
     } catch (e) {
-      log('Error cleaning up old notification IDs: $e');
+      // Error cleaning up old notification IDs
     }
   }
   
@@ -106,7 +175,6 @@ class FcmHelper {
     
     // Check in-memory first (fast)
     if (_recentNotificationIds.contains(notificationId)) {
-      log('⚠️ DUPLICATE DETECTED (in-memory) - ID: $notificationId');
       return true;
     }
     
@@ -120,14 +188,13 @@ class FcmHelper {
           if (timestampMillis != null) {
             final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
             if (now.difference(timestamp).inSeconds < 30) {
-              log('⚠️ DUPLICATE DETECTED (persistent storage) - ID: $notificationId');
               return true;
             }
           }
         }
       }
     } catch (e) {
-      log('Error checking persistent storage for duplicate ID: $e');
+      // Error checking persistent storage for duplicate ID
     }
     
     // Also check by content (title + body) to catch duplicates even if IDs somehow differ
@@ -137,7 +204,6 @@ class FcmHelper {
     if (_recentNotificationContent.containsKey(contentKey)) {
       final lastSeen = _recentNotificationContent[contentKey]!;
       if (now.difference(lastSeen).inSeconds < 30) {
-        log('⚠️ DUPLICATE DETECTED (in-memory content) - Content: $contentKey');
         return true;
       }
     }
@@ -152,14 +218,13 @@ class FcmHelper {
           if (timestampMillis != null) {
             final timestamp = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
             if (now.difference(timestamp).inSeconds < 30) {
-              log('⚠️ DUPLICATE DETECTED (persistent storage content) - Content: $contentKey');
               return true;
             }
           }
         }
       }
     } catch (e) {
-      log('Error checking persistent storage for duplicate content: $e');
+      // Error checking persistent storage for duplicate content
     }
     
     return false;
@@ -193,7 +258,7 @@ class FcmHelper {
       storedContent[contentKey] = nowMillis;
       await CacheHelper.saveData(key: _notificationContentKey, value: json.encode(storedContent));
     } catch (e) {
-      log('Error saving notification to persistent storage: $e');
+      // Error saving notification to persistent storage
     }
   }
 
@@ -219,7 +284,7 @@ class FcmHelper {
       // Register background handler
       FirebaseMessaging.onBackgroundMessage(_fcmBackgroundHandler);
     } catch (error) {
-      log("FCM Error : ${error.toString()}");
+      // FCM Error
     }
   }
 
@@ -278,7 +343,6 @@ class FcmHelper {
       
       // Get user's language preference
       final langCode = CacheHelper.getData(key: LANG_CACHE);
-      log('[mobile-user] Language code from cache: $langCode');
       
       // Handle both string and dynamic types
       String? langString;
@@ -292,42 +356,33 @@ class FcmHelper {
       // Both apps should default to English for consistency
       if (langString == null || langString.isEmpty) {
         langString = 'en';
-        log('[mobile-user] Language not set, defaulting to English');
       }
       
       final isArabic = langString.toLowerCase().trim() == 'ar';
-      log('[mobile-user] Is Arabic: $isArabic (langString: $langString)');
 
       // Check if localized data exists in message.data
-      log('Checking for keys: $enKey, $arKey in data: ${data.keys.toList()}');
       if (data.containsKey(enKey) || data.containsKey(arKey)) {
         final enValue = data[enKey]?.toString().trim() ?? '';
         final arValue = data[arKey]?.toString().trim() ?? '';
-        
-        log('English value: $enValue, Arabic value: $arValue');
         
         if (isArabic) {
           // Prefer Arabic, fallback to English, then default
           final result = arValue.isNotEmpty 
               ? arValue 
               : (enValue.isNotEmpty ? enValue : defaultText);
-          log('Selected Arabic text: $result');
           return result;
         } else {
           // Prefer English, fallback to Arabic, then default
           final result = enValue.isNotEmpty 
               ? enValue 
               : (arValue.isNotEmpty ? arValue : defaultText);
-          log('Selected English text: $result');
           return result;
         }
       }
 
       // Fallback to default notification text
-      log('No localized keys found, using default: $defaultText');
       return defaultText.isNotEmpty ? defaultText : 'New Notification';
     } catch (e) {
-      log('Error getting localized notification text: $e');
       return defaultText.isNotEmpty ? defaultText : 'New Notification';
     }
   }
@@ -335,13 +390,10 @@ class FcmHelper {
   //handle fcm notification when app is open (foreground)
   @pragma('vm:entry-point')
   static Future<void> _fcmForegroundHandler(RemoteMessage message) async {
-    log('FCM Foreground message received: ${message.data}');
-    
     // Skip if we don't have notification data to avoid showing empty notifications
     if (!message.data.containsKey('titleEn') && 
         !message.data.containsKey('titleAr') && 
         message.notification == null) {
-      log('Skipping notification - no title data available');
       return;
     }
     
@@ -359,9 +411,6 @@ class FcmHelper {
       'bodyAr',
     );
 
-    log('Foreground notification - showing BotToast and creating system notification for notification tray');
-    log('Notification payload: ${message.data}');
-    
     // Create a localized system notification that will appear in notification tray (when user swipes down)
     // This won't show as a heads-up because we set alert: false in setForegroundNotificationPresentationOptions
     try {
@@ -378,18 +427,14 @@ class FcmHelper {
           : '${notificationType}_${DateTime.now().millisecondsSinceEpoch}';
       final uniqueNotificationId = notificationIdString.hashCode.abs() % 2147483647;
       
-      log('Foreground notification - ID: $uniqueNotificationId, ticketId: $ticketId, type: $notificationType, title: $localizedTitle');
-      
       // Check for duplicates before creating notification (by ID and content)
       final isDuplicate = await _isDuplicateNotification(uniqueNotificationId, localizedTitle, localizedBody);
       if (isDuplicate) {
-        log('⚠️ DUPLICATE DETECTED - Skipping duplicate notification with ID: $uniqueNotificationId (ticketId: $ticketId, type: $notificationType)');
         return;
       }
       
       // Mark as created to prevent duplicates
       await _markNotificationCreated(uniqueNotificationId, localizedTitle, localizedBody);
-      log('✅ Marked notification as created - ID: $uniqueNotificationId');
       
       // Cache the notification
       final cachedNotification = CachedNotification(
@@ -412,9 +457,8 @@ class FcmHelper {
           bigPicture: '',
           payload: message.data.cast(),
           notificationId: uniqueNotificationId);
-      log('✅ Created localized system notification for notification tray with ID: $uniqueNotificationId (ticketId: $ticketId, type: $notificationType)');
     } catch (e) {
-      log('Error creating system notification: $e');
+      // Error creating system notification
     }
     
     // Show BotToast snackbar for in-app display after a delay
@@ -434,9 +478,6 @@ class FcmHelper {
       if (!isDuplicate) {
         await _markNotificationCreated(botToastNotificationId, localizedTitle, localizedBody);
         _showInAppNotification(localizedTitle, localizedBody, message.data);
-        log('✅ BotToast notification shown with ID: $botToastNotificationId');
-      } else {
-        log('⚠️ DUPLICATE BotToast DETECTED - Skipping BotToast notification with ID: $botToastNotificationId');
       }
     });
   }
@@ -489,52 +530,195 @@ class FcmHelper {
           duration: const Duration(seconds: 5));
       }
     } catch (e) {
-      log('Error showing in-app notification: $e');
+      // Error showing in-app notification
     }
+  }
+  
+  /// Store notification data for later navigation (after splash screen)
+  /// Called when app is opened from background/terminated state via notification
+  /// Uses persistent storage so it works across isolates
+  static Future<void> storePendingNotification(Map<String, dynamic> data) async {
+    developer.log('💾 [FCM] storePendingNotification called with data: $data');
+    print('💾 [FCM] storePendingNotification called with data: $data');
+    
+    // Check if notification data already exists to prevent duplicate storage
+    final existingData = pendingNotificationData;
+    final existingStoredJson = CacheHelper.getData(key: _pendingNotificationKey) as String?;
+    
+    if (existingData != null || (existingStoredJson != null && existingStoredJson.isNotEmpty)) {
+      developer.log('⚠️ [FCM] Notification data already exists, skipping duplicate storage');
+      print('⚠️ [FCM] Notification data already exists, skipping duplicate storage');
+      return; // Don't store duplicate - navigation will be handled by existing data
+    }
+    
+    // Store in memory
+    pendingNotificationData = data;
+    developer.log('✅ [FCM] Stored in memory');
+    print('✅ [FCM] Stored in memory');
+    
+    // Store persistently (works across isolates)
+    try {
+      final dataJson = json.encode(data);
+      await CacheHelper.saveData(key: _pendingNotificationKey, value: dataJson);
+      developer.log('✅ [FCM] Stored persistently');
+      print('✅ [FCM] Stored persistently');
+    } catch (e) {
+      developer.log('❌ [FCM] Error storing notification persistently: $e');
+      print('❌ [FCM] Error storing notification persistently: $e');
+    }
+    
+    // Don't trigger navigation here - let _onSplashExit() handle it
+    // This prevents duplicate navigation calls
+    developer.log('⏳ [FCM] Notification stored, will navigate after splash completes');
+    print('⏳ [FCM] Notification stored, will navigate after splash completes');
   }
   
   /// Public method to navigate from Firebase Messaging notification tap
-  /// Called when app is opened from background/terminated state via notification
-  static void navigateFromFirebaseMessage(Map<String, dynamic> data) {
-    log('navigateFromFirebaseMessage called with data: $data');
-    final ticketId = data['ticketId']?.toString();
+  /// This should be called AFTER the splash screen completes
+  /// Also checks persistent storage in case data is in a different isolate
+  static void navigateFromPendingNotification() {
+    developer.log('🔍 [FCM] navigateFromPendingNotification called');
+    print('🔍 [FCM] navigateFromPendingNotification called');
     
-    // Try navigation with multiple retries and increasing delays
-    _navigateWithRetry(ticketId, 0);
-  }
-  
-  /// Navigate with retry logic
-  static void _navigateWithRetry(String? ticketId, int attempt) {
-    if (attempt >= 5) {
-      log('Failed to navigate after 5 attempts');
+    // Prevent multiple simultaneous navigation attempts
+    if (_isNavigating) {
+      developer.log('⏸️ [FCM] Navigation already in progress, skipping');
+      print('⏸️ [FCM] Navigation already in progress, skipping');
       return;
     }
     
-    Future.delayed(Duration(milliseconds: 500 * (attempt + 1)), () {
+    // First try in-memory data
+    Map<String, dynamic>? data = pendingNotificationData;
+    developer.log('💾 [FCM] In-memory data: ${data != null ? "Found" : "Not found"}');
+    print('💾 [FCM] In-memory data: ${data != null ? "Found" : "Not found"}');
+    
+    // If not in memory, try persistent storage (might be in different isolate)
+    if (data == null) {
       try {
-        final context = navigatorKey.currentState?.context;
-        if (context != null && context.mounted) {
-          if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
-            log('Navigating to ticket details: $ticketId (attempt ${attempt + 1})');
-            Navigator.push(
-              context,
-              rightToLeft(TicketDetailsScreen(id: ticketId)),
-            );
-            log('Successfully navigated to ticket details: $ticketId');
-          } else {
-            log('Navigating to notifications screen (attempt ${attempt + 1})');
-            Navigator.push(context, downToTop(NotificationsScreen()));
-            log('Successfully navigated to notifications screen');
-          }
+        developer.log('🔍 [FCM] Checking persistent storage...');
+        print('🔍 [FCM] Checking persistent storage...');
+        final storedDataJson = CacheHelper.getData(key: _pendingNotificationKey) as String?;
+        if (storedDataJson != null && storedDataJson.isNotEmpty) {
+          data = json.decode(storedDataJson) as Map<String, dynamic>;
+          // Restore to in-memory
+          pendingNotificationData = data;
+          developer.log('✅ [FCM] Found data in persistent storage');
+          print('✅ [FCM] Found data in persistent storage');
         } else {
-          log('Context not ready yet (attempt ${attempt + 1}/5), retrying...');
-          _navigateWithRetry(ticketId, attempt + 1);
+          developer.log('❌ [FCM] No data in persistent storage');
+          print('❌ [FCM] No data in persistent storage');
         }
       } catch (e) {
-        log('Error navigating on attempt ${attempt + 1}: $e');
-        _navigateWithRetry(ticketId, attempt + 1);
+        developer.log('❌ [FCM] Error loading notification from storage: $e');
+        print('❌ [FCM] Error loading notification from storage: $e');
       }
+    }
+    
+    if (data == null) {
+      developer.log('❌ [FCM] No notification data found, returning');
+      print('❌ [FCM] No notification data found, returning');
+      return;
+    }
+    
+    // DON'T clear data yet - wait until navigation succeeds
+    // This prevents data loss if multiple calls happen
+    
+    final ticketId = data['ticketId']?.toString();
+    developer.log('🎫 [FCM] Extracted ticketId: $ticketId');
+    print('🎫 [FCM] Extracted ticketId: $ticketId');
+    
+    if (ticketId == null || ticketId.isEmpty || ticketId == 'null') {
+      developer.log('❌ [FCM] Invalid ticketId, clearing data');
+      print('❌ [FCM] Invalid ticketId, clearing data');
+      // Clear data if invalid
+      _clearPendingNotificationData();
+      return;
+    }
+    
+    // Mark as navigating to prevent duplicates
+    _isNavigating = true;
+    developer.log('🚦 [FCM] Starting navigation for ticketId: $ticketId');
+    print('🚦 [FCM] Starting navigation for ticketId: $ticketId');
+    
+    // Simple navigation with a small delay for stability
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _navigate(ticketId);
     });
+  }
+  
+  /// Navigate to ticket details or notifications screen
+  static void _navigate(String? ticketId) {
+    // Check if navigation already succeeded (prevent multiple navigations)
+    if (!_isNavigating) {
+      developer.log('✅ [FCM] Navigation already completed, skipping');
+      print('✅ [FCM] Navigation already completed, skipping');
+      return;
+    }
+    
+    try {
+      final navigator = navigatorKey.currentState;
+      if (navigator == null) {
+        developer.log('⚠️ [FCM] Navigator is null, cannot navigate');
+        print('⚠️ [FCM] Navigator is null, cannot navigate');
+        _isNavigating = false;
+        return;
+      }
+
+      final context = navigator.context;
+      if (!context.mounted) {
+        developer.log('⚠️ [FCM] Context not mounted, cannot navigate');
+        print('⚠️ [FCM] Context not mounted, cannot navigate');
+        _isNavigating = false;
+        return;
+      }
+      
+      developer.log('✅ [FCM] Navigator and context are ready, proceeding with navigation');
+      print('✅ [FCM] Navigator and context are ready, proceeding with navigation');
+      
+      if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
+        try {
+          // Use loader screen to prevent crashes during cold start
+          // TicketDetailsLoader will show loading indicator, then navigate to actual screen
+          developer.log('📱 [FCM] Navigating to TicketDetailsLoader (ticketId: $ticketId)');
+          print('📱 [FCM] Navigating to TicketDetailsLoader (ticketId: $ticketId)');
+          final route = rightToLeft(TicketDetailsLoader(ticketId: ticketId));
+          
+          final result = navigator.push(route);
+          
+          // Clear flag and data only after successful navigation
+          result.then((_) {
+            _clearPendingNotificationData();
+            _isNavigating = false;
+          }).catchError((e, stackTrace) {
+            _isNavigating = false;
+          });
+        } catch (e) {
+          developer.log('❌ [FCM] Error navigating to ticket details: $e');
+          print('❌ [FCM] Error navigating to ticket details: $e');
+          _isNavigating = false;
+        }
+      } else {
+        try {
+          final route = downToTop(NotificationsScreen());
+          final result = navigator.push(route);
+          
+          result.then((_) {
+            _clearPendingNotificationData();
+            _isNavigating = false;
+          }).catchError((e) {
+            _isNavigating = false;
+          });
+        } catch (e) {
+          developer.log('❌ [FCM] Error navigating to notifications: $e');
+          print('❌ [FCM] Error navigating to notifications: $e');
+          _isNavigating = false;
+        }
+      }
+    } catch (e) {
+      developer.log('❌ [FCM] Error during navigation: $e');
+      print('❌ [FCM] Error during navigation: $e');
+      _isNavigating = false;
+    }
   }
   
   // Helper function to navigate from notification
@@ -549,17 +733,14 @@ class FcmHelper {
           final currentContext = navigatorKey.currentState?.context;
           if (currentContext != null && currentContext.mounted) {
             if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
-              log('Navigating to ticket details: $ticketId');
               Navigator.push(
                 currentContext,
-                rightToLeft(TicketDetailsScreen(id: ticketId)),
+                rightToLeft(TicketDetailsLoader(ticketId: ticketId)),
               );
             } else {
-              log('No ticketId found, navigating to notifications screen');
               Navigator.push(currentContext, downToTop(NotificationsScreen()));
             }
           } else {
-            log('Context not available, retrying navigation...');
             // Retry after longer delay if context not ready
             Future.delayed(const Duration(milliseconds: 1000), () {
               try {
@@ -568,23 +749,23 @@ class FcmHelper {
                   if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
                     Navigator.push(
                       retryContext,
-                      rightToLeft(TicketDetailsScreen(id: ticketId)),
+                      rightToLeft(TicketDetailsLoader(ticketId: ticketId)),
                     );
                   } else {
                     Navigator.push(retryContext, downToTop(NotificationsScreen()));
                   }
                 }
               } catch (e) {
-                log('Error navigating on retry: $e');
+                // Error navigating on retry
               }
             });
           }
         } catch (e) {
-          log('Error navigating from notification: $e');
+          // Error navigating from notification
         }
       });
     } catch (e) {
-      log('Error in _navigateFromNotification: $e');
+      // Error in _navigateFromNotification
     }
   }
 
@@ -596,13 +777,9 @@ class FcmHelper {
     // Initialize SharedPreferences in background isolate
     try {
       await CacheHelper.init();
-      log('CacheHelper initialized in background isolate');
     } catch (e) {
-      log('Error initializing CacheHelper in background: $e');
+      // Error initializing CacheHelper in background
     }
-    
-    log('FCM Background message received: ${message.data}');
-    log('Message notification: ${message.notification?.title} - ${message.notification?.body}');
     
     // Get localized notification text
     final localizedTitle = _getLocalizedNotificationText(
@@ -618,9 +795,6 @@ class FcmHelper {
       'bodyAr',
     );
 
-    log('Creating notification with localized title: $localizedTitle, body: $localizedBody');
-    log('Notification payload: ${message.data}');
-    
     try {
       // Generate consistent notification ID based on ticketId and type to prevent duplicates
       // Using consistent ID ensures duplicates replace each other instead of creating new ones
@@ -635,18 +809,14 @@ class FcmHelper {
           : '${notificationType}_${DateTime.now().millisecondsSinceEpoch}';
       final notificationId = notificationIdString.hashCode.abs() % 2147483647;
       
-      log('Background notification - ID: $notificationId, ticketId: $ticketId, type: $notificationType, title: $localizedTitle');
-      
       // Check for duplicates before creating notification (by ID and content)
       final isDuplicate = await _isDuplicateNotification(notificationId, localizedTitle, localizedBody);
       if (isDuplicate) {
-        log('⚠️ DUPLICATE DETECTED - Skipping duplicate notification with ID: $notificationId (ticketId: $ticketId, type: $notificationType)');
         return;
       }
       
       // Mark as created to prevent duplicates
       await _markNotificationCreated(notificationId, localizedTitle, localizedBody);
-      log('✅ Marked notification as created - ID: $notificationId');
       
       // Cache the notification
       final cachedNotification = CachedNotification(
@@ -667,9 +837,7 @@ class FcmHelper {
           bigPicture: '',
           payload: message.data.cast(),
           notificationId: notificationId); // Consistent ID ensures duplicates replace each other
-      log('✅ Notification created successfully with ID: $notificationId (ticketId: $ticketId, type: $notificationType)');
     } catch (e) {
-      log('Error creating notification: $e');
       // Re-throw to ensure Firebase knows the handler completed
       rethrow;
     }

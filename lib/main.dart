@@ -21,12 +21,15 @@ import 'package:wefix/Presentation/SplashScreen/splash_screen.dart';
 import 'package:wefix/Data/Functions/token_refresh.dart';
 import 'package:wefix/Data/Functions/token_utils.dart';
 import 'package:wefix/Data/Functions/permissions_helper.dart';
+import 'package:wefix/Data/Notification/fcm_setup.dart';
 import 'package:wefix/Data/services/crashlytics_service.dart';
-import 'package:wefix/Data/Notification/awesome_notification.service.dart';
 import 'Data/model/user_model.dart';
 import 'l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Flag to ensure getInitialMessage() is only called once per app lifecycle
+bool _getInitialMessageCalled = false;
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -73,6 +76,27 @@ Future<void> main() async {
   // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await CacheHelper.init();
+  FcmHelper.clearSplashScreenCompleted();
+
+  // Call getInitialMessage() immediately after Firebase initialization
+  // This must be called BEFORE the app starts to capture notification data
+  // getInitialMessage() can only be called once per app launch
+  () async {
+    try {
+      log('📱 [Main] Calling getInitialMessage() immediately after Firebase init...');
+      final RemoteMessage? remoteMessage = await FirebaseMessaging.instance.getInitialMessage();
+      if (remoteMessage != null) {
+        log('📱 [Main] getInitialMessage() found notification: ${remoteMessage.data}');
+        // Store notification data for later navigation after splash screen
+        await FcmHelper.storePendingNotification(remoteMessage.data);
+        log('✅ [Main] Notification data stored successfully');
+      } else {
+        log('📱 [Main] getInitialMessage() returned null - no notification');
+      }
+    } catch (e) {
+      log('❌ [Main] Error getting initial message: $e');
+    }
+  }();
 
   // Set user info in Crashlytics if user is cached
   UserModel? cachedUser = MainManagements.handelUserData();
@@ -168,11 +192,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     MainManagements.handelLanguage(context: context);
 
-    // Handle initial notification if app was opened from a terminated state
-    // Use a longer delay to ensure app is fully initialized
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      NotificationsController.interceptInitialCallActionRequest();
-    });
+    // Don't handle initial notification here - it will be handled AFTER splash screen completes
+    // This prevents navigation conflicts during splash screen
   }
 
   @override

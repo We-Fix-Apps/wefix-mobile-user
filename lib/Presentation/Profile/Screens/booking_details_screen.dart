@@ -44,7 +44,7 @@ class TicketDetailsScreen extends StatefulWidget {
 }
 
 class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
-  bool? loading = false;
+  bool? loading = true;
   BookingDetailsModel? bookingDetailsModel;
   Map<String, dynamic>? fullTicketData; // Full ticket data from MMS API
   int materialsCount = 0; // Materials count fetched from API
@@ -56,8 +56,17 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    getBookingDetails();
     _scrollController.addListener(_onScroll);
+    
+    // Delay API call to prevent freezing during cold start navigation
+    // This gives the app time to fully initialize before making network requests
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          getBookingDetails();
+        }
+      });
+    });
   }
 
   @override

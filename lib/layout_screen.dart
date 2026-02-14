@@ -18,6 +18,7 @@ import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Presentation/Subscriptions/Screens/Subscriptions_screen.dart';
 import 'package:wefix/Presentation/B2B/tickets_screen.dart';
 import 'package:wefix/Presentation/auth/login_screen.dart';
+import 'package:wefix/Data/Notification/fcm_setup.dart';
 
 class HomeLayout extends StatefulWidget {
   final int? index;
@@ -42,10 +43,18 @@ class _HomeLayoutState extends State<HomeLayout> {
 
   @override
   void initState() {
+    super.initState();
     handelCurrentIndex(widget.index);
     createTutorial();
     Future.delayed(const Duration(seconds: 3), showTutorial);
-    super.initState();
+    
+        // Check for pending notifications when HomeLayout loads
+        // This ensures navigation happens even if splash screen callbacks fail
+        // Use longer delay to ensure HomeLayout is fully built and ready
+        Future.delayed(const Duration(seconds: 4), () {
+          FcmHelper.markSplashScreenCompleted();
+          FcmHelper.navigateFromPendingNotification();
+        });
   }
 
   List<Widget> getScreens(bool isB2bAccount) => [

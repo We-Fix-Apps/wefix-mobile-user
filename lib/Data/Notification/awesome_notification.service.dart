@@ -6,6 +6,7 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:wefix/Data/Notification/globale.dart';
 import 'package:wefix/Data/Notification/model/notification_channel_model.dart';
+import 'package:wefix/Data/Notification/fcm_setup.dart';
 import 'package:wefix/Data/Functions/navigation.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
@@ -164,9 +165,6 @@ class NotificationsController {
   }
 
   static Future<void> onActionReceivedMethodImpl(ReceivedAction receivedAction) async {
-    log('Action ${receivedAction.actionType?.name} received on ${receivedAction.actionLifeCycle?.name}');
-    log('Notification payload: ${receivedAction.payload}');
-    
     // Always ensure that all plugins was initialized
     WidgetsFlutterBinding.ensureInitialized();
     
@@ -175,73 +173,46 @@ class NotificationsController {
       final payload = receivedAction.payload!;
       final ticketId = payload['ticketId']?.toString();
       
-      log('Processing notification tap - ticketId: $ticketId, payload: $payload');
-      
-      // Use a delay to ensure the app context is ready, especially for foreground notifications
-      await Future.delayed(const Duration(milliseconds: 500));
-      
       if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
-        log('Navigating to ticket details: $ticketId');
-        try {
-          // Try to get context from navigatorKey
-          final context = navigatorKey.currentState?.context;
-          if (context != null && context.mounted) {
-            Navigator.push(
-              context,
-              rightToLeft(TicketDetailsScreen(id: ticketId)),
-            );
-            log('Successfully navigated to ticket details: $ticketId');
-          } else {
-            log('Context is null or not mounted, retrying navigation...');
-            // Retry after a longer delay if context is not ready
-            Future.delayed(const Duration(milliseconds: 1000), () {
-              try {
-                final retryContext = navigatorKey.currentState?.context;
-                if (retryContext != null && retryContext.mounted) {
-                  Navigator.push(
-                    retryContext,
-                    rightToLeft(TicketDetailsScreen(id: ticketId)),
-                  );
-                  log('Successfully navigated to ticket details on retry: $ticketId');
-                } else {
-                  log('Failed to navigate - context still not available');
-                }
-              } catch (e) {
-                log('Error navigating to ticket on retry: $e');
-              }
-            });
+        // Check if app is already running (splash completed)
+        final isSplashCompleted = FcmHelper.isSplashScreenCompleted();
+        
+        if (isSplashCompleted) {
+          // App is already running - navigate directly to TicketDetailsScreen (no loader needed)
+          await Future.delayed(const Duration(milliseconds: 100));
+          try {
+            final context = navigatorKey.currentState?.context;
+            if (context != null && context.mounted) {
+              Navigator.push(
+                context,
+                rightToLeft(TicketDetailsScreen(id: ticketId)),
+              );
+            } else {
+              // Context not ready, store and let retry logic handle it
+              await FcmHelper.storePendingNotification(payload.cast<String, dynamic>());
+            }
+          } catch (e) {
+            // Error navigating, store and let retry logic handle it
+            await FcmHelper.storePendingNotification(payload.cast<String, dynamic>());
           }
-        } catch (e) {
-          log('Error navigating to ticket: $e');
+        } else {
+          // App is starting from cold start - store and wait for splash gate
+          // The splash gate (_onSplashExit) will handle navigation after splash completes
+          // This ensures the flow is: Splash → Home → TicketDetailsLoader → TicketDetailsScreen
+          await FcmHelper.storePendingNotification(payload.cast<String, dynamic>());
         }
       } else {
-        log('No ticketId found, navigating to notifications screen');
+        // For non-ticket notifications, wait for context and navigate directly
+        await Future.delayed(const Duration(milliseconds: 100));
         try {
           final context = navigatorKey.currentState?.context;
           if (context != null && context.mounted) {
             Navigator.push(context, downToTop(NotificationsScreen()));
-            log('Successfully navigated to notifications screen');
-          } else {
-            log('Context is null or not mounted for notifications screen');
-            // Retry after a longer delay
-            Future.delayed(const Duration(milliseconds: 1000), () {
-              try {
-                final retryContext = navigatorKey.currentState?.context;
-                if (retryContext != null && retryContext.mounted) {
-                  Navigator.push(retryContext, downToTop(NotificationsScreen()));
-                  log('Successfully navigated to notifications screen on retry');
-                }
-              } catch (e) {
-                log('Error navigating to notifications screen on retry: $e');
-              }
-            });
           }
         } catch (e) {
-          log('Error navigating to notifications screen: $e');
+          // Error navigating to notifications screen
         }
       }
-    } else {
-      log('No payload found in notification action');
     }
   }
 
@@ -256,60 +227,22 @@ class NotificationsController {
       initialAction = receivedAction;
     } else if (receivedAction != null) {
       // Handle ticket notifications when app is opened from terminated state
-      log('Initial notification action received: ${receivedAction.payload}');
-      // Wait longer for app to be fully initialized when opened from terminated state
-      await Future.delayed(const Duration(milliseconds: 2000));
-      // Retry navigation with multiple attempts to ensure app is ready
-      _navigateFromTerminatedState(receivedAction);
-    }
-  }
-  
-  /// Handle navigation when app is opened from terminated state
-  /// Uses retry logic with increasing delays to ensure app is fully initialized
-  static Future<void> _navigateFromTerminatedState(ReceivedAction receivedAction) async {
-    if (receivedAction.payload == null || receivedAction.payload!.isEmpty) {
-      log('No payload found in initial notification action');
-      return;
-    }
-    
-    final payload = receivedAction.payload!;
-    final ticketId = payload['ticketId']?.toString();
-    
-    log('Processing initial notification tap - ticketId: $ticketId, payload: $payload');
-    
-    // Try navigation with multiple retries and increasing delays
-    for (int attempt = 0; attempt < 5; attempt++) {
-      await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
-      
-      try {
-        final context = navigatorKey.currentState?.context;
-        if (context != null && context.mounted) {
-          if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
-            log('Navigating to ticket details: $ticketId (attempt ${attempt + 1})');
-            Navigator.push(
-              context,
-              rightToLeft(TicketDetailsScreen(id: ticketId)),
-            );
-            log('Successfully navigated to ticket details: $ticketId');
-            return;
-          } else {
-            log('Navigating to notifications screen (attempt ${attempt + 1})');
-            Navigator.push(
-              context,
-              downToTop(NotificationsScreen()),
-            );
-            log('Successfully navigated to notifications screen');
-            return;
-          }
-        } else {
-          log('Context not ready yet (attempt ${attempt + 1}/5)');
+      // Only store notification data if it doesn't already exist
+      // Navigation is handled by the splash gate (_onSplashExit)
+      // This ensures the flow is always: Splash → Home → TicketDetailsLoader → TicketDetailsScreen
+      if (receivedAction.payload != null && receivedAction.payload!.isNotEmpty) {
+        final payload = receivedAction.payload!;
+        final ticketId = payload['ticketId']?.toString();
+        
+        if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
+          // Store notification data - storePendingNotification() already has duplicate check
+          // This prevents duplicate storage after navigation has already started
+          await FcmHelper.storePendingNotification(payload.cast<String, dynamic>());
+          // Don't call navigateFromPendingNotification() here
+          // The splash gate (_onSplashExit) already calls it after delays
         }
-      } catch (e) {
-        log('Error navigating on attempt ${attempt + 1}: $e');
       }
     }
-    
-    log('Failed to navigate after 5 attempts - app may not be fully initialized');
   }
 
   //  *********************************************
