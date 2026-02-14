@@ -78,7 +78,12 @@
     "emailRequired":"البريد الإلكتروني مطلوب",
     "passwordRequired":"كلمة السر مطلوبة",
     "loginFailed":"فشل تسجيل الدخول",
-    "invalidCredentials":"بيانات الدخول غير صحيحة"
+    "invalidCredentials":"بيانات الدخول غير صحيحة",
+    "preview": "معاينة",
+    "audio": "صوت",
+    "video": "فيديو",
+    "file": "ملف",
+    "image": "صورة"
 
 
 

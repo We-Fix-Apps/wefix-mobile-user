@@ -685,14 +685,17 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               .toList();
 
           // Find "Corrective" ticket type (case-insensitive) or use first one
-          try {
-            selectedTicketType = ticketTypes.firstWhere(
-              (type) => type.title.toLowerCase().contains('corrective'),
-            );
-          } catch (e) {
-            // If "Corrective" not found, use first ticket type
-            if (ticketTypes.isNotEmpty) {
-              selectedTicketType = ticketTypes.first;
+          // Only auto-select ticket type when creating a new ticket (not editing)
+          if (widget.ticketData == null) {
+            try {
+              selectedTicketType = ticketTypes.firstWhere(
+                (type) => type.title.toLowerCase().contains('corrective'),
+              );
+            } catch (e) {
+              // If "Corrective" not found, use first ticket type
+              if (ticketTypes.isNotEmpty) {
+                selectedTicketType = ticketTypes.first;
+              }
             }
           }
         }
@@ -715,28 +718,28 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         }
       }
 
-      // Auto-select first items
-      if (contracts.isNotEmpty) {
-        selectedContract = contracts.first;
-        
-        // Check if auto-selected contract is B2B (delegated to WeFix Team)
-        // Hide Team Leader and Technician for B2B business model
-        final contractData = selectedContract?.data;
-        final businessModelLookupId = contractData?['businessModelLookupId'] as int?;
-        
-        log('🔍 Auto-selected contract - businessModelLookupId: $businessModelLookupId');
-        
-        const B2B_BUSINESS_MODEL_ID = 24;
-        const WHITE_LABEL_BUSINESS_MODEL_ID = 25;
-        
-        // B2B (24) -> delegated to WeFix Team, White Label (25) -> Client Team
-        final isContractB2B = (businessModelLookupId == B2B_BUSINESS_MODEL_ID);
-        isDelegatedToWeFix = isContractB2B;
-        
-        log('🔍 Auto-selected contract isDelegatedToWeFix: $isContractB2B (B2B=${businessModelLookupId == B2B_BUSINESS_MODEL_ID}, White Label=${businessModelLookupId == WHITE_LABEL_BUSINESS_MODEL_ID})');
-      }
-      // Only auto-select if NOT editing a ticket (ticket data will be populated later)
+      // Only auto-select first items if NOT editing a ticket (ticket data will be populated later)
       if (widget.ticketData == null) {
+        // Auto-select first contract only when creating new ticket
+        if (contracts.isNotEmpty) {
+          selectedContract = contracts.first;
+          
+          // Check if auto-selected contract is B2B (delegated to WeFix Team)
+          // Hide Team Leader and Technician for B2B business model
+          final contractData = selectedContract?.data;
+          final businessModelLookupId = contractData?['businessModelLookupId'] as int?;
+          
+          log('🔍 Auto-selected contract - businessModelLookupId: $businessModelLookupId');
+          
+          const B2B_BUSINESS_MODEL_ID = 24;
+          const WHITE_LABEL_BUSINESS_MODEL_ID = 25;
+          
+          // B2B (24) -> delegated to WeFix Team, White Label (25) -> Client Team
+          final isContractB2B = (businessModelLookupId == B2B_BUSINESS_MODEL_ID);
+          isDelegatedToWeFix = isContractB2B;
+          
+          log('🔍 Auto-selected contract isDelegatedToWeFix: $isContractB2B (B2B=${businessModelLookupId == B2B_BUSINESS_MODEL_ID}, White Label=${businessModelLookupId == WHITE_LABEL_BUSINESS_MODEL_ID})');
+        }
         if (branches.isNotEmpty) {
           selectedBranch = branches.first;
           // Load zones for the first branch
@@ -882,62 +885,67 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         selectedTechnician = null;
         log('🔒 Assignment fields hidden due to delegation restriction');
       } else {
-        // No delegation restriction - apply role-based logic
-        if ((isCurrentUserTeamLeader || roleIdInt == 20) && teamLeaders.isNotEmpty) {
-          // Team Leader: Hide dropdown, auto-select themselves
-          setState(() {
-            isTeamLeaderVisible = false;
-          });
-          // Find current user in team leaders list
-          try {
-            selectedTeamLeader = teamLeaders.firstWhere(
-              (leader) => leader.id == currentUserId,
-            );
-          } catch (e) {
-            // If current user not found in team leaders list, use first one
-            if (teamLeaders.isNotEmpty) {
-              selectedTeamLeader = teamLeaders.first;
-            }
-          }
-        } else {
-          // Admin or other role: Show dropdown if team leaders are available
-          if (teamLeaders.isNotEmpty) {
-            setState(() {
-              isTeamLeaderVisible = true;
-            });
-            selectedTeamLeader = teamLeaders.first;
-          } else {
-            // No team leaders available - hide dropdown
+        // Only auto-select team leader/technician when creating a new ticket (not editing)
+        if (widget.ticketData == null) {
+          // No delegation restriction - apply role-based logic
+          if ((isCurrentUserTeamLeader || roleIdInt == 20) && teamLeaders.isNotEmpty) {
+            // Team Leader: Hide dropdown, auto-select themselves
             setState(() {
               isTeamLeaderVisible = false;
             });
-            log('⚠️ No team leaders available - hiding team leader dropdown');
+            // Find current user in team leaders list
+            try {
+              selectedTeamLeader = teamLeaders.firstWhere(
+                (leader) => leader.id == currentUserId,
+              );
+            } catch (e) {
+              // If current user not found in team leaders list, use first one
+              if (teamLeaders.isNotEmpty) {
+                selectedTeamLeader = teamLeaders.first;
+              }
+            }
+          } else {
+            // Admin or other role: Show dropdown if team leaders are available
+            if (teamLeaders.isNotEmpty) {
+              setState(() {
+                isTeamLeaderVisible = true;
+              });
+              selectedTeamLeader = teamLeaders.first;
+            } else {
+              // No team leaders available - hide dropdown
+              setState(() {
+                isTeamLeaderVisible = false;
+              });
+              log('⚠️ No team leaders available - hiding team leader dropdown');
+            }
           }
-        }
 
-        // Auto-select first technician
-        if (technicians.isNotEmpty) {
-          selectedTechnician = technicians.first;
+          // Auto-select first technician only when creating new ticket
+          if (technicians.isNotEmpty) {
+            selectedTechnician = technicians.first;
+          }
         }
       }
 
-      // Set default date
-      selectedTicketDate = DateTime.now();
-      // Set default time from available slots based on current time
-      final now = DateTime.now();
-      final currentTimeInMinutes = now.hour * 60 + now.minute;
-      final sixteenHundredInMinutes = 16 * 60; // 16:00 = 960 minutes
+      // Set default date and time only when creating a new ticket (not editing)
+      if (widget.ticketData == null) {
+        selectedTicketDate = DateTime.now();
+        // Set default time from available slots based on current time
+        final now = DateTime.now();
+        final currentTimeInMinutes = now.hour * 60 + now.minute;
+        final sixteenHundredInMinutes = 16 * 60; // 16:00 = 960 minutes
 
-      final availableSlots = getAvailableTimeSlots();
-      if (availableSlots.isNotEmpty) {
-        // Select the first available slot (which will be the next slot after current time)
-        selectedTimeFrom = availableSlots.first['from'];
-        selectedTimeTo = availableSlots.first['to'];
-      } else if (currentTimeInMinutes >= sixteenHundredInMinutes) {
-        // If current time exceeds 16:00 and no slots are available, default to the latest slot (16:00-18:00)
-        final lastSlot = allTimeSlots.last;
-        selectedTimeFrom = lastSlot['from'];
-        selectedTimeTo = lastSlot['to'];
+        final availableSlots = getAvailableTimeSlots();
+        if (availableSlots.isNotEmpty) {
+          // Select the first available slot (which will be the next slot after current time)
+          selectedTimeFrom = availableSlots.first['from'];
+          selectedTimeTo = availableSlots.first['to'];
+        } else if (currentTimeInMinutes >= sixteenHundredInMinutes) {
+          // If current time exceeds 16:00 and no slots are available, default to the latest slot (16:00-18:00)
+          final lastSlot = allTimeSlots.last;
+          selectedTimeFrom = lastSlot['from'];
+          selectedTimeTo = lastSlot['to'];
+        }
       }
     });
   }
@@ -1034,82 +1042,27 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                   }
                 } catch (e) {
                   log('⚠️ Zone not found in list: $e');
-                  // Zone not found - try to select first zone if available
-                  if (zones.isNotEmpty && mounted) {
+                  // Zone not found - leave unselected
+                  if (mounted) {
                     setState(() {
-                      selectedZone = zones.first;
-                      log('⚠️ Auto-selected first zone: ${selectedZone?.title} (ID: ${selectedZone?.id})');
+                      selectedZone = null;
+                      log('⚠️ Zone from ticket not found in available list - leaving unselected');
                     });
                   }
                 }
-              } else if (zones.isNotEmpty && mounted) {
-                // If no zone in ticket data but zones are available, select first one
-                setState(() {
-                  selectedZone = zones.first;
-                  log('⚠️ No zone in ticket data, auto-selected first zone: ${selectedZone?.title} (ID: ${selectedZone?.id})');
-                });
               }
             });
           } catch (e) {
             log('⚠️ Branch not found in list: $e');
             log('📋 Branch IDs in list: ${branches.map((b) => b.id).toList()}');
-            
-            // If branch not found, try to select first branch if available
-            if (branches.isNotEmpty) {
-              selectedBranch = branches.first;
-              log('⚠️ Auto-selected first branch: ${selectedBranch?.title} (ID: ${selectedBranch?.id})');
-              
-              // Load zones for the auto-selected branch (don't auto-select, we'll try to select from ticket data)
-              _loadZonesForBranch(selectedBranch!.id, autoSelectFirst: false).then((_) {
-                // Try to find zone from ticket data
-                if (data['zone'] != null && zones.isNotEmpty) {
-                  try {
-                    final zoneId = data['zone']['id'] as int?;
-                    if (zoneId != null) {
-                      setState(() {
-                        selectedZone = zones.firstWhere(
-                          (zone) => zone.id == zoneId,
-                        );
-                        log('✅ Found zone after branch auto-selection: ${selectedZone?.title} (ID: ${selectedZone?.id})');
-                      });
-                    }
-                  } catch (e) {
-                    log('⚠️ Zone not found after branch auto-selection: $e');
-                    // Auto-select first zone if available
-                    if (zones.isNotEmpty && mounted) {
-                      setState(() {
-                        selectedZone = zones.first;
-                        log('⚠️ Auto-selected first zone after branch auto-selection: ${selectedZone?.title} (ID: ${selectedZone?.id})');
-                      });
-                    }
-                  }
-                } else if (zones.isNotEmpty && mounted) {
-                  // Auto-select first zone if available
-                  setState(() {
-                    selectedZone = zones.first;
-                    log('⚠️ Auto-selected first zone (no zone in ticket data): ${selectedZone?.title} (ID: ${selectedZone?.id})');
-                  });
-                }
-              });
-            } else {
-              log('❌ No branches available to select');
-            }
-          }
-        }
-      } else if (branches.isNotEmpty) {
-        // If no branch in ticket data but branches are available, select first one
-        selectedBranch = branches.first;
-        log('⚠️ No branch in ticket data, auto-selected first branch: ${selectedBranch?.title} (ID: ${selectedBranch?.id})');
-        
-        // Load zones for the auto-selected branch (auto-select first zone since no ticket data)
-        _loadZonesForBranch(selectedBranch!.id, autoSelectFirst: true).then((_) {
-          if (zones.isNotEmpty && mounted) {
+            // Branch not found - leave unselected
             setState(() {
-              selectedZone = zones.first;
-              log('⚠️ Auto-selected first zone (no branch in ticket data): ${selectedZone?.title} (ID: ${selectedZone?.id})');
+              selectedBranch = null;
+              selectedZone = null;
+              log('⚠️ Branch from ticket not found in available list - leaving unselected');
             });
           }
-        });
+        }
       }
 
       // Populate main service and sub service
@@ -1184,6 +1137,34 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         });
       }
 
+      // Populate ticket type from ticket data
+      if (data['ticketType'] != null && ticketTypes.isNotEmpty) {
+        try {
+          final ticketTypeId = data['ticketType']['id'] as int?;
+          if (ticketTypeId != null) {
+            selectedTicketType = ticketTypes.firstWhere(
+              (type) => type.id == ticketTypeId,
+            );
+            log('✅ Populated ticket type: ${selectedTicketType?.title} (ID: ${selectedTicketType?.id})');
+          }
+        } catch (e) {
+          log('⚠️ Ticket type from ticket not found in available list: $e');
+        }
+      } else if (data['ticketTypeId'] != null && ticketTypes.isNotEmpty) {
+        // Try alternative field name
+        try {
+          final ticketTypeId = data['ticketTypeId'] as int?;
+          if (ticketTypeId != null) {
+            selectedTicketType = ticketTypes.firstWhere(
+              (type) => type.id == ticketTypeId,
+            );
+            log('✅ Populated ticket type from ticketTypeId: ${selectedTicketType?.title} (ID: ${selectedTicketType?.id})');
+          }
+        } catch (e) {
+          log('⚠️ Ticket type from ticketTypeId not found in available list: $e');
+        }
+      }
+
       // Populate ticket status if editing
       if (data['ticketStatus'] != null && ticketStatuses.isNotEmpty) {
         try {
@@ -1194,14 +1175,89 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             );
           }
         } catch (e) {
-          // Default to first status if available
-          if (ticketStatuses.isNotEmpty) {
-            selectedTicketStatus = ticketStatuses.first;
-          }
+          // Status not found - leave unselected
+          selectedTicketStatus = null;
+          log('⚠️ Ticket status from ticket not found in available list - leaving unselected');
         }
-      } else if (ticketStatuses.isNotEmpty) {
-        // If no status in ticket data, default to first status
-        selectedTicketStatus = ticketStatuses.first;
+      }
+
+      // Populate date from ticket data
+      if (data['ticketDate'] != null) {
+        try {
+          final ticketDateStr = data['ticketDate'] as String?;
+          if (ticketDateStr != null && ticketDateStr.isNotEmpty) {
+            selectedTicketDate = DateTime.parse(ticketDateStr);
+            log('✅ Populated ticket date: $selectedTicketDate');
+          }
+        } catch (e) {
+          log('⚠️ Error parsing ticket date: $e');
+        }
+      }
+
+      // Populate time from ticket data
+      if (data['ticketTimeFrom'] != null) {
+        selectedTimeFrom = data['ticketTimeFrom'] as String?;
+        log('✅ Populated ticket time from: $selectedTimeFrom');
+      }
+      if (data['ticketTimeTo'] != null) {
+        selectedTimeTo = data['ticketTimeTo'] as String?;
+        log('✅ Populated ticket time to: $selectedTimeTo');
+      }
+
+      // Populate team leader from ticket data
+      if (data['teamLeader'] != null && teamLeaders.isNotEmpty) {
+        try {
+          final teamLeaderId = data['teamLeader']['id'] as int?;
+          if (teamLeaderId != null) {
+            selectedTeamLeader = teamLeaders.firstWhere(
+              (leader) => leader.id == teamLeaderId,
+            );
+            log('✅ Populated team leader: ${selectedTeamLeader?.title} (ID: ${selectedTeamLeader?.id})');
+          }
+        } catch (e) {
+          log('⚠️ Team leader from ticket not found in available list: $e');
+        }
+      } else if (data['assignToTeamLeaderId'] != null && teamLeaders.isNotEmpty) {
+        // Try alternative field name
+        try {
+          final teamLeaderId = data['assignToTeamLeaderId'] as int?;
+          if (teamLeaderId != null) {
+            selectedTeamLeader = teamLeaders.firstWhere(
+              (leader) => leader.id == teamLeaderId,
+            );
+            log('✅ Populated team leader from assignToTeamLeaderId: ${selectedTeamLeader?.title} (ID: ${selectedTeamLeader?.id})');
+          }
+        } catch (e) {
+          log('⚠️ Team leader from assignToTeamLeaderId not found in available list: $e');
+        }
+      }
+
+      // Populate technician from ticket data
+      if (data['technician'] != null && technicians.isNotEmpty) {
+        try {
+          final technicianId = data['technician']['id'] as int?;
+          if (technicianId != null) {
+            selectedTechnician = technicians.firstWhere(
+              (tech) => tech.id == technicianId,
+            );
+            log('✅ Populated technician: ${selectedTechnician?.title} (ID: ${selectedTechnician?.id})');
+          }
+        } catch (e) {
+          log('⚠️ Technician from ticket not found in available list: $e');
+        }
+      } else if (data['assignToTechnicianId'] != null && technicians.isNotEmpty) {
+        // Try alternative field name
+        try {
+          final technicianId = data['assignToTechnicianId'] as int?;
+          if (technicianId != null) {
+            selectedTechnician = technicians.firstWhere(
+              (tech) => tech.id == technicianId,
+            );
+            log('✅ Populated technician from assignToTechnicianId: ${selectedTechnician?.title} (ID: ${selectedTechnician?.id})');
+          }
+        } catch (e) {
+          log('⚠️ Technician from assignToTechnicianId not found in available list: $e');
+        }
       }
 
       // Populate toggle states
@@ -1218,8 +1274,144 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         // Try generic 'note' field if withMaterial is true
         materialsNote.text = data['note'] as String;
       }
-      
-      // TODO: Map other fields when APIs are available
+
+      // Populate location map
+      if (data['locationMap'] != null) {
+        try {
+          final locationMapStr = data['locationMap'] as String?;
+          if (locationMapStr != null && locationMapStr.isNotEmpty) {
+            // Parse "latitude,longitude" format
+            final parts = locationMapStr.split(',');
+            if (parts.length == 2) {
+              final latitude = double.tryParse(parts[0].trim());
+              final longitude = double.tryParse(parts[1].trim());
+              if (latitude != null && longitude != null) {
+                selectedLocation = LatLng(latitude, longitude);
+                log('✅ Populated location map: $selectedLocation');
+              }
+            }
+          }
+        } catch (e) {
+          log('⚠️ Error parsing location map: $e');
+        }
+      } else if (data['latitudel'] != null && data['longitude'] != null) {
+        // Try alternative field names (from booking details model)
+        try {
+          final latitudeStr = data['latitudel'] as String?;
+          final longitudeStr = data['longitude'] as String?;
+          if (latitudeStr != null && longitudeStr != null) {
+            final latitude = double.tryParse(latitudeStr);
+            final longitude = double.tryParse(longitudeStr);
+            if (latitude != null && longitude != null) {
+              selectedLocation = LatLng(latitude, longitude);
+              log('✅ Populated location from latitudel/longitude: $selectedLocation');
+            }
+          }
+        } catch (e) {
+          log('⚠️ Error parsing location from latitudel/longitude: $e');
+        }
+      }
+
+      // Populate attachments (files)
+      // Backend returns: fileName, filePath, category
+      // UploadOptionsScreen expects: file/image/audio (path), filename (optional)
+      if (data['files'] != null && data['files'] is List) {
+        try {
+          final filesList = data['files'] as List;
+          // Convert relative backend paths to full URLs
+          final mmsBaseUrl = 'https://wefix-backend-mms-dev.ngrok.app'; // Base URL without /api/v1/
+          
+          uploadedFiles = filesList.map((file) {
+            if (file is Map<String, dynamic>) {
+              final fileName = (file['fileName'] ?? file['originalFilename'] ?? file['filename'] ?? '').toString();
+              var filePath = (file['filePath'] ?? file['path'] ?? '').toString();
+              final category = (file['category'] ?? '').toString().toLowerCase();
+              
+              // Convert relative path to full URL
+              if (filePath.startsWith('/WeFixFiles/') || filePath.startsWith('/')) {
+                filePath = mmsBaseUrl + filePath;
+              }
+              
+              log('📎 Mapping file: $fileName, category: $category, path: $filePath');
+              
+              // Map to the format expected by UploadOptionsScreen
+              // Based on category, put the path in the correct field
+              if (category == 'audio' || fileName.toLowerCase().endsWith('.mp3') || fileName.toLowerCase().endsWith('.m4a') || fileName.toLowerCase().endsWith('.wav')) {
+                return <String, String?>{
+                  'audio': filePath,
+                  'file': null,
+                  'image': null,
+                  'filename': fileName,
+                };
+              } else if (category == 'image' || category == 'video' || 
+                         fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg') || 
+                         fileName.toLowerCase().endsWith('.png') || fileName.toLowerCase().endsWith('.mp4') || 
+                         fileName.toLowerCase().endsWith('.mov')) {
+                return <String, String?>{
+                  'image': filePath,
+                  'file': null,
+                  'audio': null,
+                  'filename': fileName,
+                };
+              } else {
+                // Default to 'file' for documents and other types
+                return <String, String?>{
+                  'file': filePath,
+                  'image': null,
+                  'audio': null,
+                  'filename': fileName,
+                };
+              }
+            }
+            return <String, String?>{};
+          }).where((file) => file.isNotEmpty).toList().cast<Map<String, String?>>();
+          log('✅ Populated ${uploadedFiles.length} attachment(s) from ticket data');
+        } catch (e) {
+          log('⚠️ Error parsing attachments: $e');
+        }
+      } else if (data['ticketAttatchments'] != null && data['ticketAttatchments'] is List) {
+        // Try alternative field name
+        try {
+          final attachmentsList = data['ticketAttatchments'] as List;
+          uploadedFiles = attachmentsList.map((file) {
+            if (file is Map<String, dynamic>) {
+              final fileName = (file['originalFilename'] ?? file['filename'] ?? file['name'] ?? '').toString();
+              final filePath = (file['path'] ?? file['url'] ?? '').toString();
+              final fileType = (file['type'] ?? file['mimeType'] ?? '').toString().toLowerCase();
+              
+              // Map to the format expected by UploadOptionsScreen
+              if (fileType.contains('audio') || fileName.toLowerCase().endsWith('.mp3') || fileName.toLowerCase().endsWith('.m4a')) {
+                return <String, String?>{
+                  'audio': filePath,
+                  'file': null,
+                  'image': null,
+                  'filename': fileName,
+                };
+              } else if (fileType.contains('image') || fileType.contains('video') || 
+                         fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.png') || 
+                         fileName.toLowerCase().endsWith('.mp4')) {
+                return <String, String?>{
+                  'image': filePath,
+                  'file': null,
+                  'audio': null,
+                  'filename': fileName,
+                };
+              } else {
+                return <String, String?>{
+                  'file': filePath,
+                  'image': null,
+                  'audio': null,
+                  'filename': fileName,
+                };
+              }
+            }
+            return <String, String?>{};
+          }).where((file) => file.isNotEmpty).toList().cast<Map<String, String?>>();
+          log('✅ Populated ${uploadedFiles.length} attachment(s) from ticketAttatchments');
+        } catch (e) {
+          log('⚠️ Error parsing ticketAttatchments: $e');
+        }
+      }
     });
   }
 
@@ -1603,7 +1795,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       final errorMessages = fieldErrors.values.where((e) => e != null).cast<String>().toList();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessages.length == 1 ? errorMessages.first : '${localizations.required}: ${errorMessages.join(', ')}'),
+          content: Text(errorMessages.length == 1 ? errorMessages.first : errorMessages.join(', ')),
           duration: const Duration(seconds: 4),
           backgroundColor: Colors.red[600],
           action: SnackBarAction(
@@ -2021,7 +2213,8 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
           'ticketDescription': ticketDescription.text.trim(),
           'havingFemaleEngineer': withFemaleEngineer,
           'withMaterial': withMaterial,
-          if (withMaterial && materialsNote.text.trim().isNotEmpty) 'materialsNote': materialsNote.text.trim(),
+          // Always send materialsNote when withMaterial is true (even if empty, to allow clearing)
+          if (withMaterial) 'materialsNote': materialsNote.text.trim(),
           'mainServiceId': selectedMainService!.id,
           if (selectedSubService != null) 'subServiceId': selectedSubService!.id,
           if (serviceDescription.text.trim().isNotEmpty) 'serviceDescription': serviceDescription.text.trim(),

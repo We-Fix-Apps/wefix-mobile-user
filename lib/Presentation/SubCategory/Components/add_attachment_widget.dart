@@ -1,7 +1,7 @@
 import 'dart:async'; // Import this for the Timer
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -26,7 +26,7 @@ import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:video_player/video_player.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:open_file/open_file.dart';
-import 'package:bot_toast/bot_toast.dart';
+import 'package:http/http.dart' as http;
 import 'package:wefix/main.dart';
 
 import '../../../Data/Helper/cache_helper.dart';
@@ -170,10 +170,12 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       if (mounted) {
         setState(() {
           imagePath = tempFile.path;
+          final fileName = tempFile.path.split('/').last;
           uploadedFiles.add({
             "file": null,
             "audio": null,
             "image": tempFile.path,
+            "filename": fileName,
           });
         });
       }
@@ -194,10 +196,12 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     if (video != null && mounted) {
       setState(() {
         imagePath = video.path;
+        final fileName = video.path.split('/').last;
         uploadedFiles.add({
           "file": null,
           "audio": null,
           "image": video.path,
+          "filename": fileName,
         });
       });
     }
@@ -284,11 +288,12 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
       setState(() {
         isRecording = false;
         audioPath = path;
-
+        final fileName = path.split('/').last;
         uploadedFiles.add({
           "file": null,
           "audio": path,
           "image": null,
+          "filename": fileName,
         });
       });
 
@@ -397,7 +402,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
             if (tourData == null || tourData is! String) {
               showTour = {};
             } else {
-              showTour = json.decode(tourData as String);
+              showTour = json.decode(tourData);
             }
             if (mounted) {
               CustomeTutorialCoachMark.showTutorial(context, isShow: showTour["addAttachment"] ?? true);
@@ -421,6 +426,17 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
     super.dispose();
   }
 
+  // Helper function to determine if a file is an audio file
+  bool _isAudioFile(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.m4a') ||
+        lowerPath.endsWith('.mp3') ||
+        lowerPath.endsWith('.wav') ||
+        lowerPath.endsWith('.aac') ||
+        lowerPath.endsWith('.ogg');
+  }
+  
   // Helper function to determine if a file is a video
   bool _isVideoFile(String? path) {
     if (path == null || path.isEmpty) return false;
@@ -443,6 +459,294 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
         lowerPath.endsWith('.gif') ||
         lowerPath.endsWith('.bmp') ||
         lowerPath.endsWith('.webp');
+  }
+
+  // Helper function to build preview content based on file type
+  Widget _buildPreviewContent(Map<String, String?> file, String path) {
+    final isUrl = path.startsWith('http://') || path.startsWith('https://');
+    
+    // Check if it's a video file (regardless of which field it's stored in)
+    // Note: Video files are now handled by _showVideoPlayer method
+    if (_isVideoFile(path)) {
+      return const Center(child: Text('Video preview'));
+    }
+    
+    // Check if it's an audio file (regardless of which field it's stored in)
+    if (_isAudioFile(path) || file["audio"] != null) {
+      return AudioPlayerWidget(filePath: path);
+    }
+    
+    // Check if it's an image
+    if (file["image"] != null || _isImageFile(path)) {
+      if (isUrl) {
+        return CachedNetworkImage(
+          imageUrl: path,
+          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+          errorWidget: (context, url, error) => const Icon(Icons.error),
+          fit: BoxFit.contain,
+        );
+      } else {
+        return Image.file(File(path));
+      }
+    }
+    
+    // Fallback for other file types
+    return Text(AppText(context, isFunction: true).previewnotavailableforthisfiletype);
+  }
+  
+  /// Open file preview - downloads remote files before showing player (same as working implementation)
+  Future<void> _openFilePreview(BuildContext context, Map<String, String?> file, String path) async {
+    if (path.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid file path'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Check if it's a local file path (not starting with http/https)
+      final isLocalFile = !path.startsWith('http://') && !path.startsWith('https://');
+      
+      // Check if it's a video or audio file - show in-app player (same as edit ticket screen)
+      if (_isVideoFile(path)) {
+        // Use the same video player as edit ticket screen
+        _showVideoPlayer(path, !isLocalFile);
+        return;
+      }
+      
+      if (_isAudioFile(path) || file["audio"] != null) {
+        // Use the same audio player as edit ticket screen
+        _showAudioPlayer(path, !isLocalFile);
+        return;
+      }
+      
+      // For images, show in preview dialog
+      if (_isImageFile(path) || file["image"] != null) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text(AppText(context, isFunction: true).preview),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: _buildPreviewContent(file, path),
+            ),
+            actions: [
+              TextButton(
+                child: Text(AppText(context, isFunction: true).close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+      
+      // For other file types, open with system default app
+      if (isLocalFile) {
+        final result = await OpenFile.open(path);
+        if (result.type != ResultType.done && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open file: ${result.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        // For remote URLs, download first then open
+        await _downloadAndOpenFile(context, path);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+  
+  // Show video player (same as edit ticket screen)
+  void _showVideoPlayer(String filePath, bool isUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBar(
+              backgroundColor: Colors.black,
+              leading: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: const Text('Video Player', style: TextStyle(color: Colors.white)),
+            ),
+            Flexible(
+              child: isUrl ? _VideoPlayerNetworkWidget(url: filePath) : _VideoPlayerFileWidget(filePath: filePath),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Show audio player (same as edit ticket screen)
+  void _showAudioPlayer(String filePath, bool isUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Audio Player', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              isUrl ? _AudioPlayerNetworkWidget(url: filePath) : _AudioPlayerFileWidget(filePath: filePath),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  /// Download and open file with system default app
+  Future<void> _downloadAndOpenFile(BuildContext context, String url) async {
+    try {
+      // Show loading indicator
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Text('Downloading file...'),
+              ],
+            ),
+            duration: Duration(seconds: 30),
+          ),
+        );
+      }
+
+      // Download the file
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode != 200) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to download file: ${response.statusCode}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Get temporary directory
+      final tempDir = Directory.systemTemp;
+      
+      // Extract file name from URL
+      final uri = Uri.parse(url);
+      final pathSegments = uri.pathSegments;
+      final fileName = pathSegments.isNotEmpty 
+          ? pathSegments.last 
+          : 'file_${DateTime.now().millisecondsSinceEpoch}';
+      
+      // Create temporary file path
+      final filePath = '${tempDir.path}/$fileName';
+      final file = File(filePath);
+      
+      // Write downloaded bytes to file
+      await file.writeAsBytes(response.bodyBytes);
+      
+      // Hide loading indicator
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      }
+
+      // Open the downloaded file with native apps
+      final result = await OpenFile.open(filePath);
+      
+      if (result.type != ResultType.done && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open file: ${result.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error downloading/opening file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Helper function to get filename from file map
+  String _getFileName(Map<String, String?> file, int index) {
+    // Try filename field first
+    if (file["filename"] != null && file["filename"]!.isNotEmpty) {
+      return file["filename"]!;
+    }
+    
+    // Try to extract from paths
+    final filePath = file["file"] ?? file["image"] ?? file["audio"];
+    if (filePath != null && filePath.isNotEmpty) {
+      final parts = filePath.split('/');
+      if (parts.isNotEmpty) {
+        final fileName = parts.last;
+        if (fileName.isNotEmpty) {
+          return fileName;
+        }
+      }
+    }
+    
+    // Fallback to generic name based on type
+    if (file["audio"] != null) {
+      return "${AppText(context, isFunction: true).audio} ${index + 1}";
+    } else if (file["image"] != null) {
+      final path = file["image"]!.toLowerCase();
+      if (path.contains('.mp4') || path.contains('.mov') || path.contains('.avi')) {
+        return "${AppText(context, isFunction: true).video} ${index + 1}";
+      }
+      return "${AppText(context, isFunction: true).image} ${index + 1}";
+    } else if (file["file"] != null) {
+      return "${AppText(context, isFunction: true).file} ${index + 1}";
+    }
+    
+    return "${AppText(context, isFunction: true).file} ${index + 1}";
   }
 
   // Helper function to get the appropriate icon for a file
@@ -585,43 +889,46 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                       borderRadius: BorderRadius.circular(12),
                       side: const BorderSide(color: AppColors.greyColor1),
                     ),
-                    leading: _getFileIcon(file),
-                    title: Text(
-                      file["filename"] ?? file["audio"]?.split('/').last ?? file["image"]?.split('/').last ?? "",
-                      maxLines: 1,
+                    leading: InkWell(
+                      onTap: () async {
+                        final file = uploadedFiles[index];
+                        // Get the file path from any possible field
+                        final path = file["file"] ?? file["audio"] ?? file["image"];
+
+                        if (path != null && path.isNotEmpty) {
+                          await _openFilePreview(context, file, path);
+                        }
+                      },
+                      child: _getFileIcon(file),
+                    ),
+                    title: InkWell(
+                      onTap: () async {
+                        final file = uploadedFiles[index];
+                        // Get the file path from any possible field
+                        final path = file["file"] ?? file["audio"] ?? file["image"];
+
+                        if (path != null && path.isNotEmpty) {
+                          await _openFilePreview(context, file, path);
+                        }
+                      },
+                      child: Text(
+                        _getFileName(file, index),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                           icon: Icon(file["audio"] != null ? Icons.play_arrow : Icons.remove_red_eye, color: AppColors(context).primaryColor),
-                          onPressed: () {
+                          onPressed: () async {
                             final file = uploadedFiles[index];
-                            // ignore: prefer_if_null_operators
-                            final path = file["file"] != null ? file["file"] : file["audio"] ?? file["image"];
+                            // Get the file path from any possible field
+                            final path = file["file"] ?? file["audio"] ?? file["image"];
 
-                            if (path != null) {
-                              if (file["file"] != null) {
-                                OpenFile.open(path);
-                              } else {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => AlertDialog(
-                                    title: const Text('Preview'),
-                                    content: file["image"] != null
-                                        ? (file["image"]!.endsWith("mp4") ? VideoPlayerWidget(filePath: path) : Image.file(File(path)))
-                                        : file["audio"] != null
-                                            ? AudioPlayerWidget(filePath: path)
-                                            : Text(AppText(context, isFunction: true).previewnotavailableforthisfiletype),
-                                    actions: [
-                                      TextButton(
-                                        child: const Text('Close'),
-                                        onPressed: () => Navigator.pop(context),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
+                            if (path != null && path.isNotEmpty) {
+                              await _openFilePreview(context, file, path);
                             }
                           },
                         ),
@@ -646,7 +953,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   }
 
   void openMyFile(String filePath) async {
-    final result = await OpenFile.open(filePath);
+    await OpenFile.open(filePath);
   }
 }
 
@@ -679,17 +986,18 @@ Widget _optionTile({
   );
 }
 
-// Video Player Widget
-class VideoPlayerWidget extends StatefulWidget {
+// Video Player Widget for local files (same as edit ticket screen)
+class _VideoPlayerFileWidget extends StatefulWidget {
   final String filePath;
-  const VideoPlayerWidget({Key? key, required this.filePath}) : super(key: key);
+  const _VideoPlayerFileWidget({required this.filePath});
 
   @override
-  _VideoPlayerWidgetState createState() => _VideoPlayerWidgetState();
+  State<_VideoPlayerFileWidget> createState() => _VideoPlayerFileWidgetState();
 }
 
-class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
+class _VideoPlayerFileWidgetState extends State<_VideoPlayerFileWidget> {
   VideoPlayerController? _controller;
+  bool _isInitialized = false;
   bool _isDisposed = false;
 
   @override
@@ -700,39 +1008,54 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
   Future<void> _initializeVideo() async {
     if (_isDisposed) return;
-
+    
     _controller = VideoPlayerController.file(File(widget.filePath));
-
+    
     try {
       await _controller!.initialize();
-      // Only update state if still mounted and not disposed
-      if (mounted && !_isDisposed && _controller != null) {
-        setState(() {});
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isInitialized = true;
+        });
       }
     } catch (error) {
-      // Handle initialization error
-      if (mounted && !_isDisposed) {}
+      if (mounted && !_isDisposed) {
+        debugPrint('VideoPlayer initialization error: $error');
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_controller == null || _isDisposed) {
-      return const CircularProgressIndicator();
+    if (!_isInitialized || _controller == null || _isDisposed) {
+      return const Center(child: CircularProgressIndicator());
     }
-
-    // Double check before using controller
-    final controller = _controller;
-    if (controller == null || _isDisposed) {
-      return const CircularProgressIndicator();
-    }
-
-    return controller.value.isInitialized
-        ? AspectRatio(
-            aspectRatio: controller.value.aspectRatio,
-            child: VideoPlayer(controller),
-          )
-        : const CircularProgressIndicator();
+    return AspectRatio(
+      aspectRatio: _controller!.value.aspectRatio,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          VideoPlayer(_controller!),
+          IconButton(
+            icon: Icon(
+              _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              color: Colors.white,
+              size: 50,
+            ),
+            onPressed: () {
+              if (_isDisposed || _controller == null) return;
+              setState(() {
+                if (_controller!.value.isPlaying) {
+                  _controller!.pause();
+                } else {
+                  _controller!.play();
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -810,5 +1133,203 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   void dispose() {
     super.dispose();
     _audioPlayer.dispose();
+  }
+}
+
+// Video Player Widget for network URLs (same as edit ticket screen)
+class _VideoPlayerNetworkWidget extends StatefulWidget {
+  final String url;
+  const _VideoPlayerNetworkWidget({required this.url});
+
+  @override
+  State<_VideoPlayerNetworkWidget> createState() => _VideoPlayerNetworkWidgetState();
+}
+
+class _VideoPlayerNetworkWidgetState extends State<_VideoPlayerNetworkWidget> {
+  VideoPlayerController? _controller;
+  bool _isInitialized = false;
+  bool _isDisposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    if (_isDisposed) return;
+    
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    
+    try {
+      await _controller!.initialize();
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (error) {
+      if (mounted && !_isDisposed) {
+        debugPrint('VideoPlayer initialization error: $error');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized || _controller == null || _isDisposed) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return AspectRatio(
+      aspectRatio: _controller!.value.aspectRatio,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          VideoPlayer(_controller!),
+          IconButton(
+            icon: Icon(
+              _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              color: Colors.white,
+              size: 50,
+            ),
+            onPressed: () {
+              if (_isDisposed || _controller == null) return;
+              setState(() {
+                if (_controller!.value.isPlaying) {
+                  _controller!.pause();
+                } else {
+                  _controller!.play();
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    
+    // Store reference and clear immediately
+    final controller = _controller;
+    _controller = null;
+    
+    // Dispose asynchronously to avoid blocking
+    if (controller != null) {
+      Future.microtask(() async {
+        try {
+          // Wait a bit for any pending operations
+          await Future.delayed(const Duration(milliseconds: 50));
+          
+          if (controller.value.isInitialized) {
+            await controller.pause();
+          }
+          
+          controller.dispose();
+        } catch (e) {
+          // Silently catch disposal errors
+        }
+      });
+    }
+    
+    super.dispose();
+  }
+}
+
+// Audio Player Widget for local files (same as edit ticket screen)
+class _AudioPlayerFileWidget extends StatefulWidget {
+  final String filePath;
+  const _AudioPlayerFileWidget({required this.filePath});
+
+  @override
+  State<_AudioPlayerFileWidget> createState() => _AudioPlayerFileWidgetState();
+}
+
+class _AudioPlayerFileWidgetState extends State<_AudioPlayerFileWidget> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, size: 50),
+          onPressed: () async {
+            if (_isPlaying) {
+              await _audioPlayer.pause();
+            } else {
+              await _audioPlayer.play(DeviceFileSource(widget.filePath));
+            }
+            setState(() {
+              _isPlaying = !_isPlaying;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+}
+
+// Audio Player Widget for network URLs (same as edit ticket screen)
+class _AudioPlayerNetworkWidget extends StatefulWidget {
+  final String url;
+  const _AudioPlayerNetworkWidget({required this.url});
+
+  @override
+  State<_AudioPlayerNetworkWidget> createState() => _AudioPlayerNetworkWidgetState();
+}
+
+class _AudioPlayerNetworkWidgetState extends State<_AudioPlayerNetworkWidget> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, size: 50),
+          onPressed: () async {
+            if (_isPlaying) {
+              await _audioPlayer.pause();
+            } else {
+              await _audioPlayer.play(UrlSource(widget.url));
+            }
+            setState(() {
+              _isPlaying = !_isPlaying;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
   }
 }

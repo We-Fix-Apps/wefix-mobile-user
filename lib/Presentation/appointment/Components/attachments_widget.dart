@@ -7,6 +7,8 @@ import 'package:open_file/open_file.dart';
 import 'package:http/http.dart' as http;
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Business/end_points.dart';
+import 'package:video_player/video_player.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class AttachmentsWidget extends StatelessWidget {
   final String? image;
@@ -181,6 +183,21 @@ class AttachmentsWidget extends StatelessWidget {
       // Check if it's a local file path (not starting with http/https)
       final isLocalFile = !fullUrl.startsWith('http://') && !fullUrl.startsWith('https://');
       
+      // Check if it's a video or audio file - show in-app player (same as edit ticket screen)
+      if (_isVideoFile(fileUrl) || _isAudioFile(fileUrl)) {
+        // For network URLs, use network player directly (no download needed)
+        // For local files, use file player
+        if (context.mounted) {
+          if (_isVideoFile(fileUrl)) {
+            _showVideoPlayer(context, fullUrl, !isLocalFile);
+          } else {
+            _showAudioPlayer(context, fullUrl, !isLocalFile);
+          }
+        }
+        return;
+      }
+      
+      // For other file types, use the original behavior
       if (isLocalFile) {
         // For local files, open directly with system default app
         final result = await OpenFile.open(fullUrl);
@@ -209,7 +226,7 @@ class AttachmentsWidget extends StatelessWidget {
       }
     }
   }
-
+  
   Future<void> _downloadAndOpenFile(BuildContext context, String url) async {
     try {
       // Show loading indicator
@@ -352,5 +369,354 @@ class AttachmentsWidget extends StatelessWidget {
         debugPrint('Error sharing URL: $e2');
       }
     }
+  }
+  
+  // Show video player (same as edit ticket screen)
+  void _showVideoPlayer(BuildContext context, String filePath, bool isUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBar(
+              backgroundColor: Colors.black,
+              leading: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: const Text('Video Player', style: TextStyle(color: Colors.white)),
+            ),
+            Flexible(
+              child: isUrl ? _VideoPlayerNetworkWidget(url: filePath) : _VideoPlayerFileWidget(filePath: filePath),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Show audio player (same as edit ticket screen)
+  void _showAudioPlayer(BuildContext context, String filePath, bool isUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Audio Player', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              isUrl ? _AudioPlayerNetworkWidget(url: filePath) : _AudioPlayerFileWidget(filePath: filePath),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Video Player Widget for local files (same as edit ticket screen)
+class _VideoPlayerFileWidget extends StatefulWidget {
+  final String filePath;
+  const _VideoPlayerFileWidget({required this.filePath});
+
+  @override
+  State<_VideoPlayerFileWidget> createState() => _VideoPlayerFileWidgetState();
+}
+
+class _VideoPlayerFileWidgetState extends State<_VideoPlayerFileWidget> {
+  VideoPlayerController? _controller;
+  bool _isInitialized = false;
+  bool _isDisposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    if (_isDisposed) return;
+    
+    _controller = VideoPlayerController.file(File(widget.filePath));
+    
+    try {
+      await _controller!.initialize();
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (error) {
+      if (mounted && !_isDisposed) {
+        debugPrint('VideoPlayer initialization error: $error');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized || _controller == null || _isDisposed) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return AspectRatio(
+      aspectRatio: _controller!.value.aspectRatio,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          VideoPlayer(_controller!),
+          IconButton(
+            icon: Icon(
+              _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              color: Colors.white,
+              size: 50,
+            ),
+            onPressed: () {
+              if (_isDisposed || _controller == null) return;
+              setState(() {
+                if (_controller!.value.isPlaying) {
+                  _controller!.pause();
+                } else {
+                  _controller!.play();
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    
+    final controller = _controller;
+    _controller = null;
+    
+    if (controller != null) {
+      Future.microtask(() async {
+        try {
+          await Future.delayed(const Duration(milliseconds: 50));
+          
+          if (controller.value.isInitialized) {
+            await controller.pause();
+          }
+          
+          controller.dispose();
+        } catch (e) {
+          // Silently catch disposal errors
+        }
+      });
+    }
+    
+    super.dispose();
+  }
+}
+
+// Video Player Widget for network URLs (same as edit ticket screen)
+class _VideoPlayerNetworkWidget extends StatefulWidget {
+  final String url;
+  const _VideoPlayerNetworkWidget({required this.url});
+
+  @override
+  State<_VideoPlayerNetworkWidget> createState() => _VideoPlayerNetworkWidgetState();
+}
+
+class _VideoPlayerNetworkWidgetState extends State<_VideoPlayerNetworkWidget> {
+  VideoPlayerController? _controller;
+  bool _isInitialized = false;
+  bool _isDisposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    if (_isDisposed) return;
+    
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url));
+    
+    try {
+      await _controller!.initialize();
+      if (mounted && !_isDisposed) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (error) {
+      if (mounted && !_isDisposed) {
+        debugPrint('VideoPlayer initialization error: $error');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized || _controller == null || _isDisposed) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return AspectRatio(
+      aspectRatio: _controller!.value.aspectRatio,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          VideoPlayer(_controller!),
+          IconButton(
+            icon: Icon(
+              _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
+              color: Colors.white,
+              size: 50,
+            ),
+            onPressed: () {
+              if (_isDisposed || _controller == null) return;
+              setState(() {
+                if (_controller!.value.isPlaying) {
+                  _controller!.pause();
+                } else {
+                  _controller!.play();
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    
+    final controller = _controller;
+    _controller = null;
+    
+    if (controller != null) {
+      Future.microtask(() async {
+        try {
+          await Future.delayed(const Duration(milliseconds: 50));
+          
+          if (controller.value.isInitialized) {
+            await controller.pause();
+          }
+          
+          controller.dispose();
+        } catch (e) {
+          // Silently catch disposal errors
+        }
+      });
+    }
+    
+    super.dispose();
+  }
+}
+
+// Audio Player Widget for local files (same as edit ticket screen)
+class _AudioPlayerFileWidget extends StatefulWidget {
+  final String filePath;
+  const _AudioPlayerFileWidget({required this.filePath});
+
+  @override
+  State<_AudioPlayerFileWidget> createState() => _AudioPlayerFileWidgetState();
+}
+
+class _AudioPlayerFileWidgetState extends State<_AudioPlayerFileWidget> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, size: 50),
+          onPressed: () async {
+            if (_isPlaying) {
+              await _audioPlayer.pause();
+            } else {
+              await _audioPlayer.play(DeviceFileSource(widget.filePath));
+            }
+            setState(() {
+              _isPlaying = !_isPlaying;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+}
+
+// Audio Player Widget for network URLs (same as edit ticket screen)
+class _AudioPlayerNetworkWidget extends StatefulWidget {
+  final String url;
+  const _AudioPlayerNetworkWidget({required this.url});
+
+  @override
+  State<_AudioPlayerNetworkWidget> createState() => _AudioPlayerNetworkWidgetState();
+}
+
+class _AudioPlayerNetworkWidgetState extends State<_AudioPlayerNetworkWidget> {
+  late AudioPlayer _audioPlayer;
+  bool _isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayer = AudioPlayer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, size: 50),
+          onPressed: () async {
+            if (_isPlaying) {
+              await _audioPlayer.pause();
+            } else {
+              await _audioPlayer.play(UrlSource(widget.url));
+            }
+            setState(() {
+              _isPlaying = !_isPlaying;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
   }
 }

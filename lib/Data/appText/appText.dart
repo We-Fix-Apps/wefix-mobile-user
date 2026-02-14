@@ -195,6 +195,11 @@ class AppText {
   String get location => getTranslation('location');
   String get stopRecording => getTranslation('stopRecording');
   String get previewnotavailableforthisfiletype => getTranslation('previewnotavailableforthisfiletype');
+  String get preview => getTranslation('preview');
+  String get audio => getTranslation('audio');
+  String get video => getTranslation('video');
+  String get file => getTranslation('file');
+  String get image => getTranslation('image');
 
   String get uploadFilefromDevice => getTranslation('uploadFilefromDevice');
 
