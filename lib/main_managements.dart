@@ -11,8 +11,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/LanguageProvider/l10n_provider.dart';
 import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
-import 'package:wefix/Presentation/Profile/Screens/ticket_details_loader.dart';
-import 'package:wefix/Data/Notification/fcm_setup.dart';
+import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 
 class MainManagements {
   // ! Start Home Layout
@@ -74,7 +73,7 @@ class MainManagements {
           if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
             Navigator.push(
               context,
-              rightToLeft(TicketDetailsLoader(ticketId: ticketId)),
+              rightToLeft(TicketDetailsScreen(id: ticketId)),
             );
           } else {
             Navigator.push(context, downToTop(NotificationsScreen()));

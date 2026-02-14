@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:isolate';
 import 'dart:ui';
 
@@ -128,25 +127,16 @@ class NotificationsController {
   /// Use this method to detect when a new notification or a schedule is created
   @pragma("vm:entry-point")
   static Future<void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
-    var message = 'Notification created on ${receivedNotification.createdLifeCycle?.name}';
-    log(message);
   }
 
   /// Use this method to detect every time that a new notification is displayed
   @pragma("vm:entry-point")
   static Future<void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
-    var message1 = 'Notification displayed on ${receivedNotification.displayedLifeCycle?.name}';
-    var message2 = 'Notification displayed at ${receivedNotification.displayedDate}';
-
-    log(message1);
-    log(message2);
   }
 
   /// Use this method to detect if the user dismissed a notification
   @pragma("vm:entry-point")
   static Future<void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
-    var message = 'Notification dismissed on ${receivedAction.dismissedLifeCycle?.name}';
-    log(message);
   }
 
   /// Use this method to detect when the user taps on a notification or action button
@@ -155,10 +145,7 @@ class NotificationsController {
     if (receivePort != null) {
       await onActionReceivedMethodImpl(receivedAction);
     } else {
-      log('onActionReceivedMethod was called inside a parallel dart isolate, where receivePort was never initialized.');
       SendPort? sendPort = IsolateNameServer.lookupPortByName('notification_action_port');
-
-      log('Redirecting the execution to main isolate process in listening...');
       dynamic serializedData = receivedAction.toMap();
       sendPort?.send(serializedData);
     }
@@ -198,7 +185,7 @@ class NotificationsController {
         } else {
           // App is starting from cold start - store and wait for splash gate
           // The splash gate (_onSplashExit) will handle navigation after splash completes
-          // This ensures the flow is: Splash → Home → TicketDetailsLoader → TicketDetailsScreen
+          // This ensures the flow is: Splash → Home → TicketDetailsScreen
           await FcmHelper.storePendingNotification(payload.cast<String, dynamic>());
         }
       } else {
@@ -229,7 +216,7 @@ class NotificationsController {
       // Handle ticket notifications when app is opened from terminated state
       // Only store notification data if it doesn't already exist
       // Navigation is handled by the splash gate (_onSplashExit)
-      // This ensures the flow is always: Splash → Home → TicketDetailsLoader → TicketDetailsScreen
+      // This ensures the flow is always: Splash → Home → TicketDetailsScreen
       if (receivedAction.payload != null && receivedAction.payload!.isNotEmpty) {
         final payload = receivedAction.payload!;
         final ticketId = payload['ticketId']?.toString();
@@ -342,11 +329,10 @@ class NotificationsController {
     try {
       final ticketId = payload['ticketId']?.toString();
       if (ticketId != null && ticketId.isNotEmpty && ticketId != 'null') {
-        log('Notification payload contains ticketId: $ticketId');
         // Navigation will be handled by onActionReceivedMethodImpl when user taps
       }
     } catch (e) {
-      log('Error handling notification payload: $e');
+      // Error handling notification payload
     }
   }
 
@@ -359,8 +345,6 @@ class NotificationsController {
   }
 
   static Future<void> getAllScheduleNotifications() async {
-    List<NotificationModel> allScheduleNotifications = await AwesomeNotifications().listScheduledNotifications();
-    log(allScheduleNotifications.length.toString());
-    log("Scheduled Notifications :$allScheduleNotifications");
+    await AwesomeNotifications().listScheduledNotifications();
   }
 }

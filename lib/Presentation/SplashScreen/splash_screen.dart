@@ -1,6 +1,5 @@
 // ignore_for_file: void_checks
 
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
@@ -58,11 +57,8 @@ class _SplashScreenState extends State<SplashScreen> {
       try {
         _controller!.pause();
         _controller!.setVolume(0.0); // Mute volume immediately
-        developer.log('🛑 [Splash] Video paused and muted');
-        print('🛑 [Splash] Video paused and muted');
       } catch (e) {
-        developer.log('⚠️ [Splash] Error stopping video: $e');
-        print('⚠️ [Splash] Error stopping video: $e');
+        // Error stopping video
       }
     }
   }
@@ -71,18 +67,11 @@ class _SplashScreenState extends State<SplashScreen> {
     // Stop video immediately and completely to prevent background sound
     _stopVideoImmediately();
     
-    developer.log('✅ [Splash] Splash screen exit - will process notification after delay');
-    print('✅ [Splash] Splash screen exit - will process notification after delay');
-    
     // Mark splash as done and process pending notification once the next root screen is active.
     // Use longer delay to ensure HomeLayout/LoginScreen is fully built and splash is completely gone
     Future.delayed(const Duration(milliseconds: 2000), () {
       FcmHelper.markSplashScreenCompleted();
-      developer.log('✅ [Splash] Splash marked as completed');
-      print('✅ [Splash] Splash marked as completed');
       Future.delayed(const Duration(milliseconds: 1000), () {
-        developer.log('🚀 [Splash] Calling navigateFromPendingNotification');
-        print('🚀 [Splash] Calling navigateFromPendingNotification');
         FcmHelper.navigateFromPendingNotification();
         NotificationsController.interceptInitialCallActionRequest();
       });
@@ -130,11 +119,8 @@ class _SplashScreenState extends State<SplashScreen> {
           await Future.delayed(const Duration(milliseconds: 50));
           
           controller.dispose();
-          developer.log('🗑️ [Splash] Video controller disposed');
-          print('🗑️ [Splash] Video controller disposed');
         } catch (e) {
-          developer.log('⚠️ [Splash] Error disposing video: $e');
-          print('⚠️ [Splash] Error disposing video: $e');
+          // Error disposing video
         }
       });
     }
@@ -167,16 +153,10 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   checkVersionAndNavigate() async {
-    developer.log('🔍 [Splash] Checking version...');
-    print('🔍 [Splash] Checking version...');
     // Check for app update
     final needsUpdate = await VersionCheckService.checkForUpdate();
-    developer.log('🔍 [Splash] Version check completed: needsUpdate=$needsUpdate');
-    print('🔍 [Splash] Version check completed: needsUpdate=$needsUpdate');
     
     if (needsUpdate && mounted) {
-      developer.log('📱 [Splash] Update needed, navigating to VersionCheckScreen');
-      print('📱 [Splash] Update needed, navigating to VersionCheckScreen');
       // Stop video BEFORE navigation to prevent background sound
       _stopVideoImmediately();
       Navigator.pushReplacement(
@@ -190,29 +170,18 @@ class _SplashScreenState extends State<SplashScreen> {
     }
     
     // If no update needed, proceed with normal navigation
-    developer.log('✅ [Splash] No update needed, proceeding to navigatorToFirstPage');
-    print('✅ [Splash] No update needed, proceeding to navigatorToFirstPage');
     navigatorToFirstPage();
   }
 
   navigatorToFirstPage() async {
-    developer.log('🚀 [Splash] navigatorToFirstPage called');
-    print('🚀 [Splash] navigatorToFirstPage called');
-    
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     
     // Check if user manually logged out
     final isLoggedOut = CacheHelper.getData(key: CacheHelper.isLoggedOut);
-    developer.log('🔍 [Splash] isLoggedOut: $isLoggedOut, userModel: ${widget.userModel != null}');
-    print('🔍 [Splash] isLoggedOut: $isLoggedOut, userModel: ${widget.userModel != null}');
     
     // If user logged out manually, always go to login screen (even if user data exists for biometric)
     if (isLoggedOut == true) {
-      developer.log('📱 [Splash] User logged out, navigating to LoginScreen');
-      print('📱 [Splash] User logged out, navigating to LoginScreen');
       getAppLanguage().whenComplete(() {
-        developer.log('✅ [Splash] Language loaded, navigating to LoginScreen');
-        print('✅ [Splash] Language loaded, navigating to LoginScreen');
         // Stop video BEFORE navigation to prevent background sound
         _stopVideoImmediately();
         Navigator.pushReplacement(
@@ -225,8 +194,6 @@ class _SplashScreenState extends State<SplashScreen> {
     }
     
     if (widget.userModel != null) {
-      developer.log('👤 [Splash] User model found, processing user data');
-      print('👤 [Splash] User model found, processing user data');
       appProvider.addUser(user: widget.userModel);
       // Load tokens from cache when restoring user data
       appProvider.loadTokensFromCache();
@@ -252,11 +219,7 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
       
-      developer.log('📱 [Splash] Navigating to HomeLayout');
-      print('📱 [Splash] Navigating to HomeLayout');
       getAppLanguage().whenComplete(() {
-        developer.log('✅ [Splash] Language loaded, navigating to HomeLayout');
-        print('✅ [Splash] Language loaded, navigating to HomeLayout');
         // Stop video BEFORE navigation to prevent background sound
         _stopVideoImmediately();
         Navigator.pushReplacement(
@@ -266,11 +229,7 @@ class _SplashScreenState extends State<SplashScreen> {
         _onSplashExit();
       });
     } else {
-      developer.log('📱 [Splash] No user model, navigating to LoginScreen');
-      print('📱 [Splash] No user model, navigating to LoginScreen');
       getAppLanguage().whenComplete(() {
-        developer.log('✅ [Splash] Language loaded, navigating to LoginScreen');
-        print('✅ [Splash] Language loaded, navigating to LoginScreen');
         // Stop video BEFORE navigation to prevent background sound
         _stopVideoImmediately();
         Navigator.pushReplacement(
@@ -283,14 +242,10 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future getAppLanguage() async {
-    developer.log('🌐 [Splash] getAppLanguage called');
-    print('🌐 [Splash] getAppLanguage called');
     AppProvider languageProvider =
         Provider.of<AppProvider>(context, listen: false);
     try {
       await LanguageApis.getAppLang(lang: 'ar').then((value) {
-        developer.log('✅ [Splash] Language API response received: ${value.isNotEmpty}');
-        print('✅ [Splash] Language API response received: ${value.isNotEmpty}');
         if (value.isNotEmpty) {
           List<String> allGlobal = [];
           languageProvider.addLang(value);
@@ -300,13 +255,10 @@ class _SplashScreenState extends State<SplashScreen> {
             }
           }
           languageProvider.addGlobal(allGlobal);
-          developer.log('✅ [Splash] Language data processed');
-          print('✅ [Splash] Language data processed');
         }
       });
     } catch (e) {
-      developer.log('❌ [Splash] Error loading language: $e');
-      print('❌ [Splash] Error loading language: $e');
+      // Error loading language
     }
   }
 

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -28,17 +27,12 @@ import 'l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-// Flag to ensure getInitialMessage() is only called once per app lifecycle
-bool _getInitialMessageCalled = false;
-
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // This handler is registered first in main.dart, but the actual notification
   // creation is handled by FcmHelper._fcmBackgroundHandler in fcm_setup.dart
   // which is registered during init() in injection_container.dart
   // We keep this as a fallback, but it should not be called if FcmHelper.initFcm() runs first
-  log('Handling a background message: ${message.messageId}');
-  log('Message data: ${message.data}');
 
   // Try to call the FcmHelper handler if available
   // Note: This might not work if FcmHelper hasn't been initialized yet
@@ -46,7 +40,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     // Import and call FcmHelper's background handler
     // Since we can't import here (top-level function), we'll handle it in fcm_setup.dart
   } catch (e) {
-    log('Error in background handler: $e');
+    // Error in background handler
   }
 }
 
@@ -83,18 +77,13 @@ Future<void> main() async {
   // getInitialMessage() can only be called once per app launch
   () async {
     try {
-      log('📱 [Main] Calling getInitialMessage() immediately after Firebase init...');
       final RemoteMessage? remoteMessage = await FirebaseMessaging.instance.getInitialMessage();
       if (remoteMessage != null) {
-        log('📱 [Main] getInitialMessage() found notification: ${remoteMessage.data}');
         // Store notification data for later navigation after splash screen
         await FcmHelper.storePendingNotification(remoteMessage.data);
-        log('✅ [Main] Notification data stored successfully');
-      } else {
-        log('📱 [Main] getInitialMessage() returned null - no notification');
       }
     } catch (e) {
-      log('❌ [Main] Error getting initial message: $e');
+      // Error getting initial message
     }
   }();
 
@@ -113,7 +102,6 @@ Future<void> main() async {
   try {
     token = await FirebaseMessaging.instance.getToken();
   } catch (e) {
-    log(e.toString());
   }
   HttpOverrides.global = MyHttpOverrides();
 
@@ -144,16 +132,7 @@ Future<void> main() async {
 Future<void> requestNotificationPermission(BuildContext context) async {
   var status = await Permission.notification.status;
   if (status.isDenied) {
-    var result = await Permission.notification.request();
-    if (result.isGranted) {
-      log('Notifications enabled.');
-    } else if (result.isDenied) {
-      log('Notifications denied.');
-    } else if (result.isPermanentlyDenied) {
-      log('Notifications permanently denied. Please enable in settings.');
-    }
-  } else if (status.isGranted) {
-    log('Notifications already enabled.');
+    await Permission.notification.request();
   }
   if (!context.mounted) return;
   await PermissionsHelper.requestNotificationPermission(context);
@@ -227,27 +206,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         if (tokenExpiresAt != null) {
           // If token is expired or about to expire, try to refresh it
           if (!isTokenValid(tokenExpiresAt) || shouldRefreshToken(tokenExpiresAt)) {
-            log('App resumed: Token expired or needs refresh, attempting refresh...');
-            final refreshed = await ensureValidToken(appProvider, context);
-            if (!refreshed) {
-              log('App resumed: Token refresh failed, user will be logged out on next API call');
-            } else {
-              log('App resumed: Token refreshed successfully');
-            }
+            await ensureValidToken(appProvider, context);
           }
         } else if (appProvider.refreshToken != null && appProvider.refreshToken!.isNotEmpty) {
           // If we have refresh token but no expiration date, try to refresh
-          log('App resumed: No expiration date, attempting token refresh...');
-          final refreshed = await ensureValidToken(appProvider, context);
-          if (!refreshed) {
-            log('App resumed: Token refresh failed');
-          } else {
-            log('App resumed: Token refreshed successfully');
-          }
+          await ensureValidToken(appProvider, context);
         }
       }
     } catch (e) {
-      log('Error handling app resumed: $e');
+      // Error handling app resumed
     }
   }
 

@@ -1,4 +1,3 @@
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:wefix/Presentation/Profile/Screens/booking_details_screen.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
@@ -21,16 +20,11 @@ class _TicketDetailsLoaderState extends State<TicketDetailsLoader> {
   void initState() {
     super.initState();
     
-    developer.log('⏳ [Loader] TicketDetailsLoader shown (ticketId: ${widget.ticketId})');
-    print('⏳ [Loader] TicketDetailsLoader shown (ticketId: ${widget.ticketId})');
-    
     // Give the app time to fully initialize before loading the complex TicketDetailsScreen
     // This prevents native crashes during cold start navigation
     // Increased delay to ensure all native plugins are ready and app is fully initialized
     Future.delayed(const Duration(milliseconds: 100), () {
       if (!mounted) {
-        developer.log('⚠️ [Loader] Widget not mounted, skipping navigation');
-        print('⚠️ [Loader] Widget not mounted, skipping navigation');
         return;
       }
       
@@ -38,14 +32,10 @@ class _TicketDetailsLoaderState extends State<TicketDetailsLoader> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Future.delayed(const Duration(milliseconds: 100), () {
           if (!mounted) {
-            developer.log('⚠️ [Loader] Widget not mounted after frame callback, skipping navigation');
-            print('⚠️ [Loader] Widget not mounted after frame callback, skipping navigation');
             return;
           }
           
           try {
-            developer.log('🚀 [Loader] Navigating to TicketDetailsScreen (ticketId: ${widget.ticketId})');
-            print('🚀 [Loader] Navigating to TicketDetailsScreen (ticketId: ${widget.ticketId})');
             // Replace this loader screen with the actual TicketDetailsScreen
             Navigator.pushReplacement(
               context,
@@ -54,8 +44,6 @@ class _TicketDetailsLoaderState extends State<TicketDetailsLoader> {
               ),
             );
           } catch (e) {
-            developer.log('❌ [Loader] Error navigating to TicketDetailsScreen: $e');
-            print('❌ [Loader] Error navigating to TicketDetailsScreen: $e');
             // Show error and go back
             if (mounted) {
               final appText = AppText(context);
