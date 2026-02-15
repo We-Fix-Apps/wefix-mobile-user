@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/widgets.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:wefix/Data/Helper/cache_helper.dart';
 import 'package:wefix/Data/Functions/cash_strings.dart';
@@ -14,6 +16,9 @@ import 'package:wefix/Presentation/Profile/Screens/notifications_screen.dart';
 import 'package:wefix/Data/Constant/theme/color_constant.dart';
 import 'package:wefix/Data/Functions/app_size.dart';
 import 'package:wefix/main.dart';
+import 'package:wefix/Business/AppProvider/app_provider.dart';
+import 'package:wefix/Business/Authantication/auth_apis.dart';
+import 'package:wefix/Data/Api/auth_helper.dart';
 import 'awesome_notification.service.dart';
 import 'notification_cache_service.dart';
 
@@ -282,8 +287,85 @@ class FcmHelper {
       
       // Register background handler
       FirebaseMessaging.onBackgroundMessage(_fcmBackgroundHandler);
+
+      // Listen for token refreshes and update backend
+      FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+        try {
+          log('FCM Token refreshed: $newToken');
+          if (newToken.isNotEmpty) {
+            // Update in AppProvider
+            final context = navigatorKey.currentState?.context;
+            if (context != null) {
+              final appProvider = Provider.of<AppProvider>(context, listen: false);
+              appProvider.fcmToken = newToken;
+            }
+            
+            // Update on backend if user is authenticated
+            await updateFcmTokenOnBackend(newToken);
+          }
+        } catch (e) {
+          log('Error handling FCM token refresh: $e');
+        }
+      });
     } catch (error) {
       // FCM Error
+    }
+  }
+
+  /// Update FCM token on backend with retry mechanism
+  /// Public method to be called from main.dart
+  static Future<void> updateFcmTokenOnBackend(String token, {int retryCount = 0}) async {
+    try {
+      final context = navigatorKey.currentState?.context;
+      if (context == null) {
+        log('Cannot update FCM token: No context available');
+        return;
+      }
+
+      final appProvider = Provider.of<AppProvider>(context, listen: false);
+      final accessToken = appProvider.accessToken;
+      final userModel = appProvider.userModel;
+
+      // Only update if user is authenticated and is a company personnel (B2B user)
+      if (accessToken == null || accessToken.isEmpty || userModel == null) {
+        log('Cannot update FCM token: User not authenticated');
+        return;
+      }
+
+      // Check if user is company personnel (B2B user)
+      final isCompanyPersonnel = AuthHelper.isCompanyPersonnel(appProvider);
+      if (!isCompanyPersonnel) {
+        log('FCM token update skipped: User is not company personnel');
+        return;
+      }
+
+      final success = await Authantication.mmsUpdateFcmToken(
+        token: accessToken,
+        fcmToken: token,
+      );
+
+      if (success) {
+        log('FCM token updated successfully on backend');
+      } else {
+        // Retry with exponential backoff
+        if (retryCount < 3) {
+          // Calculate delay: 1s, 2s, 4s for retries 0, 1, 2
+          final delaySeconds = [1, 2, 4][retryCount];
+          await Future.delayed(Duration(seconds: delaySeconds));
+          await updateFcmTokenOnBackend(token, retryCount: retryCount + 1);
+        } else {
+          log('Failed to update FCM token after 3 retries');
+        }
+      }
+    } catch (e) {
+      log('Error updating FCM token on backend: $e');
+      // Retry with exponential backoff
+      if (retryCount < 3) {
+        // Calculate delay: 1s, 2s, 4s for retries 0, 1, 2
+        final delaySeconds = [1, 2, 4][retryCount];
+        await Future.delayed(Duration(seconds: delaySeconds));
+        await updateFcmTokenOnBackend(token, retryCount: retryCount + 1);
+      }
     }
   }
 

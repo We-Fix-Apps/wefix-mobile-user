@@ -48,7 +48,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   String? audioPath;
   String? imagePath;
   final ImagePicker _imagePicker = ImagePicker();
-  List<Map<String, String?>> uploadedFiles = [];
+  List<Map<String, dynamic>> uploadedFiles = [];
   bool loading = false;
 
   // Timer variables
@@ -76,6 +76,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
         "filename": result.files.first.name,
         "audio": null,
         "image": null,
+        "isNew": true, // Mark as new file
       });
 
       // noteController.clear();
@@ -176,6 +177,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
             "audio": null,
             "image": tempFile.path,
             "filename": fileName,
+            "isNew": true, // Mark as new file
           });
         });
       }
@@ -202,6 +204,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
           "audio": null,
           "image": video.path,
           "filename": fileName,
+          "isNew": true, // Mark as new file
         });
       });
     }
@@ -294,6 +297,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
           "audio": path,
           "image": null,
           "filename": fileName,
+          "isNew": true, // Mark as new file
         });
       });
 
@@ -328,7 +332,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
 
   List<Map<String, String?>> extractedFiles = [];
   List<String> extractedPaths = [];
-  List<String> extractFilePaths(List<Map<String, String?>> uploadedFiles) {
+  List<String> extractFilePaths(List<Map<String, dynamic>> uploadedFiles) {
     // Loop through the uploadedFiles list and add valid paths
 
     extractedPaths.clear();
@@ -387,7 +391,12 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   void initState() {
     // Initialize uploadedFiles from data if provided (for ticket creation)
     if (widget.data != null && widget.data!['uploadedFiles'] != null) {
-      uploadedFiles = List<Map<String, String?>>.from(widget.data!['uploadedFiles'] as List);
+      // Mark existing files from ticket as not new
+      uploadedFiles = (widget.data!['uploadedFiles'] as List).map((file) {
+        final fileMap = Map<String, dynamic>.from(file as Map);
+        fileMap["isNew"] = false; // Mark existing files from ticket as not new
+        return fileMap;
+      }).toList();
     }
 
     _requestPermissionsOnce();
@@ -462,7 +471,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   }
 
   // Helper function to build preview content based on file type
-  Widget _buildPreviewContent(Map<String, String?> file, String path) {
+  Widget _buildPreviewContent(Map<String, dynamic> file, String path) {
     final isUrl = path.startsWith('http://') || path.startsWith('https://');
     
     // Check if it's a video file (regardless of which field it's stored in)
@@ -495,7 +504,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   }
   
   /// Open file preview - downloads remote files before showing player (same as working implementation)
-  Future<void> _openFilePreview(BuildContext context, Map<String, String?> file, String path) async {
+  Future<void> _openFilePreview(BuildContext context, Map<String, dynamic> file, String path) async {
     if (path.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -715,7 +724,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   }
 
   // Helper function to get filename from file map
-  String _getFileName(Map<String, String?> file, int index) {
+  String _getFileName(Map<String, dynamic> file, int index) {
     // Try filename field first
     if (file["filename"] != null && file["filename"]!.isNotEmpty) {
       return file["filename"]!;
@@ -750,7 +759,7 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
   }
 
   // Helper function to get the appropriate icon for a file
-  Widget _getFileIcon(Map<String, String?> file) {
+  Widget _getFileIcon(Map<String, dynamic> file) {
     // Check audio files first
     if (file["audio"] != null) {
       return SvgPicture.asset("assets/icon/mp4.svg", width: 40);
@@ -932,14 +941,16 @@ class _UploadOptionsScreenState extends State<UploadOptionsScreen> {
                             }
                           },
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            setState(() {
-                              uploadedFiles.removeAt(index);
-                            });
-                          },
-                        ),
+                        // Only show delete button for new files
+                        if (file["isNew"] == true)
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                uploadedFiles.removeAt(index);
+                              });
+                            },
+                          ),
                       ],
                     ),
                   ),

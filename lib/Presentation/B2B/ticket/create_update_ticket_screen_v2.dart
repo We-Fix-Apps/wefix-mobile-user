@@ -8,7 +8,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wefix/Business/AppProvider/app_provider.dart';
 import 'package:wefix/Business/Bookings/bookings_apis.dart';
@@ -21,6 +20,10 @@ import 'package:wefix/Presentation/Components/custom_botton_widget.dart';
 import 'package:wefix/Presentation/Components/widget_form_text.dart';
 import 'package:wefix/Presentation/SubCategory/Components/add_attachment_widget.dart' show UploadOptionsScreen;
 import 'package:wefix/l10n/app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:wefix/Data/Functions/app_size.dart';
+import 'package:wefix/Data/appText/appText.dart';
+import 'package:http/http.dart' as http;
 
 class CreateUpdateTicketScreenV2 extends StatefulWidget {
   final Map<String, dynamic>? ticketData;
@@ -184,7 +187,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
   }
 
   // Attachments
-  List<Map<String, String?>> uploadedFiles = [];
+  List<Map<String, dynamic>> uploadedFiles = [];
 
   @override
   void initState() {
@@ -1337,34 +1340,37 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               // Map to the format expected by UploadOptionsScreen
               // Based on category, put the path in the correct field
               if (category == 'audio' || fileName.toLowerCase().endsWith('.mp3') || fileName.toLowerCase().endsWith('.m4a') || fileName.toLowerCase().endsWith('.wav')) {
-                return <String, String?>{
+                return <String, dynamic>{
                   'audio': filePath,
                   'file': null,
                   'image': null,
                   'filename': fileName,
+                  'isNew': false, // Mark existing files from ticket as not new
                 };
               } else if (category == 'image' || category == 'video' || 
                          fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg') || 
                          fileName.toLowerCase().endsWith('.png') || fileName.toLowerCase().endsWith('.mp4') || 
                          fileName.toLowerCase().endsWith('.mov')) {
-                return <String, String?>{
+                return <String, dynamic>{
                   'image': filePath,
                   'file': null,
                   'audio': null,
                   'filename': fileName,
+                  'isNew': false, // Mark existing files from ticket as not new
                 };
               } else {
                 // Default to 'file' for documents and other types
-                return <String, String?>{
+                return <String, dynamic>{
                   'file': filePath,
                   'image': null,
                   'audio': null,
                   'filename': fileName,
+                  'isNew': false, // Mark existing files from ticket as not new
                 };
               }
             }
-            return <String, String?>{};
-          }).where((file) => file.isNotEmpty).toList().cast<Map<String, String?>>();
+            return <String, dynamic>{};
+          }).where((file) => file.isNotEmpty).toList().cast<Map<String, dynamic>>();
           log('✅ Populated ${uploadedFiles.length} attachment(s) from ticket data');
         } catch (e) {
           log('⚠️ Error parsing attachments: $e');
@@ -1381,32 +1387,35 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
               
               // Map to the format expected by UploadOptionsScreen
               if (fileType.contains('audio') || fileName.toLowerCase().endsWith('.mp3') || fileName.toLowerCase().endsWith('.m4a')) {
-                return <String, String?>{
+                return <String, dynamic>{
                   'audio': filePath,
                   'file': null,
                   'image': null,
                   'filename': fileName,
+                  'isNew': false, // Mark existing files from ticket as not new
                 };
               } else if (fileType.contains('image') || fileType.contains('video') || 
                          fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.png') || 
                          fileName.toLowerCase().endsWith('.mp4')) {
-                return <String, String?>{
+                return <String, dynamic>{
                   'image': filePath,
                   'file': null,
                   'audio': null,
                   'filename': fileName,
+                  'isNew': false, // Mark existing files from ticket as not new
                 };
               } else {
-                return <String, String?>{
+                return <String, dynamic>{
                   'file': filePath,
                   'image': null,
                   'audio': null,
                   'filename': fileName,
+                  'isNew': false, // Mark existing files from ticket as not new
                 };
               }
             }
-            return <String, String?>{};
-          }).where((file) => file.isNotEmpty).toList().cast<Map<String, String?>>();
+            return <String, dynamic>{};
+          }).where((file) => file.isNotEmpty).toList().cast<Map<String, dynamic>>();
           log('✅ Populated ${uploadedFiles.length} attachment(s) from ticketAttatchments');
         } catch (e) {
           log('⚠️ Error parsing ticketAttatchments: $e');
@@ -3795,11 +3804,31 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
                     onTap: isEmergency
                         ? null
                         : () async {
+                            // Normalize dates to start of day for comparison
+                            final now = DateTime.now();
+                            final today = DateTime(now.year, now.month, now.day);
+                            final firstDate = today;
+                            final lastDate = today.add(const Duration(days: 365));
+                            
+                            // Ensure initialDate is not before firstDate
+                            DateTime initialDate;
+                            final currentSelectedDate = selectedTicketDate;
+                            if (currentSelectedDate != null) {
+                              final selectedDate = DateTime(
+                                currentSelectedDate.year,
+                                currentSelectedDate.month,
+                                currentSelectedDate.day,
+                              );
+                              initialDate = selectedDate.isBefore(firstDate) ? firstDate : selectedDate;
+                            } else {
+                              initialDate = firstDate;
+                            }
+                            
                             final date = await showDatePicker(
                               context: context,
-                              initialDate: selectedTicketDate ?? DateTime.now(),
-                              firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              initialDate: initialDate,
+                              firstDate: firstDate,
+                              lastDate: lastDate,
                             );
 
                             if (date != null && mounted) {
@@ -4176,7 +4205,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             ).then((result) {
               // Handle returned uploaded files from attachment screen
               if (result != null && result is Map<String, dynamic>) {
-                final returnedFiles = result['uploadedFiles'] as List<Map<String, String?>>?;
+                final returnedFiles = result['uploadedFiles'] as List<Map<String, dynamic>>?;
                 if (returnedFiles != null) {
                   setState(() {
                     uploadedFiles = returnedFiles;
@@ -4218,20 +4247,107 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             ),
           ),
         ),
-        // Display uploaded files count
+        // Display uploaded files list (matching add_attachment_widget design)
         if (uploadedFiles.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: uploadedFiles.asMap().entries.map((entry) {
-              final index = entry.key;
-              final file = entry.value;
-              final fileName = file['filename'] ?? file['image']?.split('/').last ?? file['file']?.split('/').last ?? file['audio']?.split('/').last ?? 'File ${index + 1}';
-              final filePath = file['file'] ?? file['image'] ?? file['audio'];
+          Text(
+            AppText(context).attachments,
+            style: TextStyle(
+              fontSize: AppSize(context).smallText1,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: uploadedFiles.length,
+              itemBuilder: (context, index) {
+                final file = uploadedFiles[index];
+                return Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: AppColors.greyColor1),
+                    ),
+                    leading: InkWell(
+                      onTap: () async {
+                        final file = uploadedFiles[index];
+                        // Get the file path from any possible field
+                        final path = file["file"] ?? file["audio"] ?? file["image"];
 
-  // Helper function to determine if a file is a video
-  bool _isVideoFile(String? path) {
+                        if (path != null && path.isNotEmpty) {
+                          await _openFilePreviewForEditTicket(context, file, path);
+                        }
+                      },
+                      child: _getFileIconForEditTicket(file),
+                    ),
+                    title: InkWell(
+                      onTap: () async {
+                        final file = uploadedFiles[index];
+                        // Get the file path from any possible field
+                        final path = file["file"] ?? file["audio"] ?? file["image"];
+
+                        if (path != null && path.isNotEmpty) {
+                          await _openFilePreviewForEditTicket(context, file, path);
+                        }
+                      },
+                      child: Text(
+                        _getFileNameForEditTicket(file, index),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(file["audio"] != null ? Icons.play_arrow : Icons.remove_red_eye, color: AppColors(context).primaryColor),
+                          onPressed: () async {
+                            final file = uploadedFiles[index];
+                            // Get the file path from any possible field
+                            final path = file["file"] ?? file["audio"] ?? file["image"];
+
+                            if (path != null && path.isNotEmpty) {
+                              await _openFilePreviewForEditTicket(context, file, path);
+                            }
+                          },
+                        ),
+                        // Only show delete button for new files
+                        if (file["isNew"] == true)
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              setState(() {
+                                uploadedFiles.removeAt(index);
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+          ),
+        ],
+      ],
+    );
+  }
+
+  // Helper functions for attachments (matching add_attachment_widget.dart)
+  bool _isAudioFileForEditTicket(String? path) {
+    if (path == null || path.isEmpty) return false;
+    final lowerPath = path.toLowerCase();
+    return lowerPath.endsWith('.m4a') ||
+        lowerPath.endsWith('.mp3') ||
+        lowerPath.endsWith('.wav') ||
+        lowerPath.endsWith('.aac') ||
+        lowerPath.endsWith('.ogg');
+  }
+
+  bool _isVideoFileForEditTicket(String? path) {
     if (path == null || path.isEmpty) return false;
     final lowerPath = path.toLowerCase();
     return lowerPath.endsWith('.mp4') ||
@@ -4242,8 +4358,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         lowerPath.endsWith('.webm');
   }
 
-  // Helper function to determine if a file is an image
-  bool _isImageFile(String? path) {
+  bool _isImageFileForEditTicket(String? path) {
     if (path == null || path.isEmpty) return false;
     final lowerPath = path.toLowerCase();
     return lowerPath.endsWith('.jpg') ||
@@ -4254,180 +4369,143 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
         lowerPath.endsWith('.webp');
   }
 
-  // Helper function to get the appropriate icon for a file
-  IconData _getFileIconData(String? filePath, Map<String, String?> file) {
+  String _getFileNameForEditTicket(Map<String, dynamic> file, int index) {
+    // Try filename field first
+    if (file["filename"] != null && file["filename"]!.isNotEmpty) {
+      return file["filename"]!;
+    }
+    
+    // Try to extract from paths
+    final filePath = file["file"] ?? file["image"] ?? file["audio"];
+    if (filePath != null && filePath.isNotEmpty) {
+      final parts = filePath.split('/');
+      if (parts.isNotEmpty) {
+        final fileName = parts.last;
+        if (fileName.isNotEmpty) {
+          return fileName;
+        }
+      }
+    }
+    
+    // Fallback to generic name based on type
+    if (file["audio"] != null) {
+      return "${AppText(context).audio} ${index + 1}";
+    } else if (file["image"] != null) {
+      final path = file["image"]!.toLowerCase();
+      if (path.contains('.mp4') || path.contains('.mov') || path.contains('.avi')) {
+        return "${AppText(context).video} ${index + 1}";
+      }
+      return "${AppText(context).image} ${index + 1}";
+    } else if (file["file"] != null) {
+      return "${AppText(context).file} ${index + 1}";
+    }
+    
+    return "${AppText(context).file} ${index + 1}";
+  }
+
+  Widget _getFileIconForEditTicket(Map<String, dynamic> file) {
     // Check audio files first
-    if (file['audio'] != null) {
-      return Icons.audiotrack;
+    if (file["audio"] != null) {
+      return SvgPicture.asset("assets/icon/mp4.svg", width: 40);
     }
-    
+
     // Check video files
-    final path = filePath ?? file['file'] ?? file['image'];
-    if (_isVideoFile(path)) {
-      return Icons.videocam;
+    final filePath = file["file"] ?? file["image"];
+    if (filePath != null && _isVideoFileForEditTicket(filePath)) {
+      return SvgPicture.asset("assets/icon/vid.svg", width: 40);
     }
-    
+
     // Check image files
-    if (_isImageFile(path)) {
-      return Icons.image;
+    if (filePath != null && _isImageFileForEditTicket(filePath)) {
+      return SvgPicture.asset("assets/icon/imge.svg", width: 40);
     }
-    
-    // Default to file icon
-    return Icons.insert_drive_file;
+
+    // Default to file icon for other types
+    return SvgPicture.asset("assets/icon/file.svg", width: 40);
   }
 
-              return InkWell(
-                onTap: filePath != null
-                    ? () {
-                        _viewFile(filePath, file);
-                      }
-                    : null,
-                child: Chip(
-                  avatar: Icon(
-                    _getFileIconData(filePath, file),
-                    size: 18,
-                  ),
-                  label: Text(
-                    fileName,
-                    style: TextStyle(
-                      color: filePath != null ? Colors.blue : Colors.grey,
-                      decoration: filePath != null ? TextDecoration.underline : null,
+  Future<void> _openFilePreviewForEditTicket(BuildContext context, Map<String, dynamic> file, String path) async {
+    if (path.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid file path'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Check if it's a local file path (not starting with http/https)
+      final isLocalFile = !path.startsWith('http://') && !path.startsWith('https://');
+      
+      // Check if it's a video file - show in-app player
+      if (_isVideoFileForEditTicket(path)) {
+        _showVideoPlayerForEditTicket(context, path, !isLocalFile);
+        return;
+      }
+      
+      if (_isAudioFileForEditTicket(path) || file["audio"] != null) {
+        _showAudioPlayerForEditTicket(context, path, !isLocalFile);
+        return;
+      }
+      
+      // For images, show in preview dialog
+      if (_isImageFileForEditTicket(path) || file["image"] != null) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text(AppText(context).preview),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: isLocalFile
+                  ? Image.file(File(path))
+                  : CachedNetworkImage(
+                      imageUrl: path,
+                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                      fit: BoxFit.contain,
                     ),
-                  ),
-                  onDeleted: () {
-                    setState(() {
-                      uploadedFiles.removeAt(index);
-                    });
-                  },
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ],
-    );
-  }
-
-  // Helper function to detect file type
-  String _getFileType(String filePath, Map<String, String?> file) {
-    // Check file map first
-    if (file['image'] != null) {
-      final path = file['image']!;
-      if (path.toLowerCase().endsWith('.mp4') || path.toLowerCase().endsWith('.mov') || path.toLowerCase().endsWith('.avi') || path.toLowerCase().endsWith('.mkv')) {
-        return 'video';
-      }
-      return 'image';
-    }
-    if (file['audio'] != null) return 'audio';
-    if (file['file'] != null) {
-      final path = file['file']!.toLowerCase();
-      if (path.endsWith('.pdf') || path.endsWith('.doc') || path.endsWith('.docx') || path.endsWith('.xls') || path.endsWith('.xlsx') || path.endsWith('.txt')) {
-        return 'document';
-      }
-      if (path.endsWith('.mp4') || path.endsWith('.mov') || path.endsWith('.avi') || path.endsWith('.mkv')) {
-        return 'video';
-      }
-      if (path.endsWith('.mp3') || path.endsWith('.wav') || path.endsWith('.m4a') || path.endsWith('.aac') || path.endsWith('.ogg')) {
-        return 'audio';
-      }
-      if (path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.png') || path.endsWith('.gif') || path.endsWith('.webp') || path.endsWith('.bmp')) {
-        return 'image';
-      }
-    }
-
-    // Fallback: check file extension from path
-    final path = filePath.toLowerCase();
-    if (path.endsWith('.mp4') || path.endsWith('.mov') || path.endsWith('.avi') || path.endsWith('.mkv')) {
-      return 'video';
-    }
-    if (path.endsWith('.mp3') || path.endsWith('.wav') || path.endsWith('.m4a') || path.endsWith('.aac') || path.endsWith('.ogg')) {
-      return 'audio';
-    }
-    if (path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.png') || path.endsWith('.gif') || path.endsWith('.webp') || path.endsWith('.bmp')) {
-      return 'image';
-    }
-    if (path.endsWith('.pdf') || path.endsWith('.doc') || path.endsWith('.docx') || path.endsWith('.xls') || path.endsWith('.xlsx') || path.endsWith('.txt')) {
-      return 'document';
-    }
-
-    return 'unknown';
-  }
-
-  // View file in appropriate viewer
-  void _viewFile(String filePath, Map<String, String?> file) {
-    final fileType = _getFileType(filePath, file);
-    final isUrl = filePath.startsWith('http://') || filePath.startsWith('https://');
-
-    if (fileType == 'image') {
-      _showImageViewer(filePath, isUrl);
-    } else if (fileType == 'video') {
-      _showVideoPlayer(filePath, isUrl);
-    } else if (fileType == 'audio') {
-      _showAudioPlayer(filePath, isUrl);
-    } else {
-      // For documents and unknown files, use open_file or url_launcher
-      if (isUrl) {
-        _openUrlInBrowser(filePath);
-      } else {
-        _openFile(filePath);
-      }
-    }
-  }
-
-  // Show image viewer
-  void _showImageViewer(String filePath, bool isUrl) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black87,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
-          children: [
-            Center(
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: isUrl
-                    ? CachedNetworkImage(
-                        imageUrl: filePath,
-                        fit: BoxFit.contain,
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.error,
-                          color: Colors.white,
-                          size: 50,
-                        ),
-                      )
-                    : Image.file(
-                        File(filePath),
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.error,
-                          color: Colors.white,
-                          size: 50,
-                        ),
-                      ),
-              ),
             ),
-            Positioned(
-              top: 40,
-              right: 20,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+            actions: [
+              TextButton(
+                child: Text(AppText(context).close),
                 onPressed: () => Navigator.pop(context),
               ),
+            ],
+          ),
+        );
+        return;
+      }
+      
+      // For other file types, open with system default app
+      if (isLocalFile) {
+        final result = await OpenFile.open(path);
+        if (result.type != ResultType.done && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open file: ${result.message}'),
+              backgroundColor: Colors.red,
             ),
-          ],
-        ),
-      ),
-    );
+          );
+        }
+      } else {
+        // For remote URLs, download first then open
+        await _downloadAndOpenFileForEditTicket(context, path);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening file: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  // Show video player
-  void _showVideoPlayer(String filePath, bool isUrl) {
+  void _showVideoPlayerForEditTicket(BuildContext context, String filePath, bool isUrl) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -4452,8 +4530,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
     );
   }
 
-  // Show audio player
-  void _showAudioPlayer(String filePath, bool isUrl) {
+  void _showAudioPlayerForEditTicket(BuildContext context, String filePath, bool isUrl) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -4481,27 +4558,85 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
     );
   }
 
-  // Open URL in browser (for documents)
-  Future<void> _openUrlInBrowser(String url) async {
+  Future<void> _downloadAndOpenFileForEditTicket(BuildContext context, String url) async {
     try {
-      final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) {
+      // Show loading indicator
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Text('Downloading file...'),
+              ],
+            ),
+            duration: Duration(seconds: 30),
+          ),
+        );
+      }
+
+      // Download the file
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode != 200) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Could not open file URL'),
+            SnackBar(
+              content: Text('Failed to download file: ${response.statusCode}'),
               backgroundColor: Colors.red,
             ),
           );
         }
+        return;
       }
-    } catch (e) {
-      if (mounted) {
+
+      // Get temporary directory
+      final tempDir = Directory.systemTemp;
+      
+      // Extract file name from URL
+      final uri = Uri.parse(url);
+      final pathSegments = uri.pathSegments;
+      final fileName = pathSegments.isNotEmpty 
+          ? pathSegments.last 
+          : 'file_${DateTime.now().millisecondsSinceEpoch}';
+      
+      // Create temporary file path
+      final filePath = '${tempDir.path}/$fileName';
+      final file = File(filePath);
+      
+      // Write downloaded bytes to file
+      await file.writeAsBytes(response.bodyBytes);
+      
+      // Hide loading indicator
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      }
+
+      // Open the file
+      final result = await OpenFile.open(filePath);
+      if (result.type != ResultType.done && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error opening file URL: $e'),
+            content: Text('Could not open file: ${result.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error downloading file: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -4509,31 +4644,7 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
     }
   }
 
-  // Open local file
-  Future<void> _openFile(String filePath) async {
-    try {
-      final result = await OpenFile.open(filePath);
-      if (result.type != ResultType.done) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Could not open file: ${result.message}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error opening file: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
+  // Helper function to detect file type
 }
 
 // Video Player Widget for local files

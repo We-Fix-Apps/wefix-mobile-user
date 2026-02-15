@@ -404,4 +404,34 @@ class Authantication {
       return null;
     }
   }
+
+  // * Update FCM Token
+  static Future<bool> mmsUpdateFcmToken({
+    required String token,
+    required String fcmToken,
+  }) async {
+    try {
+      final response = await HttpHelper.putData2(
+        query: EndPoints.mmsBaseUrl + EndPoints.mmsUpdateFcmToken,
+        token: token,
+        data: {
+          'fcmToken': fcmToken,
+        },
+      );
+
+      log('mmsUpdateFcmToken() [ STATUS ] -> ${response.statusCode}');
+
+      final body = json.decode(response.body);
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        return true;
+      } else {
+        log('mmsUpdateFcmToken() [ ERROR ] -> ${body['message'] ?? 'Unknown error'}');
+        return false;
+      }
+    } catch (e) {
+      log('mmsUpdateFcmToken() [ ERROR ] -> $e');
+      return false;
+    }
+  }
 }

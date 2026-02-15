@@ -351,6 +351,147 @@ class _TicketDetailsScreenState extends State<TicketDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  // Main Service and Subservice (from fullTicketData if available)
+                  if (fullTicketData != null && 
+                      (fullTicketData!['mainServiceLookup'] != null || fullTicketData!['subServiceLookup'] != null))
+                    _buildSection(
+                      '🔧 ${languageProvider.lang == "ar" ? "الخدمة الرئيسية والفرعية" : "Main Service & Subservice"}',
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Main Service
+                          if (fullTicketData!['mainServiceLookup'] != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Row(
+                                children: [
+                                  // Main Service Icon
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: AppColors(context).primaryColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: fullTicketData!['mainServiceLookup']['icon'] != null &&
+                                            fullTicketData!['mainServiceLookup']['icon'].toString().isNotEmpty
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: WidgetCachNetworkImage(
+                                              image: _buildImageUrl(fullTicketData!['mainServiceLookup']['icon']),
+                                              width: 50,
+                                              height: 50,
+                                              boxFit: BoxFit.cover,
+                                            ),
+                                          )
+                                        : Icon(
+                                            Icons.build,
+                                            color: AppColors(context).primaryColor,
+                                            size: 28,
+                                          ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Main Service Name
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          languageProvider.lang == "ar" ? "الخدمة الرئيسية" : "Main Service",
+                                          style: TextStyle(
+                                            fontSize: AppSize(context).smallText2,
+                                            color: AppColors.greyColor5,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          languageProvider.lang == "ar"
+                                              ? (fullTicketData!['mainServiceLookup']['titleArabic'] ?? 
+                                                 fullTicketData!['mainServiceLookup']['nameArabic'] ?? 
+                                                 fullTicketData!['mainServiceLookup']['title'] ?? 
+                                                 fullTicketData!['mainServiceLookup']['name'] ?? '')
+                                              : (fullTicketData!['mainServiceLookup']['title'] ?? 
+                                                 fullTicketData!['mainServiceLookup']['name'] ?? ''),
+                                          style: TextStyle(
+                                            fontSize: AppSize(context).smallText1,
+                                            color: AppColors.blackColor1,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          // Subservice
+                          if (fullTicketData!['subServiceLookup'] != null)
+                            Row(
+                              children: [
+                                // Subservice Icon
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secoundryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: fullTicketData!['subServiceLookup']['icon'] != null &&
+                                          fullTicketData!['subServiceLookup']['icon'].toString().isNotEmpty
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: WidgetCachNetworkImage(
+                                            image: _buildImageUrl(fullTicketData!['subServiceLookup']['icon']),
+                                            width: 50,
+                                            height: 50,
+                                            boxFit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.settings,
+                                          color: AppColors.secoundryColor,
+                                          size: 28,
+                                        ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Subservice Name
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        languageProvider.lang == "ar" ? "الخدمة الفرعية" : "Subservice",
+                                        style: TextStyle(
+                                          fontSize: AppSize(context).smallText2,
+                                          color: AppColors.greyColor5,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        languageProvider.lang == "ar"
+                                            ? (fullTicketData!['subServiceLookup']['titleArabic'] ?? 
+                                               fullTicketData!['subServiceLookup']['nameArabic'] ?? 
+                                               fullTicketData!['subServiceLookup']['title'] ?? 
+                                               fullTicketData!['subServiceLookup']['name'] ?? '')
+                                            : (fullTicketData!['subServiceLookup']['title'] ?? 
+                                               fullTicketData!['subServiceLookup']['name'] ?? ''),
+                                        style: TextStyle(
+                                          fontSize: AppSize(context).smallText1,
+                                          color: AppColors.blackColor1,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 8),
                   bookingDetailsModel?.objTickets.servcieTickets.isEmpty == true
                       ? const SizedBox()
                       : _buildSection(

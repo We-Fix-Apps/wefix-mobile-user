@@ -20,8 +20,10 @@ import 'package:wefix/Presentation/SplashScreen/splash_screen.dart';
 import 'package:wefix/Data/Functions/token_refresh.dart';
 import 'package:wefix/Data/Functions/token_utils.dart';
 import 'package:wefix/Data/Functions/permissions_helper.dart';
+import 'package:wefix/Data/Api/auth_helper.dart';
 import 'package:wefix/Data/Notification/fcm_setup.dart';
 import 'package:wefix/Data/services/crashlytics_service.dart';
+import 'dart:developer' as developer;
 import 'Data/model/user_model.dart';
 import 'l10n/app_localizations.dart';
 
@@ -183,6 +185,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Check and update FCM token when app comes to foreground
+      _checkAndUpdateFcmToken();
+    }
     super.didChangeAppLifecycleState(state);
 
     // When app returns to foreground (resumed), check and refresh token if needed
@@ -193,10 +199,46 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _lastLifecycleState = state;
   }
 
+  /// Check and update FCM token when app resumes
+  Future<void> _checkAndUpdateFcmToken() async {
+    try {
+      final appProvider = Provider.of<AppProvider>(context, listen: false);
+      
+      // Only update for company personnel (B2B users)
+      if (appProvider.userModel == null || 
+          appProvider.accessToken == null || 
+          appProvider.accessToken!.isEmpty) {
+        return;
+      }
+
+      // Check if user is company personnel using AuthHelper
+      final isCompanyPersonnel = AuthHelper.isCompanyPersonnel(appProvider);
+      if (!isCompanyPersonnel) {
+        return;
+      }
+
+      final currentToken = await FirebaseMessaging.instance.getToken();
+      final storedToken = appProvider.fcmToken;
+
+      if (currentToken != null && 
+          currentToken.isNotEmpty && 
+          currentToken != storedToken) {
+        developer.log('FCM token changed on app resume, updating backend...');
+        await FcmHelper.updateFcmTokenOnBackend(currentToken);
+        appProvider.fcmToken = currentToken;
+      }
+    } catch (e) {
+      developer.log('Error checking FCM token on app resume: $e');
+    }
+  }
+
   /// Handle app returning to foreground - check and refresh token if needed
   Future<void> _handleAppResumed() async {
     try {
       final appProvider = Provider.of<AppProvider>(context, listen: false);
+
+      // Check and update FCM token when app comes to foreground
+      await _checkAndUpdateFcmToken();
 
       // Only check token for company personnel (MMS users)
       if (appProvider.userModel != null && appProvider.accessToken != null && appProvider.refreshToken != null) {

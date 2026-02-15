@@ -134,6 +134,7 @@ class EndPoints {
   static String mmsVerifyOTP = 'user/verify-otp'; // Verify OTP for Business Services login
   static String mmsLogout = 'user/logout';
   static String mmsRefreshToken = 'user/refresh-token';
+  static String mmsUpdateFcmToken = 'user/fcm-token';
   static String mmsRegister = 'user/register';
   static String mmsTickets = 'tickets';
   static String mmsTicketStatistics = 'tickets/statistics';

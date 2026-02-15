@@ -255,6 +255,56 @@ class HttpHelper {
     return response;
   }
 
+  // Todo :- Put Data for MMS API (with token refresh support)
+  static Future<http.Response> putData2({
+    required String query,
+    String? token,
+    Map<String, dynamic>? data,
+    Map<String, String>? headers,
+    BuildContext? context,
+  }) async {
+    // Check and refresh token if needed (only for MMS API calls with token)
+    if (token != null && 
+        query.contains(EndPoints.mmsBaseUrl) &&
+        !query.contains(EndPoints.mmsLogin) &&
+        !query.contains(EndPoints.mmsRefreshToken)) {
+      // Ensure token is valid for company personnel before making request
+      await AuthHelper.ensureTokenValidForCompanyPersonnel(context);
+      
+      // Get updated token from provider after potential refresh
+      token = await AuthHelper.getUpdatedToken(context, token);
+    }
+
+    var requestHeaders = _setHeaders();
+    if (token != null) {
+      requestHeaders['Authorization'] = 'Bearer $token';
+    }
+    // Merge additional headers if provided
+    if (headers != null) {
+      requestHeaders.addAll(headers);
+    }
+    
+    _logRequest('PUT', query, requestHeaders, data);
+    
+    final response = await http.put(
+      Uri.parse(query),
+      body: jsonEncode(data),
+      headers: requestHeaders,
+    );
+    
+    _logResponse(response.statusCode, response.body, response.headers);
+    
+    // Check for 401/403 responses and handle auth errors
+    String? responseMessage;
+    try {
+      final body = json.decode(response.body);
+      responseMessage = body['message'];
+    } catch (_) {}
+    await AuthHelper.checkResponseStatus(response.statusCode, query, context, isMMS: query.contains(EndPoints.mmsBaseUrl), responseMessage: responseMessage);
+    
+    return response;
+  }
+
   // Todo :- Remove Data
   static Future<http.Response> removeData({
     required String query,
