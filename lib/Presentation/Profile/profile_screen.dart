@@ -36,6 +36,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     AppProvider appProvider = Provider.of<AppProvider>(context, listen: false);
     LanguageProvider languageProvider = Provider.of<LanguageProvider>(context, listen: false);
 
+    // B2B users: Admin 18, Team Leader 20, Technician 21, etc., Super User 26
+    final roleId = appProvider.userModel?.customer.roleId;
+    final roleIdInt = roleId is int ? roleId : (roleId is String ? int.tryParse(roleId.toString()) : null);
+    final bool isB2B = roleIdInt != null && (roleIdInt == 18 || roleIdInt == 20 || roleIdInt == 21 || roleIdInt == 22 || roleIdInt == 26);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppText(context).menu),
@@ -51,8 +56,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               if (appProvider.userModel?.token != null) ...[
-                WidgetCard(title: AppText(context).wallet, onTap: () => Navigator.push(context, rightToLeft(const WalletScreen()))),
-                const SizedBox(height: 10),
+                if (!isB2B) ...[
+                  WidgetCard(title: AppText(context).wallet, onTap: () => Navigator.push(context, rightToLeft(const WalletScreen()))),
+                  const SizedBox(height: 10),
+                ],
                 WidgetCard(title: AppText(context).history, onTap: () => Navigator.push(context, rightToLeft(const BookingScreen()))),
                 const SizedBox(height: 10),
                 WidgetCard(title: AppText(context).myProperty, onTap: () => Navigator.push(context, rightToLeft(const ApartmentScreen(status: "Active", statusColor: AppColors.greenColor)))),
