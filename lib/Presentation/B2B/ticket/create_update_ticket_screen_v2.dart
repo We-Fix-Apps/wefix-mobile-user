@@ -830,9 +830,26 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
       final isAdmin = (roleIdInt == ADMIN_ROLE_ID);
       
       // Check if contract is B2B
+      // When editing, check contract from ticket data first, then fall back to selectedContract
       const B2B_BUSINESS_MODEL_ID = 24;
-      final contractData = selectedContract?.data;
-      final businessModelLookupId = contractData?['businessModelLookupId'] as int?;
+      int? businessModelLookupId;
+      
+      // First, try to get from ticket data contract (when editing)
+      if (widget.ticketData != null) {
+        final ticketContract = widget.ticketData!['contract'];
+        if (ticketContract != null && ticketContract is Map) {
+          businessModelLookupId = ticketContract['businessModelLookupId'] as int?;
+          log('🔍 Checking B2B from ticket contract - businessModelLookupId: $businessModelLookupId');
+        }
+      }
+      
+      // Fall back to selectedContract if not found in ticket data
+      if (businessModelLookupId == null) {
+        final contractData = selectedContract?.data;
+        businessModelLookupId = contractData?['businessModelLookupId'] as int?;
+        log('🔍 Checking B2B from selectedContract - businessModelLookupId: $businessModelLookupId');
+      }
+      
       final isB2BContract = (businessModelLookupId == B2B_BUSINESS_MODEL_ID);
       
       // Check if ticket is delegated to WeFix
@@ -980,9 +997,28 @@ class _CreateUpdateTicketScreenV2State extends State<CreateUpdateTicketScreenV2>
             const WHITE_LABEL_BUSINESS_MODEL_ID = 25;
             
             // B2B (24) -> delegated to WeFix Team, White Label (25) -> Client Team
-            isDelegatedToWeFix = (businessModelLookupId == B2B_BUSINESS_MODEL_ID);
+            final isContractB2B = (businessModelLookupId == B2B_BUSINESS_MODEL_ID);
+            isDelegatedToWeFix = isContractB2B;
             
             log('🔍 isDelegatedToWeFix: $isDelegatedToWeFix (B2B=${businessModelLookupId == B2B_BUSINESS_MODEL_ID}, White Label=${businessModelLookupId == WHITE_LABEL_BUSINESS_MODEL_ID})');
+            
+            // For B2B contracts, hide assignment fields immediately
+            if (isContractB2B) {
+              const WEFIX_COMPANY_ID = 39;
+              final delegatedToCompanyId = data['delegatedToCompanyId'] as int?;
+              final isTicketDelegatedToWeFix = (delegatedToCompanyId == WEFIX_COMPANY_ID);
+              
+              // Only show fields if user is from WeFix AND ticket is delegated to WeFix
+              if (!(isTicketDelegatedToWeFix && isWeFixUser)) {
+                setState(() {
+                  shouldHideAssignmentFields = true;
+                  isTeamLeaderVisible = false;
+                });
+                selectedTeamLeader = null;
+                selectedTechnician = null;
+                log('🔒 B2B contract detected in ticket data - hiding Team Leader and Technician fields');
+              }
+            }
             
             // Check if ticket is delegated (has delegatedToCompanyId)
             const WEFIX_COMPANY_ID = 39;
